@@ -19,6 +19,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { fetchProperties, Property } from '@/lib/airtable';
+import { GatedData } from '@/components/gated-data';
 
 const filters = ['All Type', 'Apartment', 'Villa', 'Commercial', 'Land'];
 const sortOptions = ['Newest', 'Highest Yield', 'Lowest Price', 'Capital Growth'];
@@ -161,11 +162,15 @@ export default function PropertiesPage() {
               <div className="pt-6 border-t border-slate-100 grid grid-cols-2 gap-8">
                   <div>
                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-1">Purchase price</span>
-                    <div className="text-2xl font-black text-slate-900 tracking-tight">€{property.price.toLocaleString()}</div>
+                    <GatedData>
+                        <div className="text-2xl font-black text-slate-900 tracking-tight">€{property.price.toLocaleString()}</div>
+                    </GatedData>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-1">Estimated Yield</span>
-                    <div className="text-2xl font-black text-emerald-500 tracking-tight">{property.yield}%</div>
+                    <GatedData>
+                        <div className="text-2xl font-black text-emerald-500 tracking-tight">{property.yield}%</div>
+                    </GatedData>
                   </div>
               </div>
             </div>

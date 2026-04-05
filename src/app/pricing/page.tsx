@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'motion/react';
 import { 
   CheckCircle2, 
@@ -11,7 +12,8 @@ import {
   Zap,
   ArrowRight,
   UserCircle2,
-  Building2
+  Building2,
+  Clock
 } from 'lucide-react';
 
 const plans = [
@@ -125,11 +127,16 @@ export default function PricingPage() {
                         ))}
                     </div>
 
-                    <button className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 group ${
-                        plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-600/20' : 'bg-slate-900 text-white hover:bg-black'
-                    }`}>
-                        {plan.cta} <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    <Link 
+                        href={`/pricing/checkout?plan=${plan.id}`}
+                        className={`w-full py-5 rounded-2xl font-black transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] ${
+                            plan.popular 
+                            ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/30 hover:bg-blue-700' 
+                            : 'bg-slate-900 text-white hover:bg-slate-800'
+                        }`}
+                    >
+                        Activate {plan.name} <ArrowRight className="size-4" />
+                    </Link>
                 </div>
             ))}
         </div>
