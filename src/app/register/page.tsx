@@ -1,0 +1,145 @@
+'use client';
+
+import { useState } from 'react';
+import { motion } from 'motion/react';
+import { Logo } from '@/components/logo';
+import { Mail, Lock, ArrowRight, User, ShieldCheck, TrendingUp, Building2, UserCircle2, CheckCircle2 } from 'lucide-react';
+
+export default function RegisterPage() {
+  const [accountType, setAccountType] = useState<'investor' | 'agent'>('investor');
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 hero-gradient font-outfit">
+      
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative z-10 w-full max-w-5xl"
+      >
+        <div className="bg-white p-8 md:p-16 rounded-[64px] shadow-2xl shadow-slate-200/50 border border-slate-100 grid md:grid-cols-2 gap-20">
+          
+          {/* Left Column: Info */}
+          <div className="space-y-12 hidden md:block border-r border-slate-100 pr-20">
+            <Logo />
+            <div className="space-y-10">
+              <div className="flex gap-6">
+                 <div className="size-14 rounded-[20px] bg-blue-50 flex items-center justify-center shrink-0 border-2 border-blue-100">
+                    <TrendingUp className="size-7 text-blue-600" />
+                 </div>
+                 <div className="space-y-2">
+                    <h4 className="font-extrabold text-slate-900 uppercase tracking-tight">Institutional Intelligence</h4>
+                    <p className="text-slate-500 text-sm leading-relaxed font-bold">Access real-time yield analysis for Western Europe's top cities.</p>
+                 </div>
+              </div>
+              <div className="flex gap-6">
+                 <div className="size-14 rounded-[20px] bg-emerald-50 flex items-center justify-center shrink-0 border-2 border-emerald-100">
+                    <ShieldCheck className="size-7 text-emerald-600" />
+                 </div>
+                 <div className="space-y-2">
+                    <h4 className="font-extrabold text-slate-900 uppercase tracking-tight">Verified Listings</h4>
+                    <p className="text-slate-500 text-sm leading-relaxed font-bold">Every property is vetted for legal compliance and yield accuracy.</p>
+                 </div>
+              </div>
+            </div>
+            
+            <div className="bg-slate-50 p-8 rounded-[32px] border-2 border-slate-100 mt-12 relative overflow-hidden">
+                <p className="text-base font-black text-slate-400 italic mb-6 leading-relaxed relative z-10">"The most transparent data-driven platform I've used for my European portfolio."</p>
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="size-10 rounded-full bg-slate-200" />
+                    <div>
+                        <div className="text-sm font-black text-slate-900">Elena Rossi</div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Investor</div>
+                    </div>
+                </div>
+                <div className="absolute top-0 right-0 size-32 bg-blue-500/5 rounded-full blur-2xl" />
+            </div>
+          </div>
+
+          {/* Right Column: Form */}
+          <div className="space-y-10">
+            <div className="md:hidden flex justify-center mb-10">
+                <Logo />
+            </div>
+            <div className="text-center md:text-left space-y-4">
+                <div className="section-tag w-fit mx-auto md:mx-0">Join InvesTerra</div>
+                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">Create Account.</h1>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Select your membership role below</p>
+            </div>
+
+            {/* Account Type Toggle */}
+            <div className="flex p-2 bg-slate-50 rounded-[24px] border-2 border-slate-100">
+                <button 
+                  onClick={() => setAccountType('investor')}
+                  className={`flex-grow py-3.5 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest flex items-center justify-center gap-3 ${
+                    accountType === 'investor' ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                    <UserCircle2 className="size-4" />
+                    Individual Investor
+                </button>
+                <button 
+                  onClick={() => setAccountType('agent')}
+                  className={`flex-grow py-3.5 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest flex items-center justify-center gap-3 ${
+                    accountType === 'agent' ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                    <Building2 className="size-4" />
+                    Agent / Agency
+                </button>
+            </div>
+
+            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name / Entity</label>
+                    <div className="relative">
+                        <User className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                        <input 
+                        type="text" 
+                        placeholder={accountType === 'investor' ? "John Doe" : "Agency Name"}
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-bold text-slate-600"
+                        />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Work Email</label>
+                    <div className="relative">
+                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                        <input 
+                        type="email" 
+                        placeholder="name@company.com"
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-bold text-slate-600"
+                        />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Secret Password</label>
+                    <div className="relative">
+                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                        <input 
+                        type="password" 
+                        placeholder="••••••••"
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-bold text-slate-600"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 px-1">
+                    <CheckCircle2 className="size-4 text-emerald-500" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">By joining you agree to our Investor Terms</span>
+                </div>
+
+                <button className="w-full py-5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-3 group mt-6 uppercase tracking-widest text-xs">
+                    Create {accountType} Account <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+            </form>
+
+            <p className="text-center text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-tight">
+                Already have an account? <a href="/login" className="text-blue-600 font-black hover:underline ml-1">Log in here</a>
+            </p>
+          </div>
+
+        </div>
+      </motion.div>
+    </div>
+  );
+}

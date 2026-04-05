@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-outfit: "Outfit", sans-serif;
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-primary: #f59e0b; /* Amber 500 */
+  --color-secondary: #0ea5e9; /* Sky 500 */
+  --color-accent: #10b981; /* Emerald 500 */
+  --color-muted: #f1f5f9;
+  --color-border: #e2e8f0;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --primary: #2563eb; /* Royal Blue for Professionalism */
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --ring: #2563eb;
+  --radius: 0.75rem;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-outfit);
+  -webkit-font-smoothing: antialiased;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600;
+}
+
+.glass {
+  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+}
+
+.glass-card {
+  @apply bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300;
+}
+
+.hero-gradient {
+  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent),
+              radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent);
+}
+
+/* Custom utility for section headers */
+.section-tag {
+  @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest border border-blue-100;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/10 active:scale-[0.98];
+}
+
+.btn-secondary {
+  @apply px-8 py-4 bg-white text-slate-900 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all active:scale-[0.98];
+}
