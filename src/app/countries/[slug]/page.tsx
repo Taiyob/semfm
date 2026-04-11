@@ -98,7 +98,15 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
                     className="group bg-white rounded-[48px] border border-stone-100 p-8 md:p-12 shadow-2xl shadow-stone-200/50 flex flex-col lg:flex-row gap-12 items-center hover:border-[#B55D3E]/20 transition-all duration-500"
                   >
                       <div className="w-full lg:w-2/5 aspect-[4/3] relative rounded-[32px] overflow-hidden shadow-2xl">
-                          <Image src={region.image} alt={region.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                          <Image 
+                              src={region.image} 
+                              alt={region.name} 
+                              fill 
+                              priority={idx === 0} 
+                              loading={idx === 0 ? "eager" : "lazy"}
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
+                              className="object-cover group-hover:scale-105 transition-transform duration-700" 
+                          />
                           <div className="absolute inset-0 bg-stone-950/20" />
                       </div>
                       
@@ -184,7 +192,7 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
           </div>
           <div className="relative">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[600px] bg-[#B55D3E]/20 rounded-full blur-[120px] -z-10" />
-              <Image src="/assets/lisbon_apartment_thumbnail_1775342996672.png" alt="Institutional Review" width={800} height={1000} className="rounded-[80px] border border-white/10 shadow-2xl grayscale hover:grayscale-0 transition-all duration-700" />
+              <Image src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2070&auto=format&fit=crop" alt="Institutional Review" width={800} height={1000} className="rounded-[80px] border border-white/10 shadow-2xl grayscale hover:grayscale-0 transition-all duration-700" />
           </div>
         </div>
       </section>

@@ -48,7 +48,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         {/* Left: Visuals */}
         <div className="space-y-8">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative aspect-[4/3] rounded-[64px] overflow-hidden shadow-2xl border-2 border-white">
-                <Image src={property.image} alt={property.title} fill className="object-cover" />
+                <Image src={property.image} alt={property.title} fill priority sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw" className="object-cover" />
                 <div className="absolute top-8 left-8">
                     <div className="section-tag !bg-white !text-stone-900 !border-white/20 shadow-xl">Verified Asset ID: {property.id}</div>
                 </div>
@@ -56,7 +56,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             <div className="grid grid-cols-3 gap-6">
                 {[1,2,3].map(i => (
                     <div key={i} className="aspect-square bg-stone-100 rounded-3xl border border-stone-200 overflow-hidden relative grayscale hover:grayscale-0 transition-all cursor-pointer">
-                        <Image src={property.image} alt="Thumbnail" fill className="object-cover opacity-50" />
+                        <Image src={property.image} alt="Thumbnail" fill sizes="100px" className="object-cover opacity-50" />
                     </div>
                 ))}
             </div>

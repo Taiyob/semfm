@@ -22,7 +22,7 @@ const countries = [
     description: 'Explore opportunities in Lisbon, Porto, and the Algarve. Golden Visa and NHR friendly.',
     yield: '5.2%',
     investors: '12k+',
-    image: '/assets/portugal_real_estate_hero_1775342926518.png',
+    image: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?q=80&w=2070&auto=format&fit=crop',
     status: 'Active',
     color: 'border-[#B55D3E]/20'
   },
@@ -32,7 +32,7 @@ const countries = [
     description: 'Market analysis for Madrid, Barcelona, and the Costa del Sol. Institutional beta access.',
     yield: '4.8%',
     investors: '8.5k+',
-    image: '/assets/portugal_real_estate_hero_1775342926518.png', 
+    image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?q=80&w=2070&auto=format&fit=crop', 
     status: 'Active',
     color: 'border-zinc-200'
   },
@@ -42,7 +42,7 @@ const countries = [
     description: 'High-yield opportunities in Athens and the Greek Islands. Low entry investment points.',
     yield: '6.1%',
     investors: 'Under Prep',
-    image: '/assets/portugal_real_estate_hero_1775342926518.png',
+    image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?q=80&w=2070&auto=format&fit=crop',
     status: 'Coming Soon',
     color: 'border-zinc-200'
   },
@@ -149,7 +149,8 @@ export default function GlobalHomePage() {
                     src={country.image}
                     alt={country.name}
                     fill
-                    priority={idx < 3}
+                    priority={idx === 0}
+                    loading={idx === 0 ? "eager" : "lazy"}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover"
                   />

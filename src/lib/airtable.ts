@@ -41,7 +41,7 @@ export async function fetchProperties(countrySlug: string = 'portugal'): Promise
           price: 320000,
           yield: 5.8,
           type: 'Apartment',
-          image: '/assets/lisbon_apartment_thumbnail_1775342926518.png',
+          image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2070&auto=format&fit=crop',
           sqm: 85,
           bedrooms: 2,
           status: 'Available'
@@ -54,7 +54,7 @@ export async function fetchProperties(countrySlug: string = 'portugal'): Promise
           price: 210000,
           yield: 6.2,
           type: 'Studio',
-          image: '/assets/lisbon_apartment_thumbnail_1775342926518.png',
+          image: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?q=80&w=2070&auto=format&fit=crop',
           sqm: 45,
           bedrooms: 1,
           status: 'Available'
@@ -69,7 +69,7 @@ export async function fetchProperties(countrySlug: string = 'portugal'): Promise
           price: 1250000,
           yield: 4.2,
           type: 'Penthouse',
-          image: '/assets/lisbon_apartment_thumbnail_1775342926518.png',
+          image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?q=80&w=2070&auto=format&fit=crop',
           sqm: 140,
           bedrooms: 3,
           status: 'Available'
@@ -82,7 +82,7 @@ export async function fetchProperties(countrySlug: string = 'portugal'): Promise
           price: 2450000,
           yield: 5.5,
           type: 'Villa',
-          image: '/assets/portugal_real_estate_hero_1775342926518.png',
+          image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop',
           sqm: 350,
           bedrooms: 5,
           status: 'Available'
@@ -116,7 +116,7 @@ export async function fetchProperties(countrySlug: string = 'portugal'): Promise
       price: record.fields.Price,
       yield: record.fields.Yield,
       type: record.fields.Type,
-      image: record.fields.Image?.[0]?.url || '/assets/lisbon_apartment_thumbnail_1775342926518.png',
+      image: record.fields.Image?.[0]?.url || 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2070&auto=format&fit=crop',
       sqm: record.fields.Sqm,
       bedrooms: record.fields.Bedrooms || 0,
       status: record.fields.Status

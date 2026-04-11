@@ -54,6 +54,7 @@ export default function Testimonials() {
                                         alt={testimonial.name}
                                         className="object-cover"
                                         fill
+                                        sizes="48px"
                                     />
                                 </div>
                                 <div className="space-y-0.5">

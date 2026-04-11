@@ -45,7 +45,7 @@ export const MARKET_REGISTRY: Record<string, MarketData> = {
         yield: '4.8%',
         vacancy: '2.1%',
         indicators: ['Strong Capital Appreciation', 'Prime Rental Demand'],
-        image: '/assets/lisbon_apartment_thumbnail_1775342996672.png',
+        image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?q=80&w=2070&auto=format&fit=crop',
         description: 'The political and economic heart of Portugal. Stable yields with exceptional capital growth potential in historic districts.'
       },
       {
@@ -54,7 +54,7 @@ export const MARKET_REGISTRY: Record<string, MarketData> = {
         yield: '5.4%',
         vacancy: '3.5%',
         indicators: ['Emerging Tech Hub', 'Standard Entry Price'],
-        image: '/assets/portugal_real_estate_hero_1775342926518.png',
+        image: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?q=80&w=2070&auto=format&fit=crop',
         description: 'A growing tech scene and vibrant tourism drive high rental demand in the Douro region.'
       },
       {
@@ -63,7 +63,7 @@ export const MARKET_REGISTRY: Record<string, MarketData> = {
         yield: '6.2%',
         vacancy: '8% (Seasonal)',
         indicators: ['High Holiday Yield', 'Luxury Resilience'],
-        image: '/assets/portugal_real_estate_hero_1775342926518.png',
+        image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?q=80&w=2070&auto=format&fit=crop',
         description: 'The premier holiday destination. High yields during peak seasons with established luxury resale markets.'
       }
     ]
@@ -84,7 +84,7 @@ export const MARKET_REGISTRY: Record<string, MarketData> = {
         yield: '4.1%',
         vacancy: '1.8%',
         indicators: ['Stable Euro ROI', 'Global Tech Capital'],
-        image: '/assets/portugal_real_estate_hero_1775342926518.png',
+        image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?q=80&w=2070&auto=format&fit=crop',
         description: 'The financial engine of Spain. Low yields but massive capital preservation and liquidity.'
       },
       {
@@ -93,7 +93,7 @@ export const MARKET_REGISTRY: Record<string, MarketData> = {
         yield: '5.9%',
         vacancy: '5.5%',
         indicators: ['Tourism Dominance', 'High Network Migration'],
-        image: '/assets/portugal_real_estate_hero_1775342926518.png',
+        image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop',
         description: 'Europes lifestyle destination with strong short-term rental permits and year-round demand.'
       }
     ]
