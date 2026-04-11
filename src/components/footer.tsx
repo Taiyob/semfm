@@ -85,24 +85,6 @@ export function Footer() {
               </div>
             ))}
           </div>
-
-          {/* Newsletter Section as requested */}
-          <div className="lg:col-span-3 space-y-8 p-8 bg-stone-950 rounded-[32px] text-white">
-              <h4 className="text-lg font-black uppercase tracking-tight">Market Updates</h4>
-              <p className="text-xs font-bold text-stone-500 leading-relaxed italic">
-                  “Updates on new developments in the European real estate market.”
-              </p>
-              <form className="space-y-3">
-                  <input 
-                    type="email" 
-                    placeholder="Email address" 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#B55D3E] outline-none transition-all font-bold"
-                  />
-                  <button className="w-full py-3 bg-[#B55D3E] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#A35235] transition-all">
-                      Subscribe Now
-                  </button>
-              </form>
-          </div>
         </div>
 
         {/* Global Market Contact */}

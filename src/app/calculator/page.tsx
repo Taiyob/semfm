@@ -41,6 +41,9 @@ const regions = [
   { name: 'Cascais Luxury', avgRent: 28, color: 'bg-stone-900' },
 ];
 
+export default function CalculatorPage() {
+  const [step, setStep] = useState<Step>('rent_estimate');
+  const [mode, setMode] = useState<Mode>('simple');
   const [formData, setFormData] = useState({
     region: 'Lisbon Central',
     size: 60,
@@ -185,16 +188,34 @@ const regions = [
                         ))}
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-8">
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest ml-2">Property Size (sqm)</label>
-                            <input type="number" value={formData.size} onChange={(e) => setFormData({ ...formData, size: Number(e.target.value) })} className="w-full bg-stone-50 rounded-2xl p-5 font-black text-xl outline-none border-2 border-transparent focus:border-[#B55D3E]" />
+                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest ml-2">Property Street Address</label>
+                            <div className="relative">
+                                <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 size-5 text-[#B55D3E]" />
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Avenida da Liberdade 120" 
+                                    className="w-full bg-stone-50 rounded-2xl p-5 pl-14 font-black text-lg outline-none border-2 border-transparent focus:border-[#B55D3E] transition-all" 
+                                />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-white rounded-lg border border-stone-100 text-[8px] font-black text-stone-400 uppercase tracking-widest">
+                                    Neighborhood: {formData.region.split(' ')[0]}
+                                </div>
+                            </div>
                         </div>
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest ml-2">Market Rent (€/mo)</label>
-                            <input type="number" value={formData.estimatedRent} onChange={(e) => setFormData({ ...formData, estimatedRent: Number(e.target.value) })} className="w-full bg-stone-50 rounded-2xl p-5 font-black text-xl outline-none border-2 border-transparent focus:border-[#B55D3E]" />
+
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest ml-2">Property Size (sqm)</label>
+                                <input type="number" value={formData.size} onChange={(e) => setFormData({ ...formData, size: Number(e.target.value) })} className="w-full bg-stone-50 rounded-2xl p-5 font-black text-xl outline-none border-2 border-transparent focus:border-[#B55D3E]" />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest ml-2">Expected Market Rent (€/mo)</label>
+                                <input type="number" value={formData.estimatedRent} onChange={(e) => setFormData({ ...formData, estimatedRent: Number(e.target.value) })} className="w-full bg-stone-50 rounded-2xl p-5 font-black text-xl outline-none border-2 border-transparent focus:border-[#B55D3E]" />
+                            </div>
                         </div>
                     </div>
+
 
                     {mode === 'advanced' && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="space-y-8 pt-4 border-t border-stone-50">
