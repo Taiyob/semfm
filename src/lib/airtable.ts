@@ -19,6 +19,7 @@ export interface Property {
   type: string;
   image: string;
   sqm: number;
+  bedrooms: number;
   status: 'Available' | 'Sold' | 'Under Offer';
 }
 
@@ -28,8 +29,10 @@ const BASE_ID = process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID;
 export async function fetchProperties(countrySlug: string = 'portugal'): Promise<Property[]> {
   // 1. If API keys are missing, return fallback mock data (Institutional Prototype Mode)
   if (!API_KEY || !BASE_ID) {
-    console.warn('Airtable API keys missing. Running in Prototype Mode with Mock Data.');
-    return [
+    console.warn(`Airtable API keys missing. Running in Prototype Mode with Mock Data for ${countrySlug}.`);
+    
+    const fallbackData: Record<string, Property[]> = {
+      portugal: [
         {
           id: '1',
           title: 'Modern Duplex in Beato',
@@ -40,6 +43,7 @@ export async function fetchProperties(countrySlug: string = 'portugal'): Promise
           type: 'Apartment',
           image: '/assets/lisbon_apartment_thumbnail_1775342926518.png',
           sqm: 85,
+          bedrooms: 2,
           status: 'Available'
         },
         {
@@ -52,10 +56,43 @@ export async function fetchProperties(countrySlug: string = 'portugal'): Promise
           type: 'Studio',
           image: '/assets/lisbon_apartment_thumbnail_1775342926518.png',
           sqm: 45,
+          bedrooms: 1,
           status: 'Available'
         }
-    ];
+      ],
+      spain: [
+        {
+          id: 's1',
+          title: 'Penthouse Salamanca',
+          location: 'Madrid, Spain',
+          region: 'Salamanca',
+          price: 1250000,
+          yield: 4.2,
+          type: 'Penthouse',
+          image: '/assets/lisbon_apartment_thumbnail_1775342926518.png',
+          sqm: 140,
+          bedrooms: 3,
+          status: 'Available'
+        },
+        {
+          id: 's2',
+          title: 'Marbella Luxury Villa',
+          location: 'Marbella, Spain',
+          region: 'Puerto Banus',
+          price: 2450000,
+          yield: 5.5,
+          type: 'Villa',
+          image: '/assets/portugal_real_estate_hero_1775342926518.png',
+          sqm: 350,
+          bedrooms: 5,
+          status: 'Available'
+        }
+      ]
+    };
+
+    return fallbackData[countrySlug.toLowerCase()] || fallbackData.portugal;
   }
+
 
   // 2. Live Fetch Logic (Phase 1 Ready)
   try {
@@ -81,6 +118,7 @@ export async function fetchProperties(countrySlug: string = 'portugal'): Promise
       type: record.fields.Type,
       image: record.fields.Image?.[0]?.url || '/assets/lisbon_apartment_thumbnail_1775342926518.png',
       sqm: record.fields.Sqm,
+      bedrooms: record.fields.Bedrooms || 0,
       status: record.fields.Status
     }));
   } catch (error) {

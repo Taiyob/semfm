@@ -9,7 +9,7 @@ const links = [
   {
     group: 'Investment Hub',
     items: [
-      { title: 'Market Selection', href: '/#market-selection' },
+      { title: 'Market Portals', href: '/#market-selection' },
       { title: 'Global Insights', href: '/insights' },
       { title: 'Pricing & Plans', href: '/pricing' },
       { title: 'Verified Listings', href: '/properties' },
@@ -18,52 +18,55 @@ const links = [
   {
     group: 'Region Portals',
     items: [
-      { title: 'Portugal Portfolio', href: '/countries/portugal' },
-      { title: 'Spain Analysis', href: '#' },
-      { title: 'Greece Yields', href: '#' },
-      { title: 'Italy Growth', href: '#' },
+      { title: 'Portugal Analysis', href: '/countries/portugal' },
+      { title: 'Spain (Beta)', href: '/countries/spain' },
+      { title: 'Greece Yields', href: '/countries/greece' },
+      { title: 'Italy Growth', href: '/countries/italy' },
     ],
   },
   {
-    group: 'Organization',
+    group: 'Hofman Horizon',
     items: [
-      { title: 'About InvesTerra', href: '/about' },
-      { title: 'Partner Program', href: '/partners' },
-      { title: 'Terms of Service', href: '/terms' },
-      { title: 'Privacy Policy', href: '/privacy' },
+      { title: 'Our Mission', href: '#' },
+      { title: 'Partner Program', href: '#' },
+      { title: 'Terms of Service', href: '#' },
+      { title: 'Privacy Policy', href: '#' },
     ],
   },
 ];
 
 export function Footer() {
   return (
-    <footer className="bg-slate-50 border-t border-slate-200 pt-24 pb-12 font-outfit">
+    <footer className="bg-stone-50 border-t border-stone-200 pt-24 pb-12 font-outfit">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid gap-16 md:grid-cols-2 lg:grid-cols-5">
-          <div className="lg:col-span-2 space-y-10">
+        <div className="grid gap-16 lg:grid-cols-12">
+          
+          {/* Brand Info */}
+          <div className="lg:col-span-4 space-y-10">
             <Link href="/" className="block size-fit">
-              <Logo />
+              <Logo className="!items-start" />
             </Link>
-            <p className="text-slate-500 max-w-sm text-lg leading-relaxed">
-              Empowering global real estate investors with high-fidelity data, legal transparency, and verified yield-focused assets.
+            <p className="text-stone-500 max-w-sm text-lg leading-relaxed font-bold">
+              Providing transparent real estate data for institutional and private investment decisions across the European horizon.
             </p>
             <div className="flex items-center gap-5">
-              <Link href="#" className="size-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
+              <Link href="#" className="size-11 rounded-xl bg-white border border-stone-200 flex items-center justify-center text-stone-400 hover:text-[#B55D3E] hover:border-[#B55D3E]/20 transition-all shadow-sm">
                 <FaXTwitter className="size-5" />
               </Link>
-              <Link href="#" className="size-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
+              <Link href="#" className="size-11 rounded-xl bg-white border border-stone-200 flex items-center justify-center text-stone-400 hover:text-[#B55D3E] hover:border-[#B55D3E]/20 transition-all shadow-sm">
                 <FaLinkedinIn className="size-5" />
               </Link>
-              <Link href="#" className="size-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
+              <Link href="#" className="size-11 rounded-xl bg-white border border-stone-200 flex items-center justify-center text-stone-400 hover:text-[#B55D3E] hover:border-[#B55D3E]/20 transition-all shadow-sm">
                 <FaInstagram className="size-5" />
               </Link>
             </div>
           </div>
 
-          <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-12">
+          {/* Links */}
+          <div className="lg:col-span-5 grid grid-cols-2 md:grid-cols-3 gap-12">
             {links.map((link) => (
               <div key={link.group} className="space-y-6">
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b border-slate-200 pb-4">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-stone-900 border-b border-stone-200 pb-4">
                   {link.group}
                 </h3>
                 <ul className="space-y-4">
@@ -71,7 +74,7 @@ export function Footer() {
                     <li key={item.title}>
                       <Link
                         href={item.href}
-                        className="text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors inline-flex items-center group/link"
+                        className="text-sm font-bold text-stone-500 hover:text-[#B55D3E] transition-colors inline-flex items-center group/link"
                       >
                         {item.title}
                         <ArrowRight className="size-3 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all ml-1" />
@@ -82,28 +85,47 @@ export function Footer() {
               </div>
             ))}
           </div>
+
+          {/* Newsletter Section as requested */}
+          <div className="lg:col-span-3 space-y-8 p-8 bg-stone-950 rounded-[32px] text-white">
+              <h4 className="text-lg font-black uppercase tracking-tight">Market Updates</h4>
+              <p className="text-xs font-bold text-stone-500 leading-relaxed italic">
+                  “Updates on new developments in the European real estate market.”
+              </p>
+              <form className="space-y-3">
+                  <input 
+                    type="email" 
+                    placeholder="Email address" 
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#B55D3E] outline-none transition-all font-bold"
+                  />
+                  <button className="w-full py-3 bg-[#B55D3E] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#A35235] transition-all">
+                      Subscribe Now
+                  </button>
+              </form>
+          </div>
         </div>
 
         {/* Global Market Contact */}
-        <div className="mt-24 pt-8 grid md:grid-cols-2 items-center justify-between gap-8 border-t border-slate-200">
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-xs font-bold text-slate-400">
-            <span>© {new Date().getFullYear()} InvesTerra. All rights reserved.</span>
+        <div className="mt-24 pt-8 grid md:grid-cols-2 items-center justify-between gap-8 border-t border-stone-200">
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-[10px] font-black uppercase tracking-widest text-stone-400">
+            <span>© {new Date().getFullYear()} Hofman Horizon. All rights reserved.</span>
             <span className="flex items-center gap-2">
-              <MapPin className="size-4 text-blue-600" />
-              Global Headquarters: London, UK
+              <MapPin className="size-4 text-[#B55D3E]" />
+              Zurich, Switzerland
             </span>
             <span className="flex items-center gap-2">
-              <Mail className="size-4 text-blue-600" />
-              contact@investerra.com
+              <Mail className="size-4 text-[#B55D3E]" />
+              contact@hofmanhorizon.com
             </span>
           </div>
           <div className="md:text-right">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                  Official Technology Partner <span className="text-blue-600">Antigravity Analytics</span>
-              </p>
+            <p className="text-[10px] font-black uppercase text-stone-300 tracking-[0.3em]">
+              Transparency in <span className="text-[#B55D3E]">Data.</span>
+            </p>
           </div>
         </div>
       </div>
     </footer>
   );
 }
+

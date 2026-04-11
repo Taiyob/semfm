@@ -20,13 +20,14 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'LusaInvest | Real Estate Investment Tools for Portugal',
-  description: 'Analyze Portuguese property investments with premium calculators, market insights, and curated listings. Your guide to Portugal real estate investing.',
-  keywords: ['Portugal Real Estate', 'Property Investment Portugal', 'Lisbon Yield Calculator', 'Golden Visa Portugal', 'Real Estate Market Insights'],
+  title: 'Hofman Horizon | Premium European Real Estate Data',
+  description: 'Access transparent real estate data for investment decisions. High-fidelity yield analysis, regional metrics, and verified listings across Europe.',
+  keywords: ['Hofman Horizon', 'European Real Estate Data', 'Investment Analytics', 'Property Yield Calculator', 'Market Portals'],
   icons: {
     icon: '/favicon.ico',
   },
 };
+
 
 export default function RootLayout({
   children,

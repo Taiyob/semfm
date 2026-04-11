@@ -24,16 +24,16 @@ const countries = [
     investors: '12k+',
     image: '/assets/portugal_real_estate_hero_1775342926518.png',
     status: 'Active',
-    color: 'border-amber-500/20'
+    color: 'border-[#B55D3E]/20'
   },
   {
     slug: 'spain',
-    name: 'Spain (Soon)',
-    description: 'Market analysis for Madrid, Barcelona, and the Costa del Sol currently in beta testing.',
+    name: 'Spain',
+    description: 'Market analysis for Madrid, Barcelona, and the Costa del Sol. Institutional beta access.',
     yield: '4.8%',
-    investors: 'Under Prep',
-    image: '/assets/spain_market_hero.png',
-    status: 'Upcoming',
+    investors: '8.5k+',
+    image: '/assets/portugal_real_estate_hero_1775342926518.png', 
+    status: 'Active',
     color: 'border-zinc-200'
   },
   {
@@ -42,18 +42,19 @@ const countries = [
     description: 'High-yield opportunities in Athens and the Greek Islands. Low entry investment points.',
     yield: '6.1%',
     investors: 'Under Prep',
-    image: '/assets/greece_market_hero.png',
+    image: '/assets/portugal_real_estate_hero_1775342926518.png',
     status: 'Coming Soon',
     color: 'border-zinc-200'
   },
 ];
+
 
 export default function GlobalHomePage() {
   return (
     <div className="flex flex-col gap-0 min-h-screen hero-gradient font-outfit">
 
       {/* Global Hero */}
-      <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 px-6">
+      <section className="relative pt-32 pb-16 lg:pt-48 lg:pb-24 px-6 overflow-hidden">
         <div className="max-w-7xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -62,26 +63,57 @@ export default function GlobalHomePage() {
           >
             <div className="section-tag mb-8">
               <Globe className="size-4" />
-              Global Real Estate Analytics
+              Institutional Market Intelligence
             </div>
-            <h1 className="text-5xl md:text-8xl font-extrabold tracking-tight text-slate-900 leading-[1.05] mb-10 max-w-5xl mx-auto">
-              Investment Data for the <span className="gradient-text">New European</span> Markets.
+            <h1 className="text-5xl md:text-8xl font-black tracking-tight text-stone-900 leading-[0.95] mb-10 max-w-5xl mx-auto uppercase">
+                The Data-Driven <br /><span className="gradient-text">Horizon for Investors.</span>
             </h1>
-            <p className="text-xl md:text-2xl text-slate-500 max-w-3xl mx-auto leading-relaxed mb-12">
-              The only cross-border platform providing real-time yield analysis, legal overhead estimates, and verified off-market listings across Europe.
+            <p className="text-xl md:text-2xl text-stone-500 max-w-3xl mx-auto leading-relaxed mb-12 font-bold italic">
+                “Our mission is to provide transparent real estate data for investment decisions.”
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <a href="#market-selection" className="btn-primary">
-                Select Your Market
+              <Link href="/calculator" className="btn-primary flex items-center gap-3">
+                <TrendingUp className="size-5" /> Start Investment Analysis
+              </Link>
+              <a href="#market-selection" className="btn-secondary flex items-center gap-3">
+                Explore Global Markets <Globe className="size-5 text-[#B55D3E]" />
               </a>
-              <button className="flex items-center gap-2 font-bold text-slate-600 hover:text-blue-600 transition-colors">
-                Watch Platform Demo <Navigation className="size-5" />
-              </button>
             </div>
           </motion.div>
         </div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[#B55D3E]/5 blur-[120px] rounded-full -z-10" />
       </section>
+
+      {/* Mission & Problem Section */}
+      <section className="py-24 bg-stone-50 border-y border-stone-100">
+          <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-20 items-center">
+              <div className="space-y-8">
+                  <div className="section-tag">Core Objective</div>
+                  <h2 className="text-4xl md:text-6xl font-black text-stone-900 leading-tight uppercase">Solving Data <span className="text-[#B55D3E]">Fragmentation.</span></h2>
+                  <p className="text-lg text-stone-500 font-bold leading-relaxed">
+                      Real estate data is fragmented across multiple platforms, local tax codes, and opaque regional trends. We unify institutional-grade analytics into a single, high-fidelity source of truth.
+                  </p>
+                  <div className="flex items-center gap-4 py-4">
+                      <div className="size-12 rounded-2xl bg-[#B55D3E] text-white flex items-center justify-center shadow-lg shadow-[#B55D3E]/20">
+                          <CheckCircle2 className="size-6" />
+                      </div>
+                      <span className="text-sm font-black uppercase tracking-widest text-stone-400">Integrated European Data Engine</span>
+                  </div>
+              </div>
+              <div className="grid grid-cols-2 gap-6 relative">
+                  <div className="bg-white p-8 rounded-[40px] shadow-2xl shadow-stone-200/50 border border-stone-100 space-y-4 transform hover:-translate-y-2 transition-transform">
+                      <div className="text-4xl font-black text-[#B55D3E]">12+</div>
+                      <div className="text-xs font-black uppercase tracking-widest text-stone-400">Verified Markets</div>
+                  </div>
+                  <div className="bg-white p-8 rounded-[40px] shadow-2xl shadow-stone-200/50 border border-stone-100 space-y-4 mt-12 transform hover:-translate-y-2 transition-transform">
+                      <div className="text-4xl font-black text-[#D4A373]">85ms</div>
+                      <div className="text-xs font-black uppercase tracking-widest text-stone-400">Data Response Time</div>
+                  </div>
+              </div>
+          </div>
+      </section>
+
 
       {/* Market Selection Grid */}
       <section id="market-selection" className="max-w-7xl mx-auto px-6 py-24 w-full">
