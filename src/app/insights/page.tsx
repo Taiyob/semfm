@@ -63,7 +63,7 @@ const categories = [
 
 export default function InsightsPage() {
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-outfit hero-gradient min-h-screen">
+    <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-montserrat hero-gradient min-h-screen">
       
       {/* Page Header */}
       <div className="max-w-3xl mb-20 space-y-6">

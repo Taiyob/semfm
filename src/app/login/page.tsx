@@ -7,7 +7,7 @@ import { FaGithub, FaGoogle } from 'react-icons/fa6';
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 hero-gradient font-outfit">
+    <div className="min-h-screen flex items-center justify-center p-6 hero-gradient font-montserrat">
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}

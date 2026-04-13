@@ -39,7 +39,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   if (!property) return <div className="min-h-screen flex items-center justify-center hero-gradient font-black text-stone-400 uppercase tracking-widest">Asset Not Found in Horizon Registry</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-outfit hero-gradient min-h-screen">
+    <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-montserrat hero-gradient min-h-screen">
       <Link href="/properties" className="inline-flex items-center gap-2 text-stone-400 hover:text-[#34495E] font-black text-[10px] uppercase tracking-widest mb-12 transition-colors group">
         <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" /> Back to Inventory
       </Link>

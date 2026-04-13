@@ -40,7 +40,7 @@ export default function PropertiesPage() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-outfit hero-gradient min-h-screen">
+    <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-montserrat hero-gradient min-h-screen">
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-10">

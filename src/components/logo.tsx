@@ -10,15 +10,15 @@ export function Logo({ className }: { className?: string }) {
         {/* The Horizon Arc - Refined for Premium Feel */}
         <svg
           viewBox="0 0 100 40"
-          className="w-full h-full text-[#34495E] transition-colors duration-700"
+          className="w-full h-full text-[#C5A572] transition-colors duration-700"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.2"
+          strokeWidth="1.5"
         >
           <path 
-            d="M5 35 Q 50 0, 95 35" 
+            d="M2 38 Q 50 -5, 98 38" 
             strokeLinecap="round" 
-            className="drop-shadow-[0_2px_4px_rgba(52,73,94,0.2)]"
+            className="drop-shadow-[0_2px_4px_rgba(197,165,114,0.3)]"
           />
         </svg>
       </div>

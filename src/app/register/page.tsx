@@ -9,7 +9,7 @@ export default function RegisterPage() {
   const [accountType, setAccountType] = useState<'investor' | 'agent'>('investor');
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 hero-gradient font-outfit">
+    <div className="min-h-screen flex items-center justify-center p-6 hero-gradient font-montserrat">
       
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}

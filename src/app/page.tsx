@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 import { motion } from 'motion/react';
 import {
   Globe,
@@ -51,7 +52,7 @@ const countries = [
 
 export default function GlobalHomePage() {
   return (
-    <div className="flex flex-col gap-0 min-h-screen hero-gradient font-outfit">
+    <div className="flex flex-col gap-0 min-h-screen hero-gradient font-montserrat">
 
       {/* Global Hero */}
       <section className="relative pt-32 pb-16 lg:pt-48 lg:pb-24 px-6 overflow-hidden">
@@ -94,39 +95,55 @@ export default function GlobalHomePage() {
               <p className="text-lg text-stone-500 font-bold leading-relaxed">
                   Real estate data is fragmented across platforms, tax systems, and local markets. We unify it into one clear, reliable source of truth.
               </p>
-              <div className="space-y-4 pt-4">
+              <div className="grid gap-6 pt-8">
                   {[
-                    { text: 'Analyze your property', href: '/calculator' },
-                    { text: 'Discover properties', href: '/properties' },
-                    { text: 'Stay a head of the market', href: '#newsletter' }
+                    { text: 'Analyze your property', href: '/calculator', icon: '📊' },
+                    { text: 'Discover properties', href: '/properties', icon: '🔍' },
+                    { text: 'Stay ahead of the market', href: '#newsletter', icon: '🔔' }
                   ].map(item => (
-                    <Link key={item.text} href={item.href} className="flex items-center gap-3 group/item w-fit">
-                        <div className="size-6 rounded-full bg-[#34495E]/10 flex items-center justify-center group-hover/item:bg-[#34495E]/20 transition-colors">
-                            <CheckCircle2 className="size-4 text-[#34495E]" />
+                    <Link key={item.text} href={item.href} className="flex items-center gap-5 p-5 glass-card rounded-2xl border-2 border-transparent hover:border-[#34495E]/20 hover:bg-white/50 transition-all group/item">
+                        <div className="relative size-8 shrink-0">
+                            <input type="checkbox" readOnly checked className="peer appearance-none size-8 rounded-lg border-2 border-stone-200 checked:bg-[#34495E] checked:border-[#34495E] transition-all cursor-pointer" />
+                            <CheckCircle2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
                         </div>
-                        <span className="text-sm font-bold text-stone-600 group-hover/item:text-[#34495E] transition-colors">{item.text}</span>
+                        <div className="flex flex-col">
+                            <span className="text-base font-black text-[#2C3E50] group-hover/item:text-[#34495E] transition-colors">{item.text}</span>
+                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">Initialize {item.text.split(' ')[0]} protocol</span>
+                        </div>
+                        <ArrowRight className="size-5 ml-auto text-stone-300 group-hover/item:text-[#34495E] group-hover/item:translate-x-1 transition-all" />
                     </Link>
                   ))}
               </div>
               </div>
                   <div className="flex flex-col gap-6 w-full">
                       <div className="section-tag w-fit">The Workflow</div>
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
                           {[
-                              { step: '01', label: 'Find', icon: Search },
-                              { step: '02', label: 'Analyze', icon: TrendingUp },
-                              { step: '03', label: 'Buy', icon: ShieldCheck },
-                              { step: '04', label: 'Rent', icon: Building2 },
+                              { step: '01', label: 'Discover', desc: 'Market deep-dive', icon: Search, color: 'bg-blue-50' },
+                              { step: '02', label: 'Analyze', desc: 'Yield math engine', icon: TrendingUp, color: 'bg-emerald-50' },
+                              { step: '03', label: 'Secure', desc: 'Portfolio safety', icon: ShieldCheck, color: 'bg-indigo-50' },
+                              { step: '04', label: 'Execute', desc: 'Institutional buy', icon: Building2, color: 'bg-rose-50' },
                           ].map((item, i) => (
-                              <div key={item.step} className="bg-white p-6 rounded-3xl border border-stone-100 shadow-xl shadow-stone-200/50 space-y-4 relative group hover:-translate-y-1 transition-all">
-                                  <div className="text-2xl font-black text-[#34495E]">{item.step}</div>
-                                  <div className="text-sm font-bold text-stone-600">{item.label}</div>
-                                  {i < 3 && (
-                                    <div className="absolute -right-8 top-1/2 -translate-y-1/2 hidden lg:block z-10 w-12 pointer-events-none">
-                                       <svg viewBox="0 0 48 24" fill="none" className="w-full text-[#34495E]/40 h-auto">
-                                          <path d="M2 14C8 14 12 4 24 12C36 20 40 10 46 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="1 4" />
-                                          <path d="M42 8L46 12L42 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                       </svg>
+                              <div key={item.step} className="bg-white p-6 rounded-[32px] border-2 border-transparent hover:border-stone-100 shadow-xl shadow-stone-200/50 flex flex-col justify-between items-start relative group hover:-translate-y-1 transition-all duration-300 min-h-[160px]">
+                                  <div className={cn("size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110", item.color)}>
+                                      <item.icon className="size-5 text-[#34495E]" />
+                                  </div>
+                                  <div className="relative z-10 mt-4">
+                                    <div className="text-xl font-black text-[#2C3E50]">{item.label}</div>
+                                    <div className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mt-1">{item.desc}</div>
+                                  </div>
+                                  <div className="text-4xl font-black text-[#2C3E50]/5 absolute bottom-4 right-6 group-hover:text-[#34495E]/10 transition-colors pointer-events-none">
+                                      {item.step}
+                                  </div>
+                                  {/* Connectors for 2x2 grid logic */}
+                                  {i === 0 && (
+                                    <div className="absolute -right-4 top-1/2 -translate-y-1/2 hidden sm:block z-10 w-8 pointer-events-none opacity-20">
+                                       <ArrowRight className="size-4 text-[#34495E]" />
+                                    </div>
+                                  )}
+                                  {i === 2 && (
+                                    <div className="absolute -right-4 top-1/2 -translate-y-1/2 hidden sm:block z-10 w-8 pointer-events-none opacity-20">
+                                       <ArrowRight className="size-4 text-[#34495E]" />
                                     </div>
                                   )}
                               </div>
@@ -279,44 +296,66 @@ export default function GlobalHomePage() {
       
       {/* Newsletter Intake */}
       <section id="newsletter" className="max-w-7xl mx-auto px-6 py-32 w-full">
-        <div className="rounded-[80px] bg-stone-100 p-12 md:p-24 border border-stone-200 relative overflow-hidden">
-                <div className="space-y-8">
-                   <div className="section-tag font-bold">Market Intelligence</div>
-                   <h2 className="text-4xl md:text-6xl font-black text-[#2C3E50] leading-[0.9]">Join the <br /><span className="gradient-text">mailing list</span></h2>
-                   <div className="space-y-4">
-                      {['Weekly alpha reports', 'Regional yield shifts', 'New market deep-dives'].map(item => (
-                        <div key={item} className="flex items-center gap-3">
-                            <CheckCircle2 className="size-4 text-[#34495E]" />
-                            <span className="text-sm font-medium text-stone-500">{item}</span>
+        <div className="rounded-[80px] bg-stone-100 p-12 md:p-24 border border-stone-200 relative overflow-hidden group">
+            <div className="grid lg:grid-cols-2 gap-20 items-center relative z-10">
+                <div className="space-y-10">
+                   <div className="section-tag font-black">Market Intelligence</div>
+                   <h2 className="text-4xl md:text-6xl font-black text-[#2C3E50] leading-[0.9] tracking-tighter">Stay ahead of <br /><span className="gradient-text">the market</span></h2>
+                   <div className="space-y-6">
+                      {[
+                        { text: 'Weekly institutional alpha reports', icon: CheckCircle2 },
+                        { text: 'Real-time regional yield shift alerts', icon: CheckCircle2 },
+                        { text: 'Early access to off-market listings', icon: CheckCircle2 }
+                      ].map(item => (
+                        <div key={item.text} className="flex items-center gap-4">
+                            <item.icon className="size-5 text-[#34495E]" />
+                            <span className="text-base font-bold text-stone-500">{item.text}</span>
                         </div>
                       ))}
                    </div>
                 </div>
-               <div className="space-y-4">
-                  <div className="flex flex-col gap-4">
-                      <select className="bg-white border border-stone-200 rounded-[24px] py-4 px-6 text-sm font-bold text-[#2C3E50] outline-none focus:ring-2 focus:ring-[#34495E]">
-                          <option>Preferred Region</option>
-                          <option>Portugal - Lisbon</option>
-                          <option>Portugal - Algarve</option>
-                          <option>Spain - Malaga</option>
-                          <option>Greece - Athens</option>
-                      </select>
-                      <div className="flex gap-4 px-2">
-                         {['Yield Alerts', 'Market Reports'].map(pref => (
-                           <label key={pref} className="flex items-center gap-2 cursor-pointer group">
-                              <input type="checkbox" className="size-4 accent-[#34495E]" />
-                              <span className="text-[10px] font-bold text-stone-500 group-hover:text-[#2C3E50] transition-colors uppercase tracking-tight">{pref}</span>
-                           </label>
-                         ))}
+
+               <div className="bg-white p-10 md:p-14 rounded-[56px] shadow-2xl shadow-stone-200/50 space-y-10 border border-white">
+                  <div className="space-y-6">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-2">Define Your Interest Focus</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            {['Lisbon Metro', 'Algarve South', 'Madrid Central', 'Athens Islands'].map(loc => (
+                                <button key={loc} className="py-3 px-4 rounded-2xl border-2 border-stone-50 text-[10px] font-black text-[#2C3E50] hover:border-[#34495E]/20 hover:bg-stone-50 transition-all uppercase tracking-tight text-left">
+                                    {loc}
+                                </button>
+                            ))}
+                        </div>
                       </div>
-                      <input type="email" placeholder="Institutional Email" className="bg-white border border-stone-200 rounded-[24px] py-4 px-6 text-sm font-bold text-[#2C3E50] focus:ring-2 focus:ring-[#34495E] outline-none w-full" />
+
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-2">Subscription Filters</label>
+                        <div className="flex flex-wrap gap-4 px-2">
+                           {['Yield Alerts', 'Legal Updates', 'Deal Flow'].map(pref => (
+                             <label key={pref} className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative size-5">
+                                    <input type="checkbox" className="peer appearance-none size-5 rounded-md border-2 border-stone-200 checked:bg-[#34495E] checked:border-[#34495E] transition-all cursor-pointer" />
+                                    <CheckCircle2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+                                </div>
+                                <span className="text-[10px] font-black text-stone-500 group-hover:text-[#2C3E50] transition-colors uppercase tracking-widest">{pref}</span>
+                             </label>
+                           ))}
+                        </div>
+                      </div>
+
+                      <div className="relative">
+                          <input type="email" placeholder="Institutional Email Address" className="w-full bg-stone-50 border-2 border-transparent rounded-[24px] py-5 px-8 text-sm font-black text-[#2C3E50] focus:ring-2 focus:ring-[#34495E] focus:bg-white focus:border-transparent outline-none transition-all" />
+                      </div>
                   </div>
-                  <button className="w-full py-6 bg-stone-900 text-white font-black rounded-[40px] hover:bg-[#34495E] transition-all tracking-tight text-sm shadow-xl shadow-stone-900/10">
-                      Join the mailing list
+                  
+                  <button className="w-full py-6 bg-[#34495E] text-white font-black rounded-[24px] hover:bg-[#2C3E50] transition-all tracking-[0.2em] text-[10px] uppercase shadow-xl shadow-[#34495E]/20 flex items-center justify-center gap-3 group">
+                      Activate Intelligence Feed <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                   </button>
                </div>
-           </div>
-           <div className="absolute top-0 right-0 size-96 bg-[#34495E]/5 rounded-full blur-[100px]" />
+            </div>
+            <div className="absolute -top-24 -right-24 size-[500px] bg-[#34495E]/5 rounded-full blur-[120px] -z-0" />
+            <div className="absolute -bottom-24 -left-24 size-[500px] bg-[#C5A572]/5 rounded-full blur-[120px] -z-0" />
+        </div>
       </section>
 
     </div>

@@ -58,7 +58,7 @@ export default function PricingPage() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
 
   return (
-    <div className="min-h-screen pt-32 pb-24 font-outfit hero-gradient">
+    <div className="min-h-screen pt-32 pb-24 font-montserrat hero-gradient">
       <div className="max-w-7xl mx-auto px-6">
         
         {/* Header */}

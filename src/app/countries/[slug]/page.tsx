@@ -25,7 +25,7 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
   // If country doesn't exist in registry, show "Coming Soon" or fallback
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-outfit hero-gradient px-6">
+      <div className="min-h-screen flex items-center justify-center font-montserrat hero-gradient px-6">
         <div className="text-center max-w-2xl space-y-10">
            <div className="section-tag mx-auto">Market Under Prep</div>
            <h1 className="text-5xl md:text-7xl font-black text-[#2C3E50]">Coming <br /><span className="gradient-text">Soon</span></h1>
@@ -37,7 +37,7 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
   }
 
   return (
-    <div className="flex flex-col gap-32 pb-32 font-outfit hero-gradient min-h-screen">
+    <div className="flex flex-col gap-32 pb-32 font-montserrat hero-gradient min-h-screen">
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-16 lg:pt-48 lg:pb-24 px-6 overflow-hidden">

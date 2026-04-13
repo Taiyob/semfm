@@ -42,7 +42,7 @@ export default function ArticlePage() {
   const { slug } = useParams();
 
   return (
-    <div className="min-h-screen pt-32 pb-24 font-outfit hero-gradient">
+    <div className="min-h-screen pt-32 pb-24 font-montserrat hero-gradient">
       <div className="max-w-4xl mx-auto px-6">
         
         {/* Navigation */}

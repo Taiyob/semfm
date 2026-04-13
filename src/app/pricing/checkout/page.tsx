@@ -34,7 +34,7 @@ function CheckoutContent() {
 
   if (success) {
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 hero-gradient font-outfit">
+        <div className="min-h-screen flex items-center justify-center p-6 hero-gradient font-montserrat">
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white p-16 rounded-[64px] shadow-2xl text-center max-w-xl border-2 border-emerald-100">
                 <div className="size-20 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-10 shadow-xl shadow-emerald-500/20">
                     <CheckCircle2 className="size-10" />
@@ -50,7 +50,7 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen pt-32 pb-24 font-outfit hero-gradient">
+    <div className="min-h-screen pt-32 pb-24 font-montserrat hero-gradient">
       <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-12 gap-16">
         
         {/* Left: Summary */}
@@ -161,7 +161,7 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-outfit font-black text-[#34495E] uppercase tracking-widest">Securing Session...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-montserrat font-black text-[#34495E] uppercase tracking-widest">Securing Session...</div>}>
       <CheckoutContent />
     </Suspense>
   );
