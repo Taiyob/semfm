@@ -1,5 +1,5 @@
 /**
- * InvesTerra Airtable Integration Utility
+ * Hofman Horizon Airtable Integration Utility
  * 
  * This service handles data fetching from Airtable bases for Property Listings,
  * Yield Data, and Market Insights.

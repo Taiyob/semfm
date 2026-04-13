@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Outfit } from 'next/font/google';
+import { Geist, Geist_Mono, Montserrat } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
@@ -14,10 +14,11 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-const outfit = Outfit({
-  variable: '--font-outfit',
+const montserrat = Montserrat({
+  variable: '--font-montserrat',
   subsets: ['latin'],
 });
+
 
 export const metadata: Metadata = {
   title: 'Hofman Horizon | Premium European Real Estate Data',
@@ -37,9 +38,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-primary/30 selection:text-white">
+      <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-primary/30">
+
         <Navbar />
         <main className="flex-grow pt-24">{children}</main>
         <Footer />

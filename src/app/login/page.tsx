@@ -19,66 +19,66 @@ export default function LoginPage() {
             <div className="flex justify-center mb-8">
               <Logo />
             </div>
-            <h1 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tight">Welcome Back</h1>
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Access your global investment dashboard</p>
+            <h1 className="text-3xl font-black text-[#2C3E50] mb-2">Welcome back</h1>
+            <p className="text-stone-400 font-bold text-xs">Access your global dashboard</p>
           </div>
 
           <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+              <label className="text-xs font-bold text-stone-400 ml-1">Email address</label>
               <div className="relative">
                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
                 <input 
                   type="email" 
                   placeholder="name@company.com"
-                  className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-bold text-slate-600"
+                  className="w-full bg-stone-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 outline-none focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-stone-600"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between items-center px-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Password</label>
-                <a href="#" className="text-xs font-black text-blue-600 hover:underline uppercase tracking-tight">Forgot?</a>
+                <label className="text-xs font-bold text-stone-400">Password</label>
+                <a href="#" className="text-xs font-black text-[#34495E] hover:underline">Forgot?</a>
               </div>
               <div className="relative">
                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
                 <input 
                   type="password" 
                   placeholder="••••••••"
-                  className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-bold text-slate-600"
+                  className="w-full bg-stone-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 outline-none focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-stone-600"
                 />
               </div>
             </div>
 
-            <button className="w-full py-4.5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-3 group uppercase tracking-widest text-xs">
-                Sign In <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+            <button className="w-full py-5 bg-[#34495E] text-white font-black rounded-2xl hover:bg-[#34495E] transition-all shadow-xl shadow-stone-900/20 flex items-center justify-center gap-3 group text-sm">
+                Sign in <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
 
           <div className="relative my-10">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-            <div className="relative flex justify-center"><span className="bg-white px-4 py-1 text-[10px] font-black uppercase tracking-widest text-slate-400 rounded-full">Or continue with</span></div>
+            <div className="relative flex justify-center"><span className="bg-white px-4 py-1 text-xs font-bold text-slate-400 rounded-full">Or continue with</span></div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <button className="py-3.5 rounded-2xl flex items-center justify-center gap-3 border-2 border-slate-50 hover:bg-slate-50 transition-all font-black text-slate-600 text-xs uppercase tracking-tight">
-                <FaGoogle className="size-5 text-blue-600" />
+            <button className="py-4 rounded-2xl flex items-center justify-center gap-3 border-2 border-stone-50 hover:bg-stone-50 transition-all font-bold text-stone-600 text-xs">
+                <FaGoogle className="size-5 text-[#34495E]" />
                 Google
             </button>
-            <button className="py-3.5 rounded-2xl flex items-center justify-center gap-3 border-2 border-slate-50 hover:bg-slate-50 transition-all font-black text-slate-600 text-xs uppercase tracking-tight">
-                <FaGithub className="size-5 text-slate-900" />
+            <button className="py-4 rounded-2xl flex items-center justify-center gap-3 border-2 border-stone-50 hover:bg-stone-50 transition-all font-bold text-stone-600 text-xs">
+                <FaGithub className="size-5 text-[#2C3E50]" />
                 GitHub
             </button>
           </div>
 
-          <p className="mt-12 text-center text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-tight">
-            Don't have an account? <a href="/register" className="text-blue-600 font-black hover:underline ml-1">Create one free</a>
+          <p className="mt-12 text-center text-xs font-bold text-slate-400 leading-relaxed">
+            Don't have an account? <a href="/register" className="text-[#34495E] font-black hover:underline ml-1">Create one free</a>
           </p>
 
-          <div className="mt-6 flex items-center justify-center gap-2 py-3 bg-blue-50 rounded-xl border border-blue-100">
-             <ShieldCheck className="size-4 text-blue-600" />
-             <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Institutional Encryption Active</span>
+          <div className="mt-6 flex items-center justify-center gap-2 py-3 bg-stone-100 rounded-2xl border border-stone-200">
+             <ShieldCheck className="size-4 text-[#34495E]" />
+             <span className="text-[10px] font-black text-[#34495E]">Verified encryption active</span>
           </div>
         </div>
       </motion.div>

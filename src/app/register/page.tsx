@@ -23,21 +23,21 @@ export default function RegisterPage() {
             <Logo />
             <div className="space-y-10">
               <div className="flex gap-6">
-                 <div className="size-14 rounded-[20px] bg-blue-50 flex items-center justify-center shrink-0 border-2 border-blue-100">
-                    <TrendingUp className="size-7 text-blue-600" />
+                 <div className="size-14 rounded-[20px] bg-stone-50 flex items-center justify-center shrink-0 border-2 border-stone-100">
+                    <TrendingUp className="size-7 text-[#34495E]" />
                  </div>
                  <div className="space-y-2">
-                    <h4 className="font-extrabold text-slate-900 uppercase tracking-tight">Institutional Intelligence</h4>
-                    <p className="text-slate-500 text-sm leading-relaxed font-bold">Access real-time yield analysis for Western Europe's top cities.</p>
+                    <h4 className="font-extrabold text-[#2C3E50] tracking-tight">Institutional intelligence</h4>
+                    <p className="text-stone-500 text-sm leading-relaxed font-bold">Access real-time yield analysis for Western Europe's top cities.</p>
                  </div>
               </div>
               <div className="flex gap-6">
-                 <div className="size-14 rounded-[20px] bg-emerald-50 flex items-center justify-center shrink-0 border-2 border-emerald-100">
-                    <ShieldCheck className="size-7 text-emerald-600" />
+                 <div className="size-14 rounded-[20px] bg-stone-50 flex items-center justify-center shrink-0 border-2 border-stone-100">
+                    <ShieldCheck className="size-7 text-stone-400" />
                  </div>
                  <div className="space-y-2">
-                    <h4 className="font-extrabold text-slate-900 uppercase tracking-tight">Verified Listings</h4>
-                    <p className="text-slate-500 text-sm leading-relaxed font-bold">Every property is vetted for legal compliance and yield accuracy.</p>
+                    <h4 className="font-extrabold text-[#2C3E50] tracking-tight">Verified listings</h4>
+                    <p className="text-stone-500 text-sm leading-relaxed font-bold">Every property is vetted for legal compliance and yield accuracy.</p>
                  </div>
               </div>
             </div>
@@ -47,7 +47,7 @@ export default function RegisterPage() {
                 <div className="flex items-center gap-4 relative z-10">
                     <div className="size-10 rounded-full bg-slate-200" />
                     <div>
-                        <div className="text-sm font-black text-slate-900">Elena Rossi</div>
+                        <div className="text-sm font-black text-[#2C3E50]">Elena Rossi</div>
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Investor</div>
                     </div>
                 </div>
@@ -61,8 +61,8 @@ export default function RegisterPage() {
                 <Logo />
             </div>
             <div className="text-center md:text-left space-y-4">
-                <div className="section-tag w-fit mx-auto md:mx-0">Join InvesTerra</div>
-                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">Create Account.</h1>
+                <div className="section-tag w-fit mx-auto md:mx-0">Join Hofman Horizon</div>
+                <h1 className="text-4xl md:text-5xl font-black text-[#2C3E50] tracking-tight leading-tight">Create account</h1>
                 <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Select your membership role below</p>
             </div>
 
@@ -71,7 +71,7 @@ export default function RegisterPage() {
                 <button 
                   onClick={() => setAccountType('investor')}
                   className={`flex-grow py-3.5 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest flex items-center justify-center gap-3 ${
-                    accountType === 'investor' ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600'
+                    accountType === 'investor' ? 'bg-[#34495E] text-white shadow-xl shadow-stone-900/20' : 'text-stone-400 hover:text-stone-600'
                   }`}
                 >
                     <UserCircle2 className="size-4" />
@@ -80,7 +80,7 @@ export default function RegisterPage() {
                 <button 
                   onClick={() => setAccountType('agent')}
                   className={`flex-grow py-3.5 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest flex items-center justify-center gap-3 ${
-                    accountType === 'agent' ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600'
+                    accountType === 'agent' ? 'bg-[#34495E] text-white shadow-xl shadow-stone-900/20' : 'text-stone-400 hover:text-stone-600'
                   }`}
                 >
                     <Building2 className="size-4" />
@@ -96,7 +96,7 @@ export default function RegisterPage() {
                         <input 
                         type="text" 
                         placeholder={accountType === 'investor' ? "John Doe" : "Agency Name"}
-                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-bold text-slate-600"
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-slate-600"
                         />
                     </div>
                 </div>
@@ -107,7 +107,7 @@ export default function RegisterPage() {
                         <input 
                         type="email" 
                         placeholder="name@company.com"
-                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-bold text-slate-600"
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-slate-600"
                         />
                     </div>
                 </div>
@@ -118,7 +118,7 @@ export default function RegisterPage() {
                         <input 
                         type="password" 
                         placeholder="••••••••"
-                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-bold text-slate-600"
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-slate-600"
                         />
                     </div>
                 </div>
@@ -128,13 +128,13 @@ export default function RegisterPage() {
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">By joining you agree to our Investor Terms</span>
                 </div>
 
-                <button className="w-full py-5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-3 group mt-6 uppercase tracking-widest text-xs">
+                <button className="w-full py-5 bg-[#34495E] text-white font-black rounded-2xl hover:bg-[#34495E] transition-all shadow-xl shadow-stone-900/20 flex items-center justify-center gap-3 group mt-6 uppercase tracking-widest text-[10px]">
                     Create {accountType} Account <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
                 </button>
             </form>
 
             <p className="text-center text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-tight">
-                Already have an account? <a href="/login" className="text-blue-600 font-black hover:underline ml-1">Log in here</a>
+                Already have an account? <a href="/login" className="text-[#34495E] font-black hover:underline ml-1">Log in here</a>
             </p>
           </div>
 

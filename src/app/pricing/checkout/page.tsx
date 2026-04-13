@@ -55,7 +55,7 @@ function CheckoutContent() {
         
         {/* Left: Summary */}
         <div className="lg:col-span-5 space-y-12">
-            <Link href="/pricing" className="text-xs font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors">← Back to Plans</Link>
+            <Link href="/pricing" className="text-xs font-black text-slate-400 uppercase tracking-widest hover:text-[#34495E] transition-colors">← Back to Plans</Link>
             <div className="space-y-6">
                 <div className="section-tag w-fit">Secure Checkout</div>
                 <h1 className="text-4xl font-black text-slate-900 tracking-tight">Complete Your <br /><span className="gradient-text">Pro Activation.</span></h1>
@@ -64,7 +64,7 @@ function CheckoutContent() {
             <div className="bg-slate-900 p-10 rounded-[48px] text-white space-y-10 relative overflow-hidden">
                 <div className="flex items-center gap-4 relative z-10">
                     <div className="size-14 bg-white/10 rounded-2xl flex items-center justify-center">
-                        {plan === 'agent' ? <Building2 className="size-7 text-blue-500" /> : <UserCircle2 className="size-7 text-blue-500" />}
+                        {plan === 'agent' ? <Building2 className="size-7 text-[#34495E]" /> : <UserCircle2 className="size-7 text-[#34495E]" />}
                     </div>
                     <div>
                         <div className="text-sm font-black uppercase tracking-widest text-slate-400">Selected Plan</div>
@@ -83,10 +83,10 @@ function CheckoutContent() {
                     </div>
                     <div className="pt-4 flex justify-between items-end border-t border-white/10">
                         <span className="text-xl font-black">Total Due</span>
-                        <div className="text-4xl font-black text-blue-500">€{plan === 'agent' ? '210.94' : '51.94'}</div>
+                        <div className="text-4xl font-black text-[#34495E]">€{plan === 'agent' ? '210.94' : '51.94'}</div>
                     </div>
                 </div>
-                <div className="absolute top-0 right-0 size-64 bg-blue-600/10 rounded-full blur-[80px]" />
+                <div className="absolute top-0 right-0 size-64 bg-[#34495E]/10 rounded-full blur-[80px]" />
             </div>
 
             <div className="space-y-6 px-4">
@@ -96,7 +96,7 @@ function CheckoutContent() {
                     { label: 'Cancel Subscription Anytime', icon: Clock }
                 ].map(item => (
                     <div key={item.label} className="flex gap-4 items-center">
-                        <item.icon className="size-5 text-blue-600" />
+                        <item.icon className="size-5 text-[#34495E]" />
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">{item.label}</span>
                     </div>
                 ))}
@@ -114,25 +114,25 @@ function CheckoutContent() {
                 <div className="space-y-8">
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Cardholder Name</label>
-                        <input type="text" placeholder="Full name as on card" className="w-full bg-slate-50 rounded-2xl py-4.5 px-6 font-bold outline-none border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all" />
+                        <input type="text" placeholder="Full name as on card" className="w-full bg-slate-50 rounded-2xl py-4.5 px-6 font-bold outline-none border-2 border-transparent focus:border-[#34495E] focus:bg-white transition-all" />
                     </div>
 
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Card Details</label>
                         <div className="relative">
                             <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-                            <input type="text" placeholder="4242 4242 4242 4242" className="w-full bg-slate-50 rounded-2xl py-4.5 pl-14 pr-6 font-bold outline-none border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all tracking-[0.2em]" />
+                            <input type="text" placeholder="4242 4242 4242 4242" className="w-full bg-slate-50 rounded-2xl py-4.5 pl-14 pr-6 font-bold outline-none border-2 border-transparent focus:border-[#34495E] focus:bg-white transition-all tracking-[0.2em]" />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-8">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Expiry Date</label>
-                            <input type="text" placeholder="MM / YY" className="w-full bg-slate-50 rounded-2xl py-4.5 px-6 font-bold outline-none border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all" />
+                            <input type="text" placeholder="MM / YY" className="w-full bg-slate-50 rounded-2xl py-4.5 px-6 font-bold outline-none border-2 border-transparent focus:border-[#34495E] focus:bg-white transition-all" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">CVV</label>
-                            <input type="password" placeholder="•••" className="w-full bg-slate-50 rounded-2xl py-4.5 px-6 font-bold outline-none border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all" />
+                            <input type="password" placeholder="•••" className="w-full bg-slate-50 rounded-2xl py-4.5 px-6 font-bold outline-none border-2 border-transparent focus:border-[#34495E] focus:bg-white transition-all" />
                         </div>
                     </div>
                 </div>
@@ -140,7 +140,7 @@ function CheckoutContent() {
                 <button 
                   onClick={handlePay}
                   disabled={loading}
-                  className="w-full py-5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 uppercase tracking-widest text-xs flex items-center justify-center gap-3"
+                  className="w-full py-5 bg-[#34495E] text-white font-black rounded-2xl hover:bg-[#2C3E50] transition-all shadow-xl shadow-[#34495E]/20 uppercase tracking-widest text-xs flex items-center justify-center gap-3"
                 >
                     {loading ? "Processing Encryption..." : `Verify & Pay €${plan === 'agent' ? '210.94' : '51.94'}`}
                     {!loading && <ShieldCheck className="size-5" />}
@@ -161,7 +161,7 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-outfit font-black text-blue-600 uppercase tracking-widest">Securing Session...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-outfit font-black text-[#34495E] uppercase tracking-widest">Securing Session...</div>}>
       <CheckoutContent />
     </Suspense>
   );

@@ -50,12 +50,12 @@ const INTEGRATIONS = [
   {
     name: 'SSLCommerz',
     description: 'Regional payment aggregator for localized gateways.',
-    icon: <ShieldCheck className="text-blue-600" />,
+    icon: <ShieldCheck className="text-[#34495E]" />,
   },
   {
     name: 'Docker & Kubernetes',
     description: 'Enterprise containerization for consistent deployment.',
-    icon: <SiDocker className="text-blue-500" />,
+    icon: <SiDocker className="text-[#34495E]" />,
   },
   {
     name: 'Supabase & Prisma',
@@ -85,7 +85,7 @@ export default function IntegrationsSection() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div className="max-w-2xl">
-            <h2 className="text-3xl font-semibold md:text-5xl tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight">
+            <h2 className="text-3xl font-semibold md:text-5xl tracking-tight text-[#2C3E50] dark:text-zinc-50 leading-tight">
               Powering Your Business with World-Class Technology
             </h2>
             <p className="mt-6 text-lg text-zinc-600 dark:text-zinc-400">
@@ -117,7 +117,7 @@ const IntegrationCard = ({ name, description, icon }: { name: string; descriptio
         <ArrowUpRight className="size-4 text-zinc-400 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </CardHeader>
       <CardContent className="pt-4">
-        <h3 className="font-medium text-zinc-900 dark:text-zinc-50 tracking-tight">{name}</h3>
+        <h3 className="font-medium text-[#2C3E50] dark:text-zinc-50 tracking-tight">{name}</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400 line-clamp-2">
           {description}
         </p>

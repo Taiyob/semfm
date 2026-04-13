@@ -46,18 +46,18 @@ export default function ArticlePage() {
       <div className="max-w-4xl mx-auto px-6">
         
         {/* Navigation */}
-        <Link href="/insights" className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold text-xs uppercase tracking-widest mb-12 transition-colors">
+        <Link href="/insights" className="inline-flex items-center gap-2 text-slate-400 hover:text-[#34495E] font-bold text-xs uppercase tracking-widest mb-12 transition-colors">
           <ArrowLeft className="size-4" /> Back to Knowledge Base
         </Link>
         
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-            <div className="flex items-center gap-4 text-[10px] font-black text-blue-600 uppercase tracking-widest">
+            <div className="flex items-center gap-4 text-[10px] font-black text-[#34495E] uppercase tracking-widest">
                 <span>{mockArticleContent.category}</span>
                 <span className="size-1 bg-slate-200 rounded-full" />
                 <span>{mockArticleContent.date}</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-tight tracking-tight">{mockArticleContent.title}</h1>
+            <h1 className="text-4xl md:text-6xl font-black text-[#2C3E50] leading-tight tracking-tight">{mockArticleContent.title}</h1>
             
             <div className="flex flex-wrap items-center justify-between gap-8 pt-4 pb-8 border-b border-slate-200">
                 <div className="flex items-center gap-4">
@@ -65,7 +65,7 @@ export default function ArticlePage() {
                         <User className="size-6 text-slate-400" />
                     </div>
                     <div>
-                        <div className="text-sm font-black text-slate-900">{mockArticleContent.author}</div>
+                        <div className="text-sm font-black text-[#2C3E50]">{mockArticleContent.author}</div>
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mockArticleContent.role}</div>
                     </div>
                 </div>
@@ -75,8 +75,8 @@ export default function ArticlePage() {
                     </div>
                     <div className="h-4 w-px bg-slate-200" />
                     <div className="flex items-center gap-4 text-slate-400">
-                        <Share2 className="size-5 hover:text-blue-600 cursor-pointer" />
-                        <Bookmark className="size-5 hover:text-blue-600 cursor-pointer" />
+                        <Share2 className="size-5 hover:text-[#34495E] cursor-pointer" />
+                        <Bookmark className="size-5 hover:text-[#34495E] cursor-pointer" />
                     </div>
                 </div>
             </div>
@@ -97,20 +97,20 @@ export default function ArticlePage() {
         <div className="mt-24 p-12 bg-slate-950 rounded-[48px] text-white overflow-hidden relative group">
             <div className="relative z-10 max-w-xl space-y-8">
                 <div className="section-tag !bg-white/10 !text-white !border-white/20">Institutional Insider</div>
-                <h2 className="text-3xl font-black leading-tight">Get the full 2026 <span className="text-blue-500">Yield Report</span> PDF.</h2>
+                <h2 className="text-3xl font-black leading-tight">Get the full 2026 <span className="text-[#34495E]">Yield Report</span> PDF.</h2>
                 <p className="text-slate-500 text-sm font-bold leading-relaxed">Join 12,000+ investors receiving our proprietary market analysis and off-market deals.</p>
                 <form className="flex flex-col sm:flex-row gap-4">
                     <div className="relative flex-grow">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-slate-500" />
-                        <input type="email" placeholder="name@company.com" className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-blue-600 outline-none transition-all font-bold" required />
+                        <input type="email" placeholder="name@company.com" className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[#34495E] outline-none transition-all font-bold" required />
                     </div>
-                    <button className="px-8 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-600/20 text-xs uppercase tracking-widest">Send Report</button>
+                    <button className="px-8 py-4 bg-[#34495E] text-white font-black rounded-2xl hover:bg-[#2C3E50] shadow-xl shadow-[#34495E]/20 text-xs uppercase tracking-widest">Send Report</button>
                 </form>
                 <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                     <CheckCircle2 className="size-4 text-emerald-500" /> Free market guide included.
                 </div>
             </div>
-            <div className="absolute top-0 right-0 size-64 bg-blue-600/10 rounded-full blur-[100px]" />
+            <div className="absolute top-0 right-0 size-64 bg-[#34495E]/10 rounded-full blur-[100px]" />
         </div>
 
       </div>

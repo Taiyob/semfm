@@ -11,7 +11,8 @@ import {
   Mail,
   MapPin,
   TrendingUp,
-  Calculator
+  Calculator,
+  ArrowRight
 } from 'lucide-react';
 import { MARKET_REGISTRY } from '@/lib/market-data';
 
@@ -27,8 +28,8 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
       <div className="min-h-screen flex items-center justify-center font-outfit hero-gradient px-6">
         <div className="text-center max-w-2xl space-y-10">
            <div className="section-tag mx-auto">Market Under Prep</div>
-           <h1 className="text-5xl md:text-8xl font-black text-stone-900 uppercase">Coming <br /><span className="gradient-text">Soon.</span></h1>
-           <p className="text-xl text-stone-500 font-bold italic">“Our institutional data engine is currently verifying the title deeds and occupancy codes for this market.”</p>
+           <h1 className="text-5xl md:text-7xl font-black text-[#2C3E50]">Coming <br /><span className="gradient-text">Soon</span></h1>
+           <p className="text-xl text-stone-500 font-bold italic">“Our institutional data engine is currently verifying the title deeds and occupancy codes for this market”</p>
            <Link href="/" className="btn-primary inline-flex">Return to Global Dashboard</Link>
         </div>
       </div>
@@ -47,14 +48,13 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
             transition={{ duration: 0.8 }}
           >
             <div className="section-tag mb-8">
-              <Star className="size-4 fill-current" />
-              Institutional Market Leader
+              Explore markets
             </div>
-            <h1 className="text-5xl md:text-8xl font-black text-stone-900 leading-[0.95] tracking-tight mb-10 uppercase">
-                {data.name} Market <br /><span className="gradient-text">Analysis Dashboard.</span>
+            <h1 className="text-5xl md:text-7xl font-black text-[#2C3E50] leading-[0.95] tracking-tight mb-10">
+                Discover <br /><span className="gradient-text">{data.name}</span>
             </h1>
             <p className="text-xl md:text-2xl text-stone-500 leading-relaxed mb-12 max-w-3xl mx-auto font-bold italic">
-              “{data.heroQuote}”
+              “Explore regional non biased market insights, transparant return calculations and costs”
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -69,8 +69,8 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
             <div className="mt-20 grid grid-cols-2 md:grid-cols-3 gap-12 border-t border-stone-200 pt-10">
               {data.stats.map((stat) => (
                 <div key={stat.label}>
-                  <div className="text-4xl font-black text-stone-900 mb-2">{stat.value}</div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-stone-400">{stat.label}</div>
+                  <div className="text-4xl font-black text-[#2C3E50] mb-2">{stat.value}</div>
+                  <div className="text-xs font-bold text-stone-400 tracking-tight">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -82,9 +82,8 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
       <section className="max-w-7xl mx-auto px-6 w-full">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
               <div className="max-w-2xl">
-                  <div className="section-tag mb-4">Market Granularity</div>
-                  <h2 className="text-4xl md:text-6xl font-black text-stone-900 uppercase leading-tight tracking-tighter">{data.name} → <span className="text-[#B55D3E]">Region Matrix.</span></h2>
-                  <p className="text-stone-500 text-lg font-bold italic mt-4">Select a region to drill down into city-level investment indicators.</p>
+                  <h2 className="text-4xl md:text-7xl font-black text-[#2C3E50] leading-[0.95] tracking-tight mb-4">Area-specific insights</h2>
+                  <p className="text-stone-500 text-lg font-bold italic">Discover our selected areas below to find the best property investments and to calculate transparant returns</p>
               </div>
           </div>
 
@@ -111,34 +110,53 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
                       </div>
                       
                       <div className="w-full lg:w-3/5 space-y-8">
-                          <div className="flex flex-col md:flex-row justify-between md:items-start gap-6 pb-8 border-b border-stone-100">
-                              <div>
-                                  <h3 className="text-3xl md:text-4xl font-black text-stone-900 uppercase tracking-tight mb-4">{region.name}</h3>
-                                  <p className="text-stone-500 font-bold leading-relaxed max-w-md">{region.description}</p>
-                              </div>
-                              <div className="flex gap-4">
-                                  <div className="p-4 bg-stone-50 rounded-2xl text-center min-w-[100px]">
-                                      <div className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Avg Yield</div>
-                                      <div className="text-2xl font-black text-[#B55D3E]">{region.yield}</div>
-                                  </div>
-                                  <div className="p-4 bg-stone-50 rounded-2xl text-center min-w-[100px]">
-                                      <div className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Vacancy</div>
-                                      <div className="text-2xl font-black text-stone-900">{region.vacancy}</div>
-                                  </div>
-                              </div>
+                          <div className="space-y-6 pb-8 border-b border-stone-100">
+                              <h3 className="text-3xl md:text-5xl font-black text-[#2C3E50] tracking-tight leading-[0.95]">{region.name}</h3>
+                              <p className="text-stone-500 font-bold leading-relaxed max-w-2xl text-lg italic">“{region.description}”</p>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                              {[
+                                  { label: 'Avg yield', value: region.yield },
+                                  { label: 'Avg appreciation', value: '6.2%' },
+                                  { label: 'Available properties', value: '42' },
+                                  { label: 'Vacancy rate', value: region.vacancy }
+                              ].map((stat) => {
+                                  const parts = stat.value.split(' ');
+                                  const mainVal = parts[0];
+                                  const subVal = parts.slice(1).join(' ');
+                                  
+                                  return (
+                                      <div key={stat.label} className="p-6 bg-stone-50 rounded-[32px] flex flex-col items-center text-center group/stat hover:bg-[#F8F9FA] transition-colors border border-transparent hover:border-stone-200">
+                                          <div className="text-[10px] font-black text-stone-400 uppercase tracking-[0.15em] mb-4 h-8 flex items-center justify-center">
+                                              {stat.label}
+                                          </div>
+                                          <div className="flex flex-col items-center">
+                                              <div className="text-3xl font-black text-[#2C3E50] tracking-tight">
+                                                  {mainVal}
+                                              </div>
+                                              {subVal && (
+                                                  <div className="text-[10px] font-black text-[#34495E] uppercase tracking-widest mt-1">
+                                                      {subVal}
+                                                  </div>
+                                              )}
+                                          </div>
+                                      </div>
+                                  );
+                              })}
                           </div>
 
                           <div className="grid md:grid-cols-2 gap-8">
                               <div className="space-y-4">
-                                  <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4A373]">City Level Focus</h4>
+                                   <h4 className="text-[10px] font-black tracking-tight text-[#D4A373]">City level focus</h4>
                                   <div className="flex flex-wrap gap-2">
                                       {region.cities.map(city => (
-                                          <span key={city} className="px-3 py-1 bg-stone-100 text-stone-700 text-xs font-black rounded-lg uppercase tracking-tight border border-stone-200">{city}</span>
+                                           <span key={city} className="px-3 py-1 bg-stone-100 text-stone-700 text-xs font-black rounded-lg tracking-tight border border-stone-200">{city}</span>
                                       ))}
                                   </div>
                               </div>
                               <div className="space-y-4">
-                                  <h4 className="text-[10px] font-black uppercase tracking-widest text-stone-400 italic">Key Performance Indicators</h4>
+                                   <h4 className="text-[10px] font-black tracking-tight text-stone-400 italic">Key performance indicators</h4>
                                   <ul className="space-y-2">
                                       {region.indicators.map(ind => (
                                           <li key={ind} className="flex items-center gap-2 text-xs font-bold text-stone-500">
@@ -149,14 +167,14 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
                               </div>
                           </div>
 
-                          <div className="flex flex-wrap gap-4 pt-4">
-                              <Link href="/calculator" className="px-6 py-3 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#B55D3E] transition-colors shadow-lg shadow-stone-900/10">
-                                  Run Regional Calculation
-                              </Link>
-                              <Link href="/properties" className="px-6 py-3 border border-stone-200 text-stone-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-stone-50 transition-colors">
-                                  View Segment Listings
-                              </Link>
-                          </div>
+                               <div className="flex flex-wrap items-center gap-6 pt-6">
+                                   <Link href="/calculator" className="px-8 py-4.5 bg-[#34495E] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-[#2C3E50] transition-all shadow-xl shadow-[#34495E]/20 flex items-center justify-center gap-3">
+                                       Check my potential investment <ArrowRight className="size-4" />
+                                   </Link>
+                                   <Link href="/properties" className="px-8 py-4.5 border-2 border-stone-100 text-[#34495E] text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-stone-50 transition-all flex items-center justify-center">
+                                       View local listings
+                                   </Link>
+                              </div>
                       </div>
                   </motion.div>
               ))}
@@ -168,23 +186,23 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-20 items-center">
           <div className="space-y-10 relative z-10">
             <div className="section-tag !bg-white/5 !text-white !border-white/10">Verified Data Engine</div>
-            <h2 className="text-5xl md:text-7xl font-black uppercase leading-tight">Institutional <br /><span className="text-[#B55D3E]">High-Fidelity.</span></h2>
+            <h2 className="text-5xl md:text-7xl font-black leading-tight">Data you <br /><span className="text-[#34495E]">can trust.</span></h2>
             <p className="text-stone-500 text-xl font-bold leading-relaxed italic">
-                “Every {data.name} listing undergoes a proprietary 48-point verification and blockchain-backed title check.”
+                “Every {data.name} listing undergoes a proprietary verification to ensure institutional-grade reliability”
             </p>
             <div className="flex flex-col gap-6">
                 {[
-                  { title: 'Tax Integrated', desc: `Pre-calculated regional ${data.name} taxes.` },
-                  { title: 'Off-Market', desc: 'Direct access to institutional banking portfolios.' },
-                  { title: 'Legal Vetting', desc: 'Integrated legal and title deed support.' }
+                  { title: 'Data-driven rent estimates', desc: 'Based on 10 + data points including regional seasonality', icon: ShieldCheck },
+                  { title: 'Validated by local real estate experts', desc: 'Every calculation is verified for absolute accuracy', icon: ShieldCheck },
+                  { title: 'Smarter than generic tools', desc: 'Includes taxes, fees, and regional costs', icon: ShieldCheck }
                 ].map(item => (
                     <div key={item.title} className="flex items-start gap-6 p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="size-12 rounded-2xl bg-[#B55D3E] flex items-center justify-center shrink-0">
                             <ShieldCheck className="size-6 text-white" />
                         </div>
                         <div>
-                            <h4 className="text-lg font-black uppercase mb-1 tracking-tight">{item.title}</h4>
-                            <p className="text-xs font-bold text-stone-500 uppercase tracking-widest">{item.desc}</p>
+                             <h4 className="text-lg font-black mb-1 tracking-tight">{item.title}</h4>
+                             <p className="text-xs font-bold text-stone-500 tracking-tight">{item.desc}</p>
                         </div>
                     </div>
                 ))}
@@ -203,7 +221,7 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
            <div className="grid lg:grid-cols-2 gap-16 items-center">
                <div className="space-y-8">
                    <div className="section-tag">Market Pulse</div>
-                   <h2 className="text-4xl md:text-6xl font-black text-stone-900 uppercase leading-[0.9]">{data.name} <br /><span className="gradient-text">Weekly Yields.</span></h2>
+                    <h2 className="text-4xl md:text-6xl font-black text-[#2C3E50] leading-[0.9]">{data.name} <br /><span className="gradient-text">weekly yields.</span></h2>
                    <p className="text-stone-500 text-xl font-bold italic">
                        “Updates on new developments in the international real estate market.”
                    </p>
@@ -211,11 +229,11 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
                <form className="space-y-4">
                   <div className="relative">
                       <Mail className="absolute left-6 top-1/2 -translate-y-1/2 size-5 text-stone-400" />
-                      <input type="email" placeholder="Institutional Email" className="w-full bg-white border border-stone-200 rounded-[28px] py-6 pl-16 pr-8 text-stone-900 focus:ring-2 focus:ring-[#B55D3E] outline-none transition-all font-bold" />
+                      <input type="email" placeholder="Institutional Email" className="w-full bg-white border border-stone-200 rounded-[28px] py-6 pl-16 pr-8 text-[#2C3E50] focus:ring-2 focus:ring-[#B55D3E] outline-none transition-all font-bold" />
                   </div>
-                  <button className="w-full py-6 bg-stone-900 text-white font-black rounded-[28px] hover:bg-[#B55D3E] transition-all uppercase tracking-widest text-xs shadow-xl shadow-stone-900/10">
-                      Join Global Intelligence Network
-                  </button>
+                   <button className="w-full py-6 bg-stone-900 text-white font-black rounded-[28px] hover:bg-[#B55D3E] transition-all tracking-tight text-sm shadow-xl shadow-stone-900/10">
+                       Join global intelligence network
+                   </button>
                </form>
            </div>
         </div>

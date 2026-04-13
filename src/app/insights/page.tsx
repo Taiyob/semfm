@@ -45,7 +45,7 @@ const articles = [
     id: 3,
     title: 'Post-NHR Era: Why Portugal Still Wins',
     excerpt: 'Exploring the new tax regimes and why the destination remains the #1 choice for European remote workers.',
-    author: 'InvesTerra Team',
+    author: 'Hofman Horizon Team',
     date: 'March 15, 2026',
     readTime: '6 min read',
     category: 'Regional Guide',
@@ -71,9 +71,9 @@ export default function InsightsPage() {
             <BookOpen className="size-4" />
             Knowledge Base
         </div>
-        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight">Market <span className="gradient-text">Intelligence.</span></h1>
+        <h1 className="text-5xl md:text-7xl font-black text-[#2C3E50] tracking-tight">Market <span className="gradient-text">Intelligence</span></h1>
         <p className="text-xl text-slate-500 font-bold leading-relaxed">
-            Data-backed analysis, legal updates, and deep dives into the European real estate landscape.
+            Data-backed analysis, legal updates, and deep dives into the European real estate landscape
         </p>
       </div>
 
@@ -92,7 +92,7 @@ export default function InsightsPage() {
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="glass-card rounded-[48px] overflow-hidden cursor-pointer border-2 hover:border-blue-500/40 transition-all backdrop-blur-sm"
+                        className="glass-card rounded-[48px] overflow-hidden cursor-pointer border-2 hover:border-[#34495E]/40 transition-all backdrop-blur-sm"
                     >
                         <div className="relative h-[450px]">
                             <Image 
@@ -104,25 +104,25 @@ export default function InsightsPage() {
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
                             <div className="absolute top-8 left-8 flex gap-2">
-                                <div className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-500/20">Featured Insight</div>
+                                <div className="px-4 py-2 bg-[#34495E] text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#34495E]/20">Featured insight</div>
                             </div>
                         </div>
                         <div className="p-10 lg:p-14 -mt-16 relative z-10 bg-white rounded-t-[48px]">
-                            <div className="flex items-center gap-4 text-xs font-black text-blue-600 uppercase tracking-widest mb-6">
+                            <div className="flex items-center gap-4 text-xs font-black text-[#34495E] uppercase tracking-widest mb-6">
                                 <span>{article.category}</span>
                                 <span className="size-1 bg-slate-200 rounded-full" />
                                 <span className="text-slate-400">{article.date}</span>
                             </div>
-                            <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-8 group-hover:text-blue-600 transition-colors leading-tight">{article.title}</h2>
+                            <h2 className="text-3xl md:text-5xl font-black text-[#2C3E50] mb-8 group-hover:text-[#34495E] transition-colors leading-tight">{article.title}</h2>
                             <p className="text-slate-500 text-lg leading-relaxed mb-10 font-bold">{article.excerpt}</p>
                             <div className="flex items-center justify-between border-t border-slate-100 pt-8">
                                 <div className="flex items-center gap-3">
                                     <div className="size-10 rounded-full bg-slate-50 flex items-center justify-center">
                                         <User className="size-5 text-slate-400" />
                                     </div>
-                                    <span className="text-sm font-black text-slate-900 uppercase tracking-tight">{article.author}</span>
+                                    <span className="text-sm font-black text-[#2C3E50] uppercase tracking-tight">{article.author}</span>
                                 </div>
-                                <div className="flex items-center gap-2 font-black text-blue-600 uppercase tracking-widest text-xs group-hover:gap-3 transition-all">
+                                <div className="flex items-center gap-2 font-black text-[#34495E] uppercase tracking-widest text-xs group-hover:gap-3 transition-all">
                                     Read Full Report <ArrowRight className="size-5" />
                                 </div>
                             </div>
@@ -140,17 +140,17 @@ export default function InsightsPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: idx * 0.1 }}
-                            className="glass-card rounded-[40px] overflow-hidden cursor-pointer border-2 hover:border-blue-500/40 transition-all h-full flex flex-col"
+                            className="glass-card rounded-[40px] overflow-hidden cursor-pointer border-2 hover:border-[#34495E]/40 transition-all h-full flex flex-col"
                         >
                             <div className="relative h-56">
                                 <Image src={article.image} alt={article.title} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover transition-transform group-hover:scale-105 duration-700" />
                                 <div className="absolute top-4 left-4">
-                                    <span className="px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-900">{article.category}</span>
+                                    <span className="px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-xl text-[9px] font-black uppercase tracking-widest text-[#2C3E50]">{article.category}</span>
                                 </div>
                             </div>
                             <div className="p-8 space-y-6 flex-grow flex flex-col justify-between">
                                 <div>
-                                    <h3 className="text-xl font-black text-slate-900 mb-4 line-clamp-2 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{article.title}</h3>
+                                    <h3 className="text-xl font-black text-[#2C3E50] mb-4 line-clamp-2 group-hover:text-[#34495E] transition-colors uppercase tracking-tight">{article.title}</h3>
                                     <p className="text-slate-500 text-sm font-bold line-clamp-3 mb-8 leading-relaxed italic">{article.excerpt}</p>
                                 </div>
                                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-black uppercase tracking-widest border-t border-slate-50 pt-6">
@@ -159,8 +159,8 @@ export default function InsightsPage() {
                                         <span>{article.readTime}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <Bookmark className="size-4 hover:text-blue-600 transition-colors" />
-                                        <Share2 className="size-4 hover:text-blue-600 transition-colors" />
+                                        <Bookmark className="size-4 hover:text-[#34495E] transition-colors" />
+                                        <Share2 className="size-4 hover:text-[#34495E] transition-colors" />
                                     </div>
                                 </div>
                             </div>
@@ -176,25 +176,25 @@ export default function InsightsPage() {
             
             {/* Search Insight */}
             <div className="bg-white border border-slate-100 p-8 rounded-[32px] shadow-2xl shadow-slate-200/50">
-                <h4 className="text-lg font-black text-slate-900 mb-6 uppercase tracking-tight">Search Reports</h4>
+                <h4 className="text-lg font-black text-[#2C3E50] mb-6 uppercase tracking-tight">Search Reports</h4>
                 <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
                     <input 
                         type="text" 
                         placeholder="Topics, keywords..." 
-                        className="w-full bg-slate-50 border-transparent rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-bold text-slate-600"
+                        className="w-full bg-slate-50 border-transparent rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-slate-600"
                     />
                 </div>
             </div>
 
             {/* Popular Topics */}
             <div className="bg-white border border-slate-100 p-8 rounded-[32px] shadow-2xl shadow-slate-200/50">
-                <h4 className="text-lg font-black text-slate-900 mb-6 uppercase tracking-tight">Popular Topics</h4>
+                <h4 className="text-lg font-black text-[#2C3E50] mb-6 uppercase tracking-tight">Popular Topics</h4>
                 <div className="space-y-4">
                     {categories.map(cat => (
                         <button key={cat.name} className="w-full flex items-center justify-between group px-2">
-                            <span className="text-slate-500 group-hover:text-blue-600 transition-colors font-bold text-xs uppercase tracking-widest">{cat.name}</span>
-                            <span className="size-6 rounded-lg bg-slate-50 text-[10px] font-black flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                            <span className="text-slate-500 group-hover:text-[#34495E] transition-colors font-bold text-xs uppercase tracking-widest">{cat.name}</span>
+                            <span className="size-6 rounded-lg bg-slate-50 text-[10px] font-black flex items-center justify-center text-slate-400 group-hover:bg-[#34495E] group-hover:text-white transition-all">
                                 {cat.count}
                             </span>
                         </button>
@@ -206,18 +206,18 @@ export default function InsightsPage() {
             <div className="bg-slate-950 p-10 rounded-[40px] text-white overflow-hidden relative group">
                 <div className="relative z-10 space-y-8">
                     <div className="size-14 rounded-2xl bg-white/5 flex items-center justify-center">
-                        <TrendingUp className="size-7 text-blue-500" />
+                        <TrendingUp className="size-7 text-[#34495E]" />
                     </div>
-                    <h4 className="text-3xl font-black leading-tight tracking-tight uppercase">Get Exclusive <span className="text-blue-500">Off-Market</span> Intelligence.</h4>
+                    <h4 className="text-3xl font-black leading-tight tracking-tight uppercase">Get Exclusive <span className="text-[#34495E]">Off-Market</span> Intelligence.</h4>
                     <p className="text-slate-500 text-xs font-bold leading-relaxed italic">
                         Our premium subscribers get notified 48 hours before specific Lisbon & Porto listings go public.
                     </p>
-                    <Link href="/pricing" className="btn-primary !bg-white !text-slate-900 w-full flex items-center justify-center gap-2 !py-5 text-[10px] font-black uppercase tracking-widest">
+                    <Link href="/pricing" className="btn-primary !bg-white !text-[#2C3E50] w-full flex items-center justify-center gap-2 !py-5 text-[10px] font-black uppercase tracking-widest">
                         Join Premium List <ArrowRight className="size-4" />
                     </Link>
                 </div>
                 {/* Background Detail */}
-                <div className="absolute -right-10 -bottom-10 size-48 bg-blue-600/10 rounded-full blur-[80px]" />
+                <div className="absolute -right-10 -bottom-10 size-48 bg-[#34495E]/10 rounded-full blur-[80px]" />
             </div>
 
         </aside>

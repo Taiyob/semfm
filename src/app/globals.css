@@ -1,38 +1,39 @@
 @import "tailwindcss";
 
 @theme {
-  --font-outfit: "Outfit", sans-serif;
-  --color-background: #FAF9F6; /* Warm Off-white */
-  --color-foreground: #1A1A1A;
-  --color-primary: #B55D3E; /* Terracotta */
-  --color-secondary: #D4A373; /* Gold/Tan Arc */
-  --color-accent: #8C4B3E; /* Deep Terracotta */
-  --color-muted: #F5F3EF;
-  --color-border: #E8E4DE;
+  --font-montserrat: "Montserrat", sans-serif;
+  --color-background: #FDFCFB; /* Creme White */
+  --color-foreground: #2C3E50; /* Dark Blue-Gray */
+  --color-primary: #34495E; /* Blue-Gray */
+  --color-secondary: #D4A373; /* Keeping Gold for accents/arcs */
+  --color-accent: #3E5C6B; /* Teal-Gray */
+  --color-muted: #F5F2EF; /* Beige */
+  --color-border: #E5E1D8;
 }
 
 :root {
-  --background: #FAF9F6;
-  --foreground: #1A1A1A;
-  --muted: #F5F3EF;
-  --muted-foreground: #736F6A;
-  --popover: #FAF9F6;
-  --popover-foreground: #1A1A1A;
+  --background: #FDFCFB;
+  --foreground: #2C3E50;
+  --muted: #F5F2EF;
+  --muted-foreground: #7F8C8D;
+  --popover: #FDFCFB;
+  --popover-foreground: #2C3E50;
   --card: #ffffff;
-  --card-foreground: #1A1A1A;
-  --border: #E8E4DE;
-  --input: #E8E4DE;
-  --primary: #B55D3E;
+  --card-foreground: #2C3E50;
+  --border: #E5E1D8;
+  --input: #E5E1D8;
+  --primary: #34495E;
   --primary-foreground: #ffffff;
   --secondary: #D4A373;
   --secondary-foreground: #ffffff;
-  --accent: #F5F3EF;
-  --accent-foreground: #B55D3E;
-  --destructive: #9C3A3A;
+  --accent: #F5F2EF;
+  --accent-foreground: #34495E;
+  --destructive: #E74C3C;
   --destructive-foreground: #ffffff;
-  --ring: #B55D3E;
+  --ring: #34495E;
   --radius: 1rem;
 }
+
 
 * {
   border-color: var(--border);
@@ -41,12 +42,12 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-outfit);
+  font-family: var(--font-montserrat);
   -webkit-font-smoothing: antialiased;
 }
 
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-[#B55D3E] to-[#D4A373];
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[#34495E] to-[#D4A373];
 }
 
 .glass {
@@ -64,12 +65,12 @@ body {
 
 /* Custom utility for section headers */
 .section-tag {
-  @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#B55D3E]/10 text-[#B55D3E] text-[10px] font-bold uppercase tracking-widest border border-[#B55D3E]/20;
+  @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#34495E]/10 text-[#34495E] text-[10px] font-bold uppercase tracking-widest border border-[#34495E]/20;
 }
 
 /* Buttons */
 .btn-primary {
-  @apply px-8 py-4 bg-[#B55D3E] text-white font-bold rounded-xl hover:bg-[#A35235] transition-all shadow-lg shadow-[#B55D3E]/20 active:scale-[0.98];
+  @apply px-8 py-4 bg-[#34495E] text-white font-bold rounded-xl hover:bg-[#2C3E50] transition-all shadow-lg shadow-[#34495E]/20 active:scale-[0.98];
 }
 
 .btn-secondary {

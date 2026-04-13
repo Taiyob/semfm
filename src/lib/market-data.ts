@@ -32,11 +32,11 @@ export const MARKET_REGISTRY: Record<string, MarketData> = {
   portugal: {
     slug: 'portugal',
     name: 'Portugal',
-    heroQuote: 'Access verified regional metrics, tax-inclusive yield maps, and off-market institutional listings.',
+    heroQuote: 'Access verified regional metrics, tax-inclusive yield maps, and off-market institutional listings',
     stats: [
-      { label: 'Avg. Yield', value: '5.2%' },
-      { label: 'Market Growth', value: '+8.4%' },
-      { label: 'Active Listings', value: '12.5k+' },
+      { label: 'Avg yield', value: '5.2%' },
+      { label: 'Avg appreciation', value: '8.4%' },
+      { label: 'Available properties', value: '12.5k+' },
     ],
     regions: [
       {
@@ -71,11 +71,11 @@ export const MARKET_REGISTRY: Record<string, MarketData> = {
   spain: {
     slug: 'spain',
     name: 'Spain',
-    heroQuote: 'Beta Intelligence: institutional data integration for Madrid, Barcelona, and the Costa del Sol.',
+    heroQuote: 'Beta Intelligence: institutional data integration for Madrid, Barcelona, and the Costa del Sol',
     stats: [
-      { label: 'Avg. Yield', value: '4.8%' },
-      { label: 'Market Growth', value: '+7.2%' },
-      { label: 'Active Listings', value: '45.0k+' },
+      { label: 'Avg yield', value: '4.8%' },
+      { label: 'Avg appreciation', value: '7.2%' },
+      { label: 'Available properties', value: '45.0k+' },
     ],
     regions: [
       {
