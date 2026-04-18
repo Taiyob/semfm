@@ -1,9 +1,9 @@
 'use client';
 
-import { use, useState, useEffect } from 'react';
+import { use, useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, 
   MapPin, 
@@ -15,15 +15,24 @@ import {
   Euro,
   CheckCircle2,
   Zap,
-  Lock
+  Lock,
+  Compass,
+  Wind,
+  Sun,
+  Hammer
 } from 'lucide-react';
 import { fetchProperties, Property } from '@/lib/airtable';
 import { GatedData } from '@/components/gated-data';
+import { calculateAcquisitionBreakdown } from '@/lib/calculations';
+import { cn } from '@/lib/utils';
+
+type Scenario = 'investor' | 'resident' | 'exemption';
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
+  const [scenario, setScenario] = useState<Scenario>('investor');
 
   useEffect(() => {
     async function loadData() {
@@ -35,8 +44,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     loadData();
   }, [id]);
 
+  const costs = useMemo(() => {
+    if (!property) return null;
+    return calculateAcquisitionBreakdown(property.price, scenario);
+  }, [property, scenario]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center hero-gradient"><div className="size-12 border-4 border-[#34495E] border-t-transparent rounded-full animate-spin" /></div>;
-  if (!property) return <div className="min-h-screen flex items-center justify-center hero-gradient font-black text-stone-400 uppercase tracking-widest">Asset Not Found in Horizon Registry</div>;
+  if (!property || !costs) return <div className="min-h-screen flex items-center justify-center hero-gradient font-black text-stone-400 uppercase tracking-widest">Asset Not Found</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-montserrat hero-gradient min-h-screen">
@@ -44,97 +58,149 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" /> Back to Inventory
       </Link>
 
-      <div className="grid lg:grid-cols-2 gap-20">
-        {/* Left: Visuals */}
-        <div className="space-y-8">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative aspect-[4/3] rounded-[64px] overflow-hidden shadow-2xl border-2 border-white">
-                <Image src={property.image} alt={property.title} fill priority sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw" className="object-cover" />
+      <div className="grid lg:grid-cols-12 gap-16">
+        {/* Left: Visuals and Description */}
+        <div className="lg:col-span-7 space-y-12">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative aspect-[16/10] rounded-[64px] overflow-hidden shadow-2xl border-4 border-white">
+                <Image src={property.image} alt={property.title} fill priority sizes="(max-width: 1024px) 100vw, 60vw" className="object-cover" />
                 <div className="absolute top-8 left-8">
-                    <div className="section-tag !bg-white !text-[#2C3E50] !border-white/20 shadow-xl">Verified Asset ID: {property.id}</div>
+                    <div className="section-tag !bg-white !text-[#2C3E50] shadow-xl">Verified Asset ID: {property.id}</div>
                 </div>
             </motion.div>
-            <div className="grid grid-cols-3 gap-6">
-                {[1,2,3].map(i => (
-                    <div key={i} className="aspect-square bg-stone-100 rounded-3xl border border-stone-200 overflow-hidden relative grayscale hover:grayscale-0 transition-all cursor-pointer">
-                        <Image src={property.image} alt="Thumbnail" fill sizes="100px" className="object-cover opacity-50" />
+
+            <div className="space-y-8 p-10 bg-white rounded-[48px] border border-stone-100 shadow-xl shadow-stone-200/40">
+                <div className="flex items-center gap-3">
+                    <div className="size-10 bg-stone-50 rounded-xl flex items-center justify-center">
+                        <TrendingUp className="size-5 text-[#D4A373]" />
                     </div>
-                ))}
+                    <h3 className="text-xl font-black text-[#2C3E50] uppercase tracking-tight">Institutional Briefing</h3>
+                </div>
+                <p className="text-stone-500 font-bold leading-relaxed text-lg italic">
+                   {property.description}
+                </p>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 border-t border-stone-50">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-stone-400">
+                             <Building2 className="size-4" />
+                             <span className="text-[9px] font-black uppercase tracking-widest">Bed Units</span>
+                        </div>
+                        <div className="text-sm font-black text-[#2C3E50]">{property.bedrooms} Bedrooms</div>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-stone-400">
+                             <Layout className="size-4" />
+                             <span className="text-[9px] font-black uppercase tracking-widest">Sqm Area</span>
+                        </div>
+                        <div className="text-sm font-black text-[#2C3E50]">{property.sqm} Net Sqm</div>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-stone-400">
+                             <Compass className="size-4" />
+                             <span className="text-[9px] font-black uppercase tracking-widest">Location Type</span>
+                        </div>
+                        <div className="text-sm font-black text-[#2C3E50]">{property.locationType}</div>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-stone-400">
+                             <Wind className="size-4" />
+                             <span className="text-[9px] font-black uppercase tracking-widest">Outdoor Space</span>
+                        </div>
+                        <div className="text-sm font-black text-[#2C3E50]">{property.outdoorSpace}</div>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-stone-400">
+                             <Sun className="size-4" />
+                             <span className="text-[9px] font-black uppercase tracking-widest">Energy Efficiency</span>
+                        </div>
+                        <div className="text-sm font-black text-[#2C3E50]">Label {property.energyLabel}</div>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-stone-400">
+                             <Hammer className="size-4" />
+                             <span className="text-[9px] font-black uppercase tracking-widest">Build Condition</span>
+                        </div>
+                        <div className="text-sm font-black text-[#2C3E50]">{property.condition}</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        {/* Right: Data Analysis */}
-        <div className="space-y-12">
+        {/* Right: Financial Intelligence */}
+        <div className="lg:col-span-5 space-y-10">
             <div className="space-y-6">
                 <div className="flex items-center gap-2 text-[#D4A373]">
                     <MapPin className="size-5" />
-                    <span className="text-xs font-black uppercase tracking-widest">{property.location}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">{property.location}</span>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-black text-[#2C3E50] leading-[0.95] uppercase tracking-tighter">{property.title}</h1>
-                <p className="text-stone-500 font-bold italic leading-relaxed text-lg">
-                    “A high-fidelity institutional asset with pre-calculated yield maps and tax-inclusive acquisition metrics.”
-                </p>
+                <h1 className="text-4xl md:text-5xl font-black text-[#2C3E50] leading-[0.95] uppercase tracking-tighter uppercase">{property.title}</h1>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pb-12 border-b border-stone-100">
-                <div className="p-8 bg-white rounded-[40px] border border-stone-50 shadow-xl shadow-stone-200/40">
-                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block mb-1">Acquisition Price</span>
-                    <div className="text-3xl font-black text-[#2C3E50] tracking-tight">€{property.price.toLocaleString()}</div>
+            {/* Acquisition Scenario Switcher */}
+            <div className="bg-[#2C3E50] p-10 rounded-[56px] text-white shadow-2xl shadow-[#2C3E50]/20 space-y-10">
+                <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-6">Acquisition Logic Scenarios</h4>
+                    <div className="flex bg-white/5 p-2 rounded-2xl gap-2">
+                        {(['investor', 'resident', 'exemption'] as Scenario[]).map(s => (
+                            <button key={s} onClick={() => setScenario(s)} className={cn("flex-1 py-3 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all", scenario === s ? "bg-[#D4A373] text-white shadow-lg" : "text-stone-400 hover:text-white")}>
+                                {s === 'exemption' ? 'Incentive' : s}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-                <div className="p-8 bg-stone-900 rounded-[40px] text-white">
-                    <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest block mb-1">Gross Yield</span>
-                    <GatedData><div className="text-3xl font-black text-[#D4A373] tracking-tight">{property.yield}%</div></GatedData>
-                </div>
-            </div>
 
-            <div className="space-y-8">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-stone-400 pb-4 border-b border-stone-100">Property Matrix</h3>
-                <div className="grid grid-cols-3 gap-8">
-                    <div className="space-y-1">
-                        <Building2 className="size-5 text-[#34495E] mb-2" />
-                        <span className="text-xs font-black text-[#2C3E50] uppercase">{property.bedrooms} Bed Units</span>
-                        <p className="text-[9px] font-bold text-stone-400 uppercase">Occupancy Ready</p>
+                <div className="space-y-6">
+                    <div className="flex justify-between items-end border-b border-white/5 pb-6">
+                        <div className="space-y-1">
+                            <span className="text-[9px] font-black uppercase text-stone-500">Total Investment</span>
+                            <div className="text-5xl font-black text-white">€{costs.totalPrice.toLocaleString()}</div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-[9px] font-black text-[#D4A373] uppercase mb-1">Scenario Cost</div>
+                            <div className="text-xl font-black text-[#D4A373]">€{costs.totalCosts.toLocaleString()}</div>
+                        </div>
                     </div>
-                    <div className="space-y-1">
-                        <TrendingUp className="size-5 text-[#34495E] mb-2" />
-                        <span className="text-xs font-black text-[#2C3E50] uppercase">12.4% ROI</span>
-                        <p className="text-[9px] font-bold text-stone-400 uppercase">Cash on Cash</p>
-                    </div>
-                    <div className="space-y-1">
-                        <Zap className="size-5 text-[#34495E] mb-2" />
-                        <span className="text-xs font-black text-[#2C3E50] uppercase">20Y Forecast</span>
-                        <p className="text-[9px] font-bold text-stone-400 uppercase">Equity Growth</p>
-                    </div>
-                </div>
-            </div>
 
-            <div className="p-8 bg-[#34495E]/5 rounded-[40px] border border-[#34495E]/10 space-y-6">
-                <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#34495E]">Estimated Monthly Rent</span>
-                    <GatedData blur={true}><span className="text-xl font-black text-[#2C3E50]">€{(property.price * (property.yield / 100) / 12).toFixed(0)}/mo</span></GatedData>
+                    <div className="grid grid-cols-2 gap-8 text-[10px] font-bold">
+                        <div className="flex justify-between text-stone-400"><span>IMT (Tax)</span> <span className="text-white">€{costs.imt.toLocaleString()}</span></div>
+                        <div className="flex justify-between text-stone-400"><span>Stamp Duty</span> <span className="text-white">€{costs.stampDuty.toLocaleString()}</span></div>
+                        <div className="flex justify-between text-stone-400"><span>Legal Fee</span> <span className="text-white">€{costs.legalFees.toLocaleString()}</span></div>
+                        <div className="flex justify-between text-stone-400"><span>Registry</span> <span className="text-white">€{costs.notaryFees.toLocaleString()}</span></div>
+                    </div>
                 </div>
-                <div className="h-px bg-stone-100" />
-                <div className="space-y-4">
-                    <p className="text-xs font-bold text-stone-500 italic">
-                        Unlock the full financial breakdown including net cash flow, mortgage leverage, and 20-year equity projections.
+
+                <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-2">
+                    <p className="text-[9px] font-bold text-stone-500 leading-relaxed italic">
+                       {scenario === 'investor' && "Investor Baseline: Standard 7.5% IMT applied as institutional ceiling."}
+                       {scenario === 'resident' && "Resident Scenario: Progressive IMT Table applied for owner-occupied logic."}
+                       {scenario === 'exemption' && "Rental Incentive: 0% IMT applied based on strategic rental contract conditions."}
                     </p>
-                    <Link href="/calculator" className="btn-primary w-full flex items-center justify-center gap-3 py-5 text-[10px] tracking-widest">
-                        Calculate net profit and forecast <Calculator className="size-4" />
-                    </Link>
                 </div>
+            </div>
+
+            {/* Yield Intelligence */}
+            <div className="grid grid-cols-2 gap-6">
+                <div className="p-8 bg-white rounded-[40px] border border-stone-100 shadow-xl shadow-stone-200/40 space-y-2">
+                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Gross Yield</span>
+                    <div className="text-4xl font-black text-[#2C3E50]">{property.yield}%</div>
+                </div>
+                <div className="p-8 bg-[#D4A373]/5 rounded-[40px] border border-[#D4A373]/10 space-y-2">
+                    <span className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest block">Net Profit Est.</span>
+                    <GatedData><div className="text-4xl font-black text-[#2C3E50]">€1,420<span className="text-xs ml-1">/mo</span></div></GatedData>
+                </div>
+            </div>
+
+            <div className="p-10 bg-stone-50 rounded-[48px] border border-stone-100 text-center space-y-8">
+                 <div className="space-y-2">
+                    <TrendingUp className="size-8 text-[#D4A373] mx-auto mb-4" />
+                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] block">20Y Horizon Projection</span>
+                    <GatedData blur={true}><div className="text-6xl font-black text-[#D4A373] tracking-tighter uppercase">+245%</div></GatedData>
+                 </div>
+                 <Link href="/calculator" className="w-full py-6 bg-[#2C3E50] text-white rounded-[24px] text-[11px] font-black tracking-[0.2em] uppercase flex items-center justify-center gap-3 hover:bg-[#D4A373] transition-all shadow-xl shadow-[#2C3E50]/10 group">
+                    Full Financial Audit <Zap className="size-4 group-hover:scale-110 transition-transform text-[#D4A373]" />
+                 </Link>
             </div>
         </div>
-      </div>
-
-      {/* Institutional Trust Footer */}
-      <div className="mt-32 p-16 bg-white border border-stone-100 rounded-[64px] shadow-2xl shadow-stone-200/50 flex flex-col md:flex-row items-center justify-between gap-12">
-          <div className="max-w-xl space-y-4">
-              <div className="section-tag">Transparency Protocol</div>
-              <h4 className="text-3xl font-black text-[#2C3E50] uppercase">Data you can trust.</h4>
-              <p className="text-stone-500 font-bold italic">“Our data engine ensures title deeds, tax codes, and regional trends are verified for every listing.”</p>
-          </div>
-          <Link href="/pricing" className="btn-secondary whitespace-nowrap group">
-              Unlock Full Asset Intelligence <Zap className="size-4 ml-2 inline group-hover:scale-110 transition-transform text-[#34495E]" />
-          </Link>
       </div>
 
     </div>

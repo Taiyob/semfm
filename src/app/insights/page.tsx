@@ -1,8 +1,9 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   BookOpen, 
   Clock, 
@@ -15,9 +16,14 @@ import {
   Bookmark,
   Share2,
   Calendar,
+  CheckCircle2,
   Lock,
-  Search
+  Search,
+  Filter,
+  Sparkles,
+  Mail
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const articles = [
   {
@@ -28,6 +34,7 @@ const articles = [
     date: 'April 4, 2026',
     readTime: '8 min read',
     category: 'Market Trends',
+    country: 'Portugal',
     image: '/assets/portugal_market_insights_thumbnail_1775343038691.png',
     featured: true,
   },
@@ -38,7 +45,8 @@ const articles = [
     author: 'Legal Desk',
     date: 'March 28, 2026',
     readTime: '12 min read',
-    category: 'Taxes & Law',
+    category: 'Tax & Regulation',
+    country: 'Portugal',
     image: '/assets/portugal_market_insights_thumbnail_1775343038691.png',
   },
   {
@@ -49,180 +57,227 @@ const articles = [
     date: 'March 15, 2026',
     readTime: '6 min read',
     category: 'Regional Guide',
+    country: 'Portugal',
     image: '/assets/portugal_market_insights_thumbnail_1775343038691.png',
   },
+  {
+    id: 4,
+    title: 'Spain Rental Law Updates 2026',
+    excerpt: 'How the new nationwide rent controls are affecting prime markets in Madrid and Barcelona.',
+    author: 'Carlos Ruiz',
+    date: 'April 10, 2026',
+    readTime: '10 min read',
+    category: 'Tax & Regulation',
+    country: 'Spain',
+    image: '/assets/spain-map-bg.png',
+  }
 ];
 
-const categories = [
-  { name: 'All Insights', count: 42 },
-  { name: 'Market Trends', count: 18 },
-  { name: 'Taxes & Law', count: 7 },
-  { name: 'Regional Guides', count: 12 },
-  { name: 'Investor Case Studies', count: 5 },
-];
+const countries = ['All Countries', 'Portugal', 'Spain', 'Greece'];
+const categories = ['All Insights', 'Tax & Regulation', 'Market Trends', 'Investment Strategy', 'Regional Guide'];
 
 export default function InsightsPage() {
+  const [selectedCountry, setSelectedCountry] = useState('All Countries');
+  const [selectedCategory, setSelectedCategory] = useState('All Insights');
+  const [showSubscribe, setShowSubscribe] = useState(false);
+
+  const filteredArticles = useMemo(() => {
+    return articles.filter(a => {
+        const matchesCountry = selectedCountry === 'All Countries' || a.country === selectedCountry;
+        const matchesCategory = selectedCategory === 'All Insights' || a.category === selectedCategory;
+        return matchesCountry && matchesCategory;
+    });
+  }, [selectedCountry, selectedCategory]);
+
   return (
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-montserrat hero-gradient min-h-screen">
       
       {/* Page Header */}
-      <div className="max-w-3xl mb-20 space-y-6">
-        <div className="section-tag">
-            <BookOpen className="size-4" />
-            Knowledge Base
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-10">
+        <div className="max-w-3xl space-y-6">
+            <div className="section-tag">
+                <BookOpen className="size-4" />
+                Horizon Intelligence
+            </div>
+            <h1 className="text-5xl md:text-8xl font-black text-[#2C3E50] tracking-tighter leading-[0.85]">Market <span className="text-[#D4A373]">Signals</span></h1>
+            <p className="text-xl text-slate-500 font-bold leading-relaxed max-w-xl italic">
+                Data-backed analysis and legal updates for the sophisticated European investor.
+            </p>
         </div>
-        <h1 className="text-5xl md:text-7xl font-black text-[#2C3E50] tracking-tight">Market <span className="gradient-text">Intelligence</span></h1>
-        <p className="text-xl text-slate-500 font-bold leading-relaxed">
-            Data-backed analysis, legal updates, and deep dives into the European real estate landscape
-        </p>
+        
+        <button 
+            onClick={() => setShowSubscribe(true)}
+            className="px-10 py-6 bg-[#2C3E50] text-white rounded-[24px] font-black text-[11px] tracking-[0.2em] shadow-2xl shadow-[#2C3E50]/20 hover:bg-[#D4A373] transition-all flex items-center gap-3 group"
+        >
+            <Mail className="size-4 group-hover:scale-110 transition-transform" />
+            Become a Subscriber
+        </button>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-16">
         
         {/* Main Content */}
-        <div className="lg:col-span-8 space-y-16">
+        <div className="lg:col-span-8 space-y-12">
             
-            {/* Featured Article */}
-            {articles.filter(a => a.featured).map(article => (
-                <Link 
-                    href={`/insights/${article.id}`} 
-                    key={article.id}
-                    className="block group"
-                >
-                    <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="glass-card rounded-[48px] overflow-hidden cursor-pointer border-2 hover:border-[#34495E]/40 transition-all backdrop-blur-sm"
+            {/* Filter Bar */}
+            <div className="flex flex-wrap gap-4 p-4 bg-white rounded-[32px] border border-stone-100 shadow-xl shadow-stone-200/40">
+                <div className="flex-1 min-w-[200px]">
+                    <select 
+                        value={selectedCountry}
+                        onChange={(e) => setSelectedCountry(e.target.value)}
+                        className="w-full bg-stone-50 rounded-2xl px-6 py-4 text-[10px] font-black tracking-widest text-[#2C3E50] outline-none cursor-pointer"
                     >
-                        <div className="relative h-[450px]">
-                            <Image 
-                                src={article.image} 
-                                alt={article.title}
-                                fill
-                                sizes="100vw"
-                                className="object-cover group-hover:scale-105 transition-transform duration-700"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-                            <div className="absolute top-8 left-8 flex gap-2">
-                                <div className="px-4 py-2 bg-[#34495E] text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#34495E]/20">Featured insight</div>
-                            </div>
-                        </div>
-                        <div className="p-10 lg:p-14 -mt-16 relative z-10 bg-white rounded-t-[48px]">
-                            <div className="flex items-center gap-4 text-xs font-black text-[#34495E] uppercase tracking-widest mb-6">
-                                <span>{article.category}</span>
-                                <span className="size-1 bg-slate-200 rounded-full" />
-                                <span className="text-slate-400">{article.date}</span>
-                            </div>
-                            <h2 className="text-3xl md:text-5xl font-black text-[#2C3E50] mb-8 group-hover:text-[#34495E] transition-colors leading-tight">{article.title}</h2>
-                            <p className="text-slate-500 text-lg leading-relaxed mb-10 font-bold">{article.excerpt}</p>
-                            <div className="flex items-center justify-between border-t border-slate-100 pt-8">
-                                <div className="flex items-center gap-3">
-                                    <div className="size-10 rounded-full bg-slate-50 flex items-center justify-center">
-                                        <User className="size-5 text-slate-400" />
-                                    </div>
-                                    <span className="text-sm font-black text-[#2C3E50] uppercase tracking-tight">{article.author}</span>
-                                </div>
-                                <div className="flex items-center gap-2 font-black text-[#34495E] uppercase tracking-widest text-xs group-hover:gap-3 transition-all">
-                                    Read Full Report <ArrowRight className="size-5" />
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                </Link>
-            ))}
+                        {countries.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                    <select 
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="w-full bg-stone-50 rounded-2xl px-6 py-4 text-[10px] font-black tracking-widest text-[#2C3E50] outline-none cursor-pointer"
+                    >
+                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                </div>
+            </div>
 
-            {/* Grid for Smaller Articles */}
-            <div className="grid md:grid-cols-2 gap-10">
-                {articles.filter(a => !a.featured).map((article, idx) => (
-                    <Link href={`/insights/${article.id}`} key={article.id} className="block group">
+            <div className="grid md:grid-cols-1 gap-12">
+                {filteredArticles.length > 0 ? filteredArticles.map((article, idx) => (
+                    <Link 
+                        href={`/insights/${article.id}`} 
+                        key={article.id}
+                        className="block group relative transition-all duration-700"
+                    >
                         <motion.div 
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="glass-card rounded-[40px] overflow-hidden cursor-pointer border-2 hover:border-[#34495E]/40 transition-all h-full flex flex-col"
+                            className="bg-white rounded-[48px] overflow-hidden border border-stone-100 hover:border-[#D4A373]/30 transition-all shadow-xl shadow-stone-200/30 flex flex-col md:flex-row h-full md:h-80"
                         >
-                            <div className="relative h-56">
-                                <Image src={article.image} alt={article.title} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover transition-transform group-hover:scale-105 duration-700" />
-                                <div className="absolute top-4 left-4">
-                                    <span className="px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-xl text-[9px] font-black uppercase tracking-widest text-[#2C3E50]">{article.category}</span>
-                                </div>
-                            </div>
-                            <div className="p-8 space-y-6 flex-grow flex flex-col justify-between">
-                                <div>
-                                    <h3 className="text-xl font-black text-[#2C3E50] mb-4 line-clamp-2 group-hover:text-[#34495E] transition-colors uppercase tracking-tight">{article.title}</h3>
-                                    <p className="text-slate-500 text-sm font-bold line-clamp-3 mb-8 leading-relaxed italic">{article.excerpt}</p>
-                                </div>
-                                <div className="flex items-center justify-between text-[10px] text-slate-400 font-black uppercase tracking-widest border-t border-slate-50 pt-6">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar className="size-3.5" />
-                                        <span>{article.readTime}</span>
+                            <div className="relative w-full md:w-80 h-64 md:h-auto shrink-0 overflow-hidden">
+                                <Image 
+                                    src={article.image} 
+                                    alt={article.title}
+                                    fill
+                                    sizes="400px"
+                                    className="object-cover group-hover:scale-105 transition-transform duration-1000"
+                                />
+                                {idx === 0 && (
+                                    <div className="absolute inset-0 bg-[#2C3E50]/40 flex items-center justify-center">
+                                        <Sparkles className="size-12 text-[#D4A373] animate-pulse" />
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <Bookmark className="size-4 hover:text-[#34495E] transition-colors" />
-                                        <Share2 className="size-4 hover:text-[#34495E] transition-colors" />
+                                )}
+                            </div>
+                            <div className="p-10 flex flex-col justify-between flex-grow">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 text-[9px] font-black text-[#D4A373] uppercase tracking-[0.2em]">
+                                        <span className="px-2 py-1 bg-[#D4A373]/10 rounded-lg">{article.country}</span>
+                                        <span className="text-stone-300">•</span>
+                                        <span>{article.category}</span>
+                                    </div>
+                                    <h2 className="text-2xl md:text-3xl font-black text-[#2C3E50] leading-tight tracking-tighter group-hover:text-[#D4A373] transition-colors">{article.title}</h2>
+                                    <p className="text-stone-500 font-bold leading-relaxed line-clamp-2 italic">{article.excerpt}</p>
+                                </div>
+                                <div className="flex items-center justify-between pt-6 border-t border-stone-50">
+                                    <div className="flex items-center gap-3 text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                                        <Calendar className="size-4" />
+                                        <span>{article.date}</span>
+                                    </div>
+                                    <div className="text-[10px] font-black text-[#2C3E50] uppercase tracking-[0.2em] flex items-center gap-2 group-hover:gap-3 transition-all">
+                                        Read Analysis <ArrowRight className="size-4 text-[#D4A373]" />
                                     </div>
                                 </div>
                             </div>
                         </motion.div>
                     </Link>
-                ))}
+                )) : (
+                    <div className="py-20 text-center font-black text-stone-300 uppercase tracking-widest">No Intelligence signals found for this segment</div>
+                )}
             </div>
 
         </div>
 
         {/* Sidebar */}
         <aside className="lg:col-span-4 space-y-10">
-            
-            {/* Search Insight */}
-            <div className="bg-white border border-slate-100 p-8 rounded-[32px] shadow-2xl shadow-slate-200/50">
-                <h4 className="text-lg font-black text-[#2C3E50] mb-6 uppercase tracking-tight">Search Reports</h4>
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-                    <input 
-                        type="text" 
-                        placeholder="Topics, keywords..." 
-                        className="w-full bg-slate-50 border-transparent rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-slate-600"
-                    />
+            {/* Structured Insights Info */}
+            <div className="bg-[#2C3E50] p-10 rounded-[40px] text-white space-y-8">
+                <div className="size-14 bg-white/5 rounded-2xl flex items-center justify-center">
+                    <TrendingUp className="size-7 text-[#D4A373]" />
                 </div>
-            </div>
-
-            {/* Popular Topics */}
-            <div className="bg-white border border-slate-100 p-8 rounded-[32px] shadow-2xl shadow-slate-200/50">
-                <h4 className="text-lg font-black text-[#2C3E50] mb-6 uppercase tracking-tight">Popular Topics</h4>
+                <h4 className="text-3xl font-black leading-tight tracking-tighter">Institutional <br /><span className="text-[#D4A373]">Archives</span></h4>
+                <p className="text-stone-400 text-xs font-bold leading-relaxed italic">
+                    Filtering and softening systems are designed to foster exploration of the full data archive and verified market benchmarks.
+                </p>
                 <div className="space-y-4">
-                    {categories.map(cat => (
-                        <button key={cat.name} className="w-full flex items-center justify-between group px-2">
-                            <span className="text-slate-500 group-hover:text-[#34495E] transition-colors font-bold text-xs uppercase tracking-widest">{cat.name}</span>
-                            <span className="size-6 rounded-lg bg-slate-50 text-[10px] font-black flex items-center justify-center text-slate-400 group-hover:bg-[#34495E] group-hover:text-white transition-all">
-                                {cat.count}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Premium CTA Sidebar */}
-            <div className="bg-slate-950 p-10 rounded-[40px] text-white overflow-hidden relative group">
-                <div className="relative z-10 space-y-8">
-                    <div className="size-14 rounded-2xl bg-white/5 flex items-center justify-center">
-                        <TrendingUp className="size-7 text-[#34495E]" />
+                    <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest">
+                        <CheckCircle2 className="size-4 text-[#D4A373]" /> 
+                        <span>Legal Compliance</span>
                     </div>
-                    <h4 className="text-3xl font-black leading-tight tracking-tight uppercase">Get Exclusive <span className="text-[#34495E]">Off-Market</span> Intelligence.</h4>
-                    <p className="text-slate-500 text-xs font-bold leading-relaxed italic">
-                        Our premium subscribers get notified 48 hours before specific Lisbon & Porto listings go public.
-                    </p>
-                    <Link href="/pricing" className="btn-primary !bg-white !text-[#2C3E50] w-full flex items-center justify-center gap-2 !py-5 text-[10px] font-black uppercase tracking-widest">
-                        Join Premium List <ArrowRight className="size-4" />
-                    </Link>
+                    <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest">
+                        <CheckCircle2 className="size-4 text-[#D4A373]" /> 
+                        <span>Market Alpha</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest">
+                        <CheckCircle2 className="size-4 text-[#D4A373]" /> 
+                        <span>Regional Signal</span>
+                    </div>
                 </div>
-                {/* Background Detail */}
-                <div className="absolute -right-10 -bottom-10 size-48 bg-[#34495E]/10 rounded-full blur-[80px]" />
             </div>
 
+            {/* Newsletter CTA */}
+            <div className="bg-white border border-stone-100 p-10 rounded-[48px] shadow-2xl shadow-stone-200/50 space-y-8">
+                <div className="space-y-2">
+                    <h3 className="text-xl font-black text-[#2C3E50]">Signal Alerts</h3>
+                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Get notified 48h before public release.</p>
+                </div>
+                <div className="space-y-4">
+                    <input type="email" placeholder="Institutional Email..." className="w-full bg-stone-50 border-stone-100 rounded-2xl p-5 text-sm font-bold outline-none focus:ring-2 focus:ring-[#D4A373] transition-all" />
+                    <button className="w-full py-5 bg-[#2C3E50] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-[#D4A373] transition-all">Enable My Signal</button>
+                </div>
+            </div>
         </aside>
-
       </div>
+
+      {/* Subscription Preference Popup */}
+      <AnimatePresence>
+        {showSubscribe && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSubscribe(false)} className="absolute inset-0 bg-[#2C3E50]/80 backdrop-blur-md" />
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative bg-white w-full max-w-xl rounded-[48px] p-12 lg:p-16 shadow-2xl overflow-hidden">
+                    <div className="relative z-10 space-y-10">
+                        <div className="space-y-4">
+                            <h2 className="text-4xl font-black text-[#2C3E50] tracking-tighter uppercase">Become a <br /><span className="text-[#D4A373]">Subscriber</span></h2>
+                            <p className="text-stone-500 font-bold italic leading-relaxed">Choose your intelligence segments to receive tailored market signals (Free forever).</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-[#D4A373]">Monitor Country</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {countries.slice(1).map(c => (
+                                        <button key={c} className="py-4 border-2 border-stone-100 rounded-2xl text-[10px] font-black uppercase text-stone-400 hover:border-[#2C3E50] hover:text-[#2C3E50] transition-all">{c}</button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-[#D4A373]">Signal Category</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {categories.slice(1).map(c => (
+                                        <button key={c} className="py-4 border-2 border-stone-100 rounded-2xl text-[10px] font-black uppercase text-stone-400 hover:border-[#2C3E50] hover:text-[#2C3E50] transition-all">{c}</button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="space-y-4 pt-4">
+                                <input type="email" placeholder="Enter your email address" className="w-full bg-stone-50 rounded-2xl p-5 text-sm font-bold outline-none border-2 border-transparent focus:border-[#D4A373] transition-all" />
+                                <button className="w-full py-6 bg-[#2C3E50] text-white rounded-[24px] font-black uppercase text-[11px] tracking-[0.2em] hover:bg-[#D4A373] transition-all shadow-xl shadow-[#2C3E50]/20">Activate My Intelligence</button>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
