@@ -106,13 +106,13 @@ export default function GlobalHomePage() {
             </div>
           </motion.div>
         </div>
-        <div className="absolute top-[48%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] md:w-[130%] lg:w-[110%] h-[600px] -z-10 pointer-events-none overflow-hidden select-none">
-          <div className="relative w-full h-full opacity-[0.5]">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1400px] h-[700px] md:h-[900px] -z-10 pointer-events-none overflow-hidden select-none">
+          <div className="relative w-full h-full opacity-[0.4]">
             <Image
               src="/assets/europe-map-bg.png"
               alt="Europe Map Background"
               fill
-              className="object-contain mix-blend-multiply"
+              className="object-cover mix-blend-multiply"
               priority
             />
           </div>
