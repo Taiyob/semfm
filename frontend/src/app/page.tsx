@@ -22,41 +22,41 @@ import {
 } from 'lucide-react';
 
 const countries = [
-  { 
-    name: 'Portugal', 
+  {
+    name: 'Portugal',
     slug: 'portugal',
-    description: 'Premium yields in Lisbon and Porto. Strategic golden visa opportunities.', 
-    yield: '+5.2%', 
+    description: 'Premium yields in Lisbon and Porto. Strategic golden visa opportunities.',
+    yield: '+5.2%',
     grossYield: '6.4%',
     availableProperties: 184,
     region: 'Western Europe',
-    investors: '12k+', 
+    investors: '12k+',
     image: '/assets/portugal_real_estate_hero_1775342926518.png',
     status: 'Active',
     color: 'border-zinc-200'
   },
-  { 
-    name: 'Spain', 
+  {
+    name: 'Spain',
     slug: 'spain',
-    description: 'Market analysis for Valencia, Alicante, Málaga, and Las Palmas. Beta access.', 
-    yield: '+5.9%', 
+    description: 'Market analysis for Valencia, Alicante, Málaga, and Las Palmas. Beta access.',
+    yield: '+5.9%',
     grossYield: '7.2%',
     availableProperties: 142,
     region: 'Western Europe',
-    investors: '8.5k+', 
+    investors: '8.5k+',
     image: '/assets/spain_market_hero.png',
     status: 'Active',
     color: 'border-zinc-200'
   },
-  { 
-    name: 'Greece', 
+  {
+    name: 'Greece',
     slug: 'greece',
-    description: 'High-growth potential in Athens and the Islands. EU residency pathway.', 
-    yield: '+6.1%', 
+    description: 'High-growth potential in Athens and the Islands. EU residency pathway.',
+    yield: '+6.1%',
     grossYield: '7.2%',
     availableProperties: 96,
     region: 'Southern Europe',
-    investors: '5k+', 
+    investors: '5k+',
     image: '/assets/greece_market_hero.png',
     status: 'Active',
     color: 'border-zinc-200'
@@ -76,8 +76,8 @@ export default function GlobalHomePage() {
     'Southern Europe'
   ];
 
-  const filteredCountries = selectedRegion === 'All Markets' 
-    ? countries 
+  const filteredCountries = selectedRegion === 'All Markets'
+    ? countries
     : countries.filter(c => c.region === selectedRegion);
 
   return (
@@ -139,36 +139,36 @@ export default function GlobalHomePage() {
 
             <div className="grid gap-6">
               {[
-                { 
-                  title: 'Analyze your property', 
+                {
+                  title: 'Analyze your property',
                   label: 'Run a full investment analysis in seconds',
                   desc: 'From gross yield and cash flow projections to long-term investment horizon — get the numbers you need to confidently validate any deal.',
-                  href: '/calculator' 
+                  href: '/calculator'
                 },
-                { 
-                  title: 'Discover properties', 
+                {
+                  title: 'Discover properties',
                   label: 'Find properties that match your strategy',
                   desc: 'Explore properties with advanced filters for yield, price, and estimated rental income, and find undervalued opportunities early to stay ahead of the market.',
-                  href: '/properties' 
+                  href: '/properties'
                 },
-                { 
-                  title: 'Stay ahead of the market', 
+                {
+                  title: 'Stay ahead of the market',
                   label: 'Follow real-time insights and move with confidence',
                   desc: 'Track market shifts, rental trends, and regulatory changes. Receive early signals on neighborhoods heating up or cooling down, so you can adjust your strategy proactively.',
-                  href: '#newsletter' 
+                  href: '#newsletter'
                 }
               ].map(item => (
-                <Link 
-                  key={item.title} 
-                  href={item.href} 
+                <Link
+                  key={item.title}
+                  href={item.href}
                   className="flex items-start gap-6 p-6 bg-white rounded-[32px] border-2 border-transparent hover:border-[#D4A373]/30 hover:shadow-2xl hover:shadow-[#D4A373]/10 transition-all group/item shadow-sm"
                 >
                   <div className="relative size-8 shrink-0 mt-1">
-                    <input 
-                      type="checkbox" 
-                      readOnly 
-                      checked 
-                      className="peer appearance-none size-8 rounded-lg border-2 border-stone-200 checked:bg-[#D4A373] checked:border-[#D4A373] transition-all cursor-pointer" 
+                    <input
+                      type="checkbox"
+                      readOnly
+                      checked
+                      className="peer appearance-none size-8 rounded-lg border-2 border-stone-200 checked:bg-[#D4A373] checked:border-[#D4A373] transition-all cursor-pointer"
                     />
                     <CheckCircle2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
                   </div>
@@ -202,12 +202,12 @@ export default function GlobalHomePage() {
           </div>
           <div className="flex flex-wrap items-center gap-2 p-1.5 bg-stone-100 rounded-2xl w-fit">
             {regions.map(region => (
-              <button 
+              <button
                 key={region}
                 onClick={() => setSelectedRegion(region)}
                 className={cn(
                   "px-4 py-2 font-bold rounded-xl text-sm transition-all whitespace-nowrap",
-                  selectedRegion === region 
+                  selectedRegion === region
                     ? "bg-white text-[#2C3E50] shadow-sm"
                     : "text-stone-500 hover:text-[#2C3E50] hover:bg-white/50"
                 )}
@@ -220,7 +220,7 @@ export default function GlobalHomePage() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
           {filteredCountries.map((country, idx) => (
-            <motion.div 
+            <motion.div
               key={country.name}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -229,17 +229,17 @@ export default function GlobalHomePage() {
               className="group relative bg-white rounded-[40px] overflow-hidden border border-stone-200 shadow-xl shadow-stone-200/50 hover:shadow-2xl hover:shadow-[#D4A373]/10 transition-all duration-500 hover:-translate-y-1 flex flex-col"
             >
               <div className="relative h-64 overflow-hidden">
-                <Image 
-                  src={country.image} 
-                  alt={country.name} 
-                  fill 
+                <Image
+                  src={country.image}
+                  alt={country.name}
+                  fill
                   priority={idx === 0}
-                  className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <div className="absolute bottom-6 left-8 flex items-center gap-3">
                   <div className="size-10 rounded-full border-2 border-white/30 backdrop-blur-md flex items-center justify-center p-2 overflow-hidden">
-                    <Image 
+                    <Image
                       src={`https://flagcdn.com/w80/${country.slug === 'portugal' ? 'pt' : country.slug === 'spain' ? 'es' : 'gr'}.png`}
                       alt={country.name}
                       width={40}
@@ -258,7 +258,7 @@ export default function GlobalHomePage() {
 
               <div className="p-10 flex flex-col flex-grow space-y-8">
                 <p className="text-stone-500 font-bold leading-relaxed min-h-[80px] line-clamp-3">{country.description}</p>
-                
+
                 <div className="grid grid-cols-3 gap-3">
                   <div className="p-4 bg-stone-50 rounded-2xl flex flex-col items-center justify-center text-center h-full">
                     <div className="min-h-[24px] flex items-center justify-center mb-2">
@@ -382,13 +382,13 @@ export default function GlobalHomePage() {
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-2">Personalize Your Markets</label>
                   <div className="flex flex-wrap gap-2">
                     {['All Countries', 'Portugal', 'Spain', 'Greece'].map((loc) => (
-                      <button 
-                        key={loc} 
+                      <button
+                        key={loc}
                         onClick={() => setNewsletterCountry(loc)}
                         className={cn(
                           "py-3 px-5 rounded-2xl border-2 text-[10px] font-black transition-all uppercase tracking-tight",
-                          newsletterCountry === loc 
-                            ? "bg-[#D4A373] border-[#D4A373] text-white" 
+                          newsletterCountry === loc
+                            ? "bg-[#D4A373] border-[#D4A373] text-white"
                             : "border-stone-50 text-[#2C3E50] hover:border-[#D4A373]/20 hover:bg-stone-50"
                         )}
                       >
@@ -405,10 +405,10 @@ export default function GlobalHomePage() {
                     {['Tax & Regulatory', 'Market Trends', 'Portfolio Strategy', 'Local Spotlights'].map(pref => (
                       <label key={pref} className="flex items-center gap-3 cursor-pointer group">
                         <div className="relative size-5">
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             defaultChecked
-                            className="peer appearance-none size-5 rounded-md border-2 border-stone-200 checked:bg-[#D4A373] checked:border-[#D4A373] transition-all cursor-pointer" 
+                            className="peer appearance-none size-5 rounded-md border-2 border-stone-200 checked:bg-[#D4A373] checked:border-[#D4A373] transition-all cursor-pointer"
                           />
                           <CheckCircle2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
                         </div>
@@ -419,10 +419,10 @@ export default function GlobalHomePage() {
                 </div>
 
                 <div className="relative pt-4">
-                  <input 
-                    type="email" 
-                    placeholder="Enter your email address" 
-                    className="w-full bg-stone-50 border-2 border-transparent rounded-[24px] py-5 px-8 text-sm font-black text-[#2C3E50] focus:ring-2 focus:ring-[#D4A373]/20 focus:bg-white focus:border-[#D4A373]/20 outline-none transition-all" 
+                  <input
+                    type="email"
+                    placeholder="Enter your email address"
+                    className="w-full bg-stone-50 border-2 border-transparent rounded-[24px] py-5 px-8 text-sm font-black text-[#2C3E50] focus:ring-2 focus:ring-[#D4A373]/20 focus:bg-white focus:border-[#D4A373]/20 outline-none transition-all"
                   />
                 </div>
               </div>
