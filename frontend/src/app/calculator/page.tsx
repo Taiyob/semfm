@@ -26,7 +26,9 @@ import {
   Calendar,
   Layers,
   Sparkles,
-  ArrowUpRight
+  ArrowUpRight,
+  ChevronDown,
+  Pencil
 } from 'lucide-react';
 import { GatedData } from '@/components/gated-data';
 import { calculateResidentialIMT, calculateAcquisitionBreakdown } from '@/lib/calculations';
@@ -48,6 +50,19 @@ const spainRegions = [
   { name: 'Las Palmas (Gran Canaria)', avgRent: 14, color: 'bg-[#D4A373]' },
 ];
 
+const TOOLTIP_CONTENT = {
+  grossYield: "Gross yield is the annual rental income divided by the total acquisition cost (purchase price + taxes + fees).",
+  netYield: "Net yield on cost accounts for all operating expenses and acquisition costs, providing a more realistic return estimate.",
+  noi: "Net Operating Income (NOI) is your annual rental income minus all operating expenses, before mortgage payments.",
+  netProfit: "Estimated Net Annual Profit is your final take-home income after all expenses and mortgage costs.",
+  cashOnCash: "Annual return based only on the actual cash you invested (equity), rather than the total property value.",
+  roe: "Total Return on Equity includes net profit, principal repayment, and property appreciation.",
+  equityGrowth: "The annual increase in your wealth through mortgage principal reduction and property value appreciation.",
+  loanToTac: "The percentage of the Total Acquisition Cost (TAC) that is financed through a loan.",
+  irr: "Internal Rate of Return (IRR) is a metric used to estimate the profitability of potential investments over time.",
+  tac: "TAC (Total Acquisition Costs) include purchase price, renovation, taxes, and all legal/notary fees."
+};
+
 export default function CalculatorPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading Analytics...</div>}>
@@ -66,7 +81,9 @@ function CalculatorContent() {
   }, []);
   const [mode, setMode] = useState<Mode>('simple');
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [showCalculationDetails, setShowCalculationDetails] = useState(false);
   const [showOpexBreakdown, setShowOpexBreakdown] = useState(false);
+  const [editingOpex, setEditingOpex] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     country: 'Portugal',
     region: 'Lisbon',
@@ -76,11 +93,10 @@ function CalculatorContent() {
     purchasePrice: 350000,
     renovationCost: 20000,
     estimatedRent: 1500,
-    includeMortgage: true,
+    includeMortgage: false,
     loanPercentage: 70,
     interestRate: 3.5,
     appreciationRate: 6,
-    weighting: 50,
     // Phase 2 Logic
     isRental: true,
     propertyType: 'resale' as 'resale' | 'new_build',
@@ -101,10 +117,12 @@ function CalculatorContent() {
     mortgageTerm: 25,
     // Phase 4 & 5
     includeAppreciationROI: false,
+    includePrincipalROI: false,
     rentGrowthRate: 2,
     timeHorizon: 20,
     includeMortgagePayoff: false,
-    showProjectionBreakdown: true,
+    showProjectionBreakdown: false,
+    opexOverrides: {} as Record<string, number | null>,
     // Advanced fields
     yearBuilt: 2020,
     propertyCondition: 'Standard',
@@ -158,23 +176,21 @@ function CalculatorContent() {
       formData.region, 
       formData.propertyType
     );
-    const { totalCosts, acquisitionCosts } = { 
-        totalCosts: breakdown.totalCosts, 
-        acquisitionCosts: (breakdown.imt || 0) + (breakdown.stampDuty || 0) + (breakdown.legalFees || 0) + (breakdown.notaryFees || 0) + (breakdown.iva || 0) + (breakdown.ajd || 0)
-    };
+    const { totalCosts } = breakdown;
+    const acquisitionCosts = (breakdown.imt || 0) + (breakdown.stampDuty || 0) + (breakdown.legalFees || 0) + (breakdown.notaryFees || 0) + (breakdown.iva || 0) + (breakdown.ajd || 0);
 
     const totalCapitalNeeded = Number(formData.purchasePrice) + Number(formData.renovationCost) + totalCosts;
     const annualRent = formData.estimatedRent * 12;
     
     const opexBreakdown = {
-      vacancy: annualRent * (formData.vacancyRate / 100),
-      maintenance: annualRent * (formData.maintenanceRate / 100),
-      capex: annualRent * (formData.capexRate / 100),
-      insurance: annualRent * (formData.insuranceRate / 100),
-      propertyTax: annualRent * (formData.propertyTaxRate / 100),
-      condo: annualRent * (formData.condoFeeRate / 100),
-      management: annualRent * (formData.managementFeeRate / 100),
-      admin: annualRent * (formData.adminRate / 100),
+      vacancy: formData.opexOverrides.vacancy ?? (annualRent * (formData.vacancyRate / 100)),
+      maintenance: formData.opexOverrides.maintenance ?? (annualRent * (formData.maintenanceRate / 100)),
+      capex: formData.opexOverrides.capex ?? (annualRent * (formData.capexRate / 100)),
+      insurance: formData.opexOverrides.insurance ?? (annualRent * (formData.insuranceRate / 100)),
+      propertyTax: formData.opexOverrides.propertyTax ?? (annualRent * (formData.propertyTaxRate / 100)),
+      condo: formData.opexOverrides.condo ?? (annualRent * (formData.condoFeeRate / 100)),
+      management: formData.opexOverrides.management ?? (annualRent * (formData.managementFeeRate / 100)),
+      admin: formData.opexOverrides.admin ?? (annualRent * (formData.adminRate / 100)),
     };
 
     const totalOpex = Object.values(opexBreakdown).reduce((a, b) => a + b, 0);
@@ -182,7 +198,6 @@ function CalculatorContent() {
     
     const loanAmount = Math.max(0, formData.purchasePrice - formData.downPayment);
     const ltv = (loanAmount / (formData.purchasePrice || 1)) * 100;
-    
     const monthlyRate = formData.interestRate / 100 / 12;
     const months = formData.mortgageTerm * 12;
     let monthlyAnnuity = 0;
@@ -193,73 +208,69 @@ function CalculatorContent() {
     }
 
     let yearlyInterest = 0;
-    let currentBalance = loanAmount;
+    let tempBalance = loanAmount;
     for (let m = 0; m < 12; m++) {
-      const mInterest = currentBalance * monthlyRate;
+      const mInterest = tempBalance * monthlyRate;
       yearlyInterest += mInterest;
-      currentBalance -= (monthlyAnnuity - mInterest);
+      tempBalance -= (monthlyAnnuity - mInterest);
     }
     const yearlyPrincipal = (monthlyAnnuity * 12) - yearlyInterest;
     
-    const mortgageCosts = formData.includePrincipal ? (yearlyInterest + yearlyPrincipal) : yearlyInterest;
+    const mortgageCosts = formData.includeMortgage ? (formData.includePrincipal ? (yearlyInterest + yearlyPrincipal) : yearlyInterest) : 0;
     const profitAfterMortgage = netAnnualIncome - mortgageCosts;
     
     const cashInvested = totalCapitalNeeded - loanAmount;
     const cashOnCashReturn = (profitAfterMortgage / cashInvested) * 100;
 
-    // Phase 4 ROE Logic
     const yearlyAppreciationValue = formData.purchasePrice * (formData.appreciationRate / 100);
-    const roeExcl = (profitAfterMortgage / cashInvested) * 100;
-    const roeIncl = ((profitAfterMortgage + yearlyPrincipal + yearlyAppreciationValue) / cashInvested) * 100;
-    const currentROE = formData.includeAppreciationROI ? roeIncl : roeExcl;
-    const yearlyEquityGrowth = formData.includeAppreciationROI ? (yearlyPrincipal + yearlyAppreciationValue) : yearlyPrincipal;
+    const roeIncl = ((profitAfterMortgage + (formData.includePrincipalROI ? yearlyPrincipal : 0) + (formData.includeAppreciationROI ? yearlyAppreciationValue : 0)) / cashInvested) * 100;
+    const currentROE = roeIncl;
+    const yearlyEquityGrowth = (formData.includePrincipalROI ? yearlyPrincipal : 0) + (formData.includeAppreciationROI ? yearlyAppreciationValue : 0);
 
     // Phase 5 Projection Logic
     const horizon = formData.timeHorizon;
+    let totalRentProfit = 0;
+    let currentVal = formData.purchasePrice + formData.renovationCost;
+    let currentAnnualRent = annualRent;
+    let currentAnnualOpex = totalOpex;
+
     const projection = Array.from({ length: horizon + 1 }, (_, year) => {
-        const appreciation = Math.pow(1 + (formData.appreciationRate / 100), year);
-        const rentIncrease = Math.pow(1 + (formData.rentGrowthRate / 100), year);
-        
-        // Mortgage payoff logic
-        let remainingLoan = loanAmount;
-        let cumulativePrincipalPaid = 0;
-        if (formData.includeMortgagePayoff) {
-            let balance = loanAmount;
-            for (let y = 0; y < year; y++) {
-                for (let m = 0; m < 12; m++) {
-                    const mInt = balance * monthlyRate;
-                    const mPrinc = monthlyAnnuity - mInt;
-                    balance -= mPrinc;
-                    cumulativePrincipalPaid += mPrinc;
-                }
+        // Calculate remaining loan balance at end of this year
+        let balance = loanAmount;
+        if (year > 0) {
+            for (let m = 0; m < year * 12; m++) {
+                const mInt = balance * monthlyRate;
+                balance -= (monthlyAnnuity - mInt);
             }
-            remainingLoan = Math.max(0, balance);
+        }
+        const remainingLoan = Math.max(0, balance);
+        const equity = currentVal - (formData.includeMortgagePayoff ? remainingLoan : loanAmount);
+        
+        const yearResult = {
+            year,
+            equity: Math.max(0, equity),
+            cumulativeRent: totalRentProfit,
+            propertyValue: currentVal,
+            remainingLoan: remainingLoan
+        };
+
+        // Preparation for next year
+        if (year < horizon) {
+            const yearlyMortgage = formData.includeMortgage ? (formData.includePrincipal ? (monthlyAnnuity * 12) : yearlyInterest) : 0;
+            const yearlyProfit = currentAnnualRent - currentAnnualOpex - yearlyMortgage;
+            totalRentProfit += yearlyProfit;
+
+            currentVal *= (1 + formData.appreciationRate / 100);
+            currentAnnualRent *= (1 + formData.rentGrowthRate / 100);
+            currentAnnualOpex *= (1 + formData.rentGrowthRate / 100); // OPEX grows with rent
         }
 
-        const propertyValue = (formData.purchasePrice * appreciation);
-        const equity = propertyValue - remainingLoan;
-        
-        return {
-            year,
-            value: propertyValue,
-            equity,
-            remainingLoan,
-            rent: annualRent * rentIncrease,
-            profit: profitAfterMortgage * rentIncrease,
-            cumulativeRent: 0 // Will calculate below
-        };
-    });
-
-    // Calculate cumulative rent and ROI breakdown
-    let totalRentProfit = 0;
-    projection.forEach((p, i) => {
-        if (i > 0) totalRentProfit += p.profit;
-        p.cumulativeRent = totalRentProfit;
+        return yearResult;
     });
 
     const finalYear = projection[horizon];
-    const appreciationGain = finalYear.value - formData.purchasePrice;
-    const totalReturn = totalRentProfit + appreciationGain + (loanAmount - finalYear.remainingLoan);
+    const appreciationGain = finalYear.propertyValue - formData.purchasePrice;
+    const totalReturn = (finalYear.equity - cashInvested) + finalYear.cumulativeRent;
     const combinedReturn = (totalReturn / cashInvested) * 100;
 
     // IRR Calculation
@@ -273,6 +284,7 @@ function CalculatorContent() {
                 npv += flows[t] / denom;
                 dNpv -= (t * flows[t]) / (denom * (1 + irr));
             }
+            if (Math.abs(dNpv) < 1e-10) break;
             const nextIrr = irr - npv / dNpv;
             if (Math.abs(nextIrr - irr) < 0.00001) return nextIrr * 100;
             irr = nextIrr;
@@ -281,10 +293,19 @@ function CalculatorContent() {
     };
 
     const cashFlows = [-cashInvested];
-    for (let y = 1; y < horizon; y++) {
-        cashFlows.push(projection[y].profit);
+    let irrRent = annualRent;
+    let irrOpex = totalOpex;
+    for (let y = 1; y <= horizon; y++) {
+        const yearlyMortgage = formData.includeMortgage ? (formData.includePrincipal ? (monthlyAnnuity * 12) : yearlyInterest) : 0;
+        if (y < horizon) {
+            cashFlows.push(irrRent - irrOpex - yearlyMortgage);
+            irrRent *= (1 + formData.rentGrowthRate / 100);
+            irrOpex *= (1 + formData.rentGrowthRate / 100);
+        } else {
+            // Last year: Profit + Exit Equity
+            cashFlows.push((irrRent - irrOpex - yearlyMortgage) + finalYear.equity);
+        }
     }
-    cashFlows.push(projection[horizon].profit + finalYear.value - finalYear.remainingLoan);
     const projectedIRR = calculateIRR(cashFlows);
 
     const safeNum = (val: any) => isNaN(Number(val)) ? 0 : Number(val);
@@ -304,15 +325,16 @@ function CalculatorContent() {
       annualRent: safeNum(annualRent),
       netAnnualIncome: safeNum(netAnnualIncome),
       profitAfterMortgage: safeNum(profitAfterMortgage),
-      grossYield: ((annualRent / (formData.purchasePrice || 1)) * 100).toFixed(1),
+      grossYield: ((annualRent / (totalCapitalNeeded || 1)) * 100).toFixed(1),
       netYield: ((netAnnualIncome / (totalCapitalNeeded || 1)) * 100).toFixed(1),
       cashOnCash: (cashInvested > 0 ? (profitAfterMortgage / cashInvested) * 100 : 0).toFixed(1),
+      loanToTac: (totalCapitalNeeded > 0 ? (loanAmount / totalCapitalNeeded) * 100 : 0),
       currentROE: safeNum(currentROE),
       yearlyEquityGrowth: safeNum(yearlyEquityGrowth),
       total20YearProfit: safeNum(totalReturn),
       rentContribution: (totalRentProfit / (totalReturn || 1)) * 100,
       appreciationContribution: ((appreciationGain + (loanAmount - finalYear.remainingLoan)) / (totalReturn || 1)) * 100,
-      futureValue: safeNum(finalYear.value),
+      futureValue: safeNum(finalYear.propertyValue),
       valueGrowth: safeNum(appreciationGain),
       combinedReturn: safeNum(combinedReturn).toFixed(0),
       projectedIRR: safeNum(projectedIRR).toFixed(1),
@@ -335,8 +357,6 @@ function CalculatorContent() {
     { id: 'roi', label: 'Cash ROI', locked: false },
     { id: 'projection', label: '20Y Forecast', locked: false },
   ];
-
-  // if (!mounted) return <div className="min-h-screen flex items-center justify-center bg-white text-stone-400 font-bold">Initializing Analytics Engine...</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-montserrat bg-white min-h-screen">
@@ -641,23 +661,45 @@ function CalculatorContent() {
                     </div>
 
                     <div className="flex flex-col gap-6">
-                        <div className="p-10 bg-white border border-stone-100 rounded-[40px] flex items-center justify-between shadow-2xl shadow-stone-200/40 relative overflow-hidden group">
-                             <div className="space-y-2">
-                                <span className="text-[10px] font-black tracking-[0.2em] uppercase text-stone-400">Total Acquisition Costs</span>
-                                <div className="text-5xl font-black text-[#2C3E50]">€{Math.round(results.totalCapitalNeeded).toLocaleString()}</div>
+                        <div className="p-8 bg-white border border-stone-100 rounded-[40px] shadow-2xl shadow-stone-200/40 relative overflow-hidden group">
+                             <div className="grid grid-cols-2 gap-8 items-center">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black tracking-[0.2em] uppercase text-stone-400">Total Acquisition Costs (TAC)</span>
+                                      <div className="group/tac relative">
+                                        <Info className="size-3 text-stone-300 cursor-help" />
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/tac:opacity-100 transition-opacity z-50 pointer-events-none">
+                                          {TOOLTIP_CONTENT.tac}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-4xl font-black text-[#2C3E50]">€{Math.round(results.totalCapitalNeeded).toLocaleString()}</div>
+                                </div>
+                                <div className="space-y-2 text-right">
+                                    <div className="flex items-center gap-2 justify-end">
+                                      <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[#D4A373]">Gross Yield</span>
+                                      <div className="group/gy relative text-left">
+                                        <Info className="size-3 text-[#D4A373]/50 cursor-help" />
+                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/gy:opacity-100 transition-opacity z-50 pointer-events-none">
+                                          {TOOLTIP_CONTENT.grossYield}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-4xl font-black text-[#D4A373]">{results.grossYield}%</div>
+                                </div>
                              </div>
-                              <button 
-                                 onClick={() => setShowBreakdown(!showBreakdown)}
-                                 className="flex flex-col items-end gap-2 group/btn"
-                              >
-                                  <div className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest flex items-center gap-2">
-                                      {formData.country === 'Spain' ? (formData.region === 'Las Palmas (Gran Canaria)' ? 'IGIC' : (formData.propertyType === 'resale' ? 'ITP' : 'IVA + AJD')) : 'IMT'}: €{Math.round(results.imt || results.itp || results.igic || (results.iva + results.ajd)).toLocaleString()} 
-                                      <Settings2 className={cn("size-3 transition-transform", showBreakdown ? "rotate-180" : "")} />
-                                  </div>
-                                  <div className="text-[8px] font-bold text-stone-400 uppercase tracking-tight hover:text-[#D4A373] transition-colors underline decoration-dotted">
-                                      {showBreakdown ? 'Hide costs' : 'Show breakdown'}
-                                  </div>
-                              </button>
+                             
+                             <div className="mt-8 pt-8 border-t border-stone-100 flex justify-between items-center">
+                                <div className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest flex items-center gap-2">
+                                    {formData.country === 'Spain' ? (formData.region === 'Las Palmas (Gran Canaria)' ? 'IGIC' : (formData.propertyType === 'resale' ? 'ITP' : 'IVA + AJD')) : 'IMT'}: €{Math.round(results.imt || results.itp || results.igic || (results.iva + results.ajd)).toLocaleString()} 
+                                </div>
+                                <button 
+                                   onClick={() => setShowBreakdown(!showBreakdown)}
+                                   className="text-[9px] font-bold text-stone-400 uppercase tracking-tight hover:text-[#D4A373] transition-colors underline decoration-dotted"
+                                >
+                                    {showBreakdown ? 'Hide full costs' : 'Show breakdown'}
+                                </button>
+                             </div>
                         </div>
 
                         {showBreakdown && (
@@ -749,7 +791,15 @@ function CalculatorContent() {
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="p-6 bg-stone-50 rounded-3xl border border-stone-100 flex flex-col">
                                     <div className="flex justify-between items-center mb-6">
-                                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Yearly Rent</span>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Yearly Rent</span>
+                                          <div className="group/yr relative">
+                                            <Info className="size-3 text-stone-300 cursor-help" />
+                                            <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/yr:opacity-100 transition-opacity z-50 pointer-events-none">
+                                              Total annual rental income.
+                                            </div>
+                                          </div>
+                                        </div>
                                         <span className="text-sm font-black text-[#2C3E50]">€{Math.round(results.annualRent).toLocaleString()}</span>
                                     </div>
                                     
@@ -777,19 +827,43 @@ function CalculatorContent() {
                                             >
                                               <div className="space-y-2 pt-4 border-t border-stone-200">
                                                 {[
-                                                  { label: 'Vacancy Costs', value: results.opexBreakdown.vacancy },
-                                                  { label: 'Maintenance', value: results.opexBreakdown.maintenance },
-                                                  { label: 'CapEx Reserve', value: results.opexBreakdown.capex },
-                                                  { label: 'Insurance', value: results.opexBreakdown.insurance },
-                                                  { label: 'Property Tax', value: results.opexBreakdown.propertyTax },
-                                                  { label: 'Condominium Fees', value: results.opexBreakdown.condo },
-                                                  { label: 'Management Fee', value: results.opexBreakdown.management },
-                                                  { label: 'Admin / Accounting', value: results.opexBreakdown.admin },
+                                                    { label: 'Vacancy (4%)', key: 'vacancy' },
+                                                    { label: 'Maintenance (10%)', key: 'maintenance' },
+                                                    { label: 'CapEx (5%)', key: 'capex' },
+                                                    { label: 'Insurance', key: 'insurance' },
+                                                    { label: 'Property Tax', key: 'propertyTax' },
+                                                    { label: 'Condo Fees', key: 'condo' },
+                                                    { label: 'Management', key: 'management' },
+                                                    { label: 'Admin', key: 'admin' },
                                                 ].map((item) => (
-                                                  <div key={item.label} className="flex justify-between items-center text-[10px] font-bold text-stone-500">
-                                                    <span>{item.label}</span>
-                                                    <span>€{Math.round(item.value).toLocaleString()}</span>
-                                                  </div>
+                                                    <div key={item.key} className="flex justify-between items-center group/opex">
+                                                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tight">{item.label}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            {editingOpex === item.key ? (
+                                                                <input 
+                                                                  type="number" 
+                                                                  autoFocus
+                                                                  className="w-16 bg-white border border-[#D4A373] rounded px-1 text-right text-[10px] font-bold outline-none"
+                                                                  value={formData.opexOverrides[item.key] ?? Math.round((results.opexBreakdown as any)[item.key])}
+                                                                  onChange={(e) => setFormData({
+                                                                    ...formData, 
+                                                                    opexOverrides: { ...formData.opexOverrides, [item.key]: Number(e.target.value) }
+                                                                  })}
+                                                                  onBlur={() => setEditingOpex(null)}
+                                                                />
+                                                            ) : (
+                                                                <>
+                                                                    <span className="text-[10px] font-bold text-stone-500">€{Math.round((results.opexBreakdown as any)[item.key]).toLocaleString()}</span>
+                                                                    <button 
+                                                                      onClick={() => setEditingOpex(item.key)}
+                                                                      className="opacity-0 group-hover/opex:opacity-100 transition-opacity p-0.5 hover:bg-stone-200 rounded"
+                                                                    >
+                                                                        <Pencil className="size-2 text-stone-400" />
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 ))}
                                               </div>
                                             </motion.div>
@@ -797,26 +871,39 @@ function CalculatorContent() {
                                         </AnimatePresence>
 
                                         <div className="pt-4 border-t border-stone-200 flex justify-between items-center font-black text-[#34495E]">
-                                            <span className="text-[10px] uppercase">Net Operating Income (NOI)</span>
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-[10px] uppercase">Net Operating Income (NOI)</span>
+                                              <div className="group/noi relative">
+                                                <Info className="size-3 text-[#34495E]/50 cursor-help" />
+                                                <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/noi:opacity-100 transition-opacity z-50 pointer-events-none">
+                                                  {TOOLTIP_CONTENT.noi}
+                                                </div>
+                                              </div>
+                                            </div>
                                             <span className="text-sm">€{Math.round(results.netAnnualIncome).toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="p-6 bg-white border border-stone-100 rounded-3xl shadow-xl shadow-stone-200/40">
-                                    <div className="flex items-center gap-2 mb-6">
-                                        <input 
-                                            type="checkbox" 
-                                            id="includeMortgage" 
-                                            checked={formData.includeMortgage} 
-                                            onChange={(e) => setFormData({...formData, includeMortgage: e.target.checked})}
-                                            className="size-5 accent-[#34495E]"
-                                        />
-                                        <label htmlFor="includeMortgage" className="text-xs font-black text-[#2C3E50] uppercase tracking-widest cursor-pointer">Include Mortgage Logic</label>
+                                <div className="p-6 bg-white border border-stone-100 rounded-3xl shadow-xl shadow-stone-200/40 transition-all">
+                                    <div className="flex items-center gap-2 mb-4 group cursor-pointer" onClick={() => setFormData({...formData, includeMortgage: !formData.includeMortgage})}>
+                                        <div className={cn(
+                                          "size-5 rounded border-2 flex items-center justify-center transition-all",
+                                          formData.includeMortgage ? "bg-[#34495E] border-[#34495E]" : "bg-white border-stone-200"
+                                        )}>
+                                          {formData.includeMortgage && <CheckCircle2 className="size-3 text-white" />}
+                                        </div>
+                                        <label className="text-[10px] font-black text-[#2C3E50] uppercase tracking-widest cursor-pointer">Include Mortgage</label>
                                     </div>
 
+                                    <AnimatePresence>
                                     {formData.includeMortgage && (
-                                        <div className="space-y-6">
+                                        <motion.div 
+                                          initial={{ height: 0, opacity: 0 }}
+                                          animate={{ height: 'auto', opacity: 1 }}
+                                          exit={{ height: 0, opacity: 0 }}
+                                          className="overflow-hidden space-y-6"
+                                        >
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Down Payment (€)</label>
@@ -828,9 +915,17 @@ function CalculatorContent() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center justify-between text-[10px] font-black text-stone-400 uppercase tracking-widest">
-                                              <span>Auto-calculated LTV</span>
-                                              <span className="text-[#34495E]">{results.ltv.toFixed(1)}%</span>
+                                            <div className="flex items-center justify-between">
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Loan-to-TAC</span>
+                                                <div className="group/ltac relative">
+                                                  <Info className="size-3 text-stone-300 cursor-help" />
+                                                  <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/ltac:opacity-100 transition-opacity z-50 pointer-events-none">
+                                                    {TOOLTIP_CONTENT.loanToTac}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              <span className="text-[10px] font-black text-[#34495E] uppercase tracking-widest">{results.loanToTac.toFixed(1)}%</span>
                                             </div>
 
                                             <p className="text-[9px] font-bold text-stone-400 italic">“This calculation assumes a full annuity mortgage.”</p>
@@ -843,7 +938,7 @@ function CalculatorContent() {
                                                 onChange={(e) => setFormData({...formData, includePrincipal: e.target.checked})}
                                                 className="size-4 accent-[#D4A373]"
                                               />
-                                              <label htmlFor="includePrincipal" className="text-[9px] font-black text-[#2C3E50] uppercase tracking-widest cursor-pointer">Include principal repayment in calculation</label>
+                                              <label htmlFor="includePrincipal" className="text-[9px] font-black text-[#2C3E50] uppercase tracking-widest cursor-pointer">Include principal repayment</label>
                                             </div>
 
                                             <div className="space-y-2 pt-2">
@@ -853,24 +948,38 @@ function CalculatorContent() {
                                               </div>
                                               {formData.includePrincipal && (
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-[9px] font-black text-[#D4A373] uppercase tracking-widest">Annual Principal Repayment</span>
+                                                    <span className="text-[9px] font-black text-[#D4A373] uppercase tracking-widest">Annual Monthly Repayment</span>
                                                     <span className="text-sm font-black text-[#D4A373]">€{Math.round(results.yearlyPrincipal).toLocaleString()}</span>
                                                 </div>
                                               )}
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     )}
+                                    </AnimatePresence>
                                 </div>
                             </div>
 
-                            <div className="p-10 bg-[#34495E] text-white rounded-[40px] flex items-center justify-between shadow-2xl shadow-[#34495E]/20">
+                            <div className={cn(
+                              "p-10 rounded-[40px] flex items-center justify-between shadow-2xl transition-colors",
+                              results.profitAfterMortgage >= 0 
+                                ? "bg-emerald-600 shadow-emerald-600/20" 
+                                : "bg-rose-600 shadow-rose-600/20"
+                            )}>
                                 <div className="space-y-1">
-                                    <span className="text-[10px] font-black tracking-[0.2em] uppercase opacity-60">Estimated Net Annual Profit</span>
-                                    <div className="text-5xl font-black">€{Math.round(results.profitAfterMortgage).toLocaleString()}</div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black tracking-[0.2em] uppercase opacity-60 text-white">Estimated Net Annual Profit</span>
+                                      <div className="group/np relative">
+                                        <Info className="size-3 text-white/50 cursor-help" />
+                                        <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/np:opacity-100 transition-opacity z-50 pointer-events-none">
+                                          {TOOLTIP_CONTENT.netProfit}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-5xl font-black text-white">€{Math.round(results.profitAfterMortgage).toLocaleString()}</div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Monthly Profit</div>
-                                    <div className="text-2xl font-black">€{Math.round(results.profitAfterMortgage / 12).toLocaleString()}</div>
+                                    <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1 text-white">Monthly Profit</div>
+                                    <div className="text-2xl font-black text-white">€{Math.round(results.profitAfterMortgage / 12).toLocaleString()}</div>
                                 </div>
                             </div>
                         </div>
@@ -909,8 +1018,16 @@ function CalculatorContent() {
                                         <span className="text-lg font-black text-[#2C3E50]">€{Math.round(results.cashInvested).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-[10px] font-bold text-stone-400">
-                                        <span>Net Operating Income (NOI)</span>
-                                        <span>€{Math.round(results.netAnnualIncome).toLocaleString()}</span>
+                                        <div className="flex items-center gap-2">
+                                          <span>Estimated Net Annual Profit</span>
+                                          <div className="group/enap relative">
+                                            <Info className="size-3 text-stone-300 cursor-help" />
+                                            <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/enap:opacity-100 transition-opacity z-50 pointer-events-none">
+                                              {TOOLTIP_CONTENT.netProfit}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <span>€{Math.round(results.profitAfterMortgage).toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -927,16 +1044,42 @@ function CalculatorContent() {
                         </div>
 
                         <div className="p-8 bg-stone-900 text-white rounded-[40px] space-y-8">
-                             <div className="flex items-center justify-between border-b border-white/10 pb-6">
-                                <div className="flex items-center gap-3">
-                                  <input 
-                                    type="checkbox" 
-                                    id="includeAppreciationROI" 
-                                    checked={formData.includeAppreciationROI} 
-                                    onChange={(e) => setFormData({...formData, includeAppreciationROI: e.target.checked})}
-                                    className="size-5 accent-[#D4A373]"
-                                  />
-                                  <label htmlFor="includeAppreciationROI" className="text-xs font-black uppercase tracking-widest cursor-pointer">Include appreciation & principal repayment</label>
+                             <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 pb-6 gap-6">
+                                <div className="flex flex-wrap gap-6">
+                                  <div className="flex items-center gap-3">
+                                    <input 
+                                      type="checkbox" 
+                                      id="includePrincipalROI" 
+                                      checked={formData.includePrincipalROI} 
+                                      onChange={(e) => setFormData({...formData, includePrincipalROI: e.target.checked})}
+                                      className="size-5 accent-[#D4A373]"
+                                    />
+                                    <div className="flex flex-col">
+                                      <label htmlFor="includePrincipalROI" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Include Principal Repayment</label>
+                                      {formData.includePrincipalROI && (
+                                        <span className="text-[9px] text-[#D4A373] font-bold">
+                                          +€{Math.round(results.yearlyPrincipal).toLocaleString()} ({((results.yearlyPrincipal / (formData.purchasePrice - formData.downPayment || 1)) * 100).toFixed(1)}% of loan)
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <input 
+                                      type="checkbox" 
+                                      id="includeAppreciationROI" 
+                                      checked={formData.includeAppreciationROI} 
+                                      onChange={(e) => setFormData({...formData, includeAppreciationROI: e.target.checked})}
+                                      className="size-5 accent-[#D4A373]"
+                                    />
+                                    <div className="flex flex-col">
+                                      <label htmlFor="includeAppreciationROI" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Include Appreciation</label>
+                                      {formData.includeAppreciationROI && (
+                                        <span className="text-[9px] text-[#D4A373] font-bold">
+                                          +€{Math.round(formData.purchasePrice * (formData.appreciationRate / 100)).toLocaleString()} (Annual increase)
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                              </div>
 
@@ -1087,15 +1230,78 @@ function CalculatorContent() {
                                     </div>
                                 </div>
                                 <div className="p-6 bg-[#34495E] text-white rounded-3xl shadow-xl shadow-[#34495E]/20">
-                                    <span className="text-[10px] font-black uppercase tracking-widest block mb-2 opacity-60">Projected IRR</span>
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Projected IRR</span>
+                                      <div className="group/irr relative">
+                                        <Info className="size-3 text-white/50 cursor-help" />
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/irr:opacity-100 transition-opacity z-50 pointer-events-none text-left">
+                                          {TOOLTIP_CONTENT.irr}
+                                        </div>
+                                      </div>
+                                    </div>
                                     <div className="text-3xl font-black">{results.projectedIRR}%</div>
                                     <p className="text-[9px] font-bold mt-2 uppercase tracking-tight opacity-60">Internal Rate of Return</p>
                                 </div>
                                 <div className="p-6 bg-[#D4A373] text-white rounded-3xl shadow-xl shadow-[#D4A373]/20">
-                                    <span className="text-[10px] font-black uppercase tracking-widest block mb-2 opacity-60">Combined {formData.timeHorizon}Y ROI</span>
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Combined {formData.timeHorizon}Y ROI</span>
+                                      <div className="group/croi relative">
+                                        <Info className="size-3 text-white/50 cursor-help" />
+                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/croi:opacity-100 transition-opacity z-50 pointer-events-none text-left">
+                                          Total percentage gain on your initial cash investment over {formData.timeHorizon} years.
+                                        </div>
+                                      </div>
+                                    </div>
                                     <div className="text-3xl font-black">{results.combinedReturn}%</div>
                                     <p className="text-[9px] font-bold mt-2 uppercase tracking-tight opacity-60">Total project performance</p>
                                 </div>
+                            </div>
+
+                            <div className="pt-10 border-t border-stone-100">
+                                <button 
+                                  onClick={() => setShowCalculationDetails(!showCalculationDetails)}
+                                  className="w-full py-4 border-2 border-stone-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-stone-400 hover:border-[#D4A373] hover:text-[#D4A373] transition-all flex items-center justify-center gap-3"
+                                >
+                                  {showCalculationDetails ? 'Hide Calculation Logic' : 'Show Calculation Logic'}
+                                  <ChevronDown className={cn("size-4 transition-transform", showCalculationDetails ? "rotate-180" : "")} />
+                                </button>
+                                
+                                <AnimatePresence>
+                                {showCalculationDetails && (
+                                  <motion.div 
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="mt-6 p-8 bg-stone-50 rounded-[32px] border border-stone-100 space-y-6">
+                                      <div className="grid md:grid-cols-2 gap-10">
+                                        <div className="space-y-4">
+                                          <h6 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4A373]">Income Formula</h6>
+                                          <p className="text-xs font-bold text-stone-500 leading-relaxed">
+                                            We take your <span className="text-[#34495E]">Monthly Profit (Year 1)</span> and grow it by <span className="text-[#34495E]">{formData.rentGrowthRate}%</span> annually. 
+                                            The total is the sum of these increasing monthly cash flows over {formData.timeHorizon} years.
+                                          </p>
+                                          <div className="p-4 bg-white rounded-2xl border border-stone-200/50 font-mono text-[10px] text-stone-400">
+                                            Sum[ (Monthly Profit × 12) × (1 + {formData.rentGrowthRate/100})^year ]
+                                          </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                          <h6 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#34495E]">Equity Formula</h6>
+                                          <p className="text-xs font-bold text-stone-500 leading-relaxed">
+                                            Your equity grows in two ways: <br />
+                                            1. <span className="text-[#34495E]">Market Growth</span>: Purchase Price × (1 + {formData.appreciationRate}%)^{formData.timeHorizon}. <br />
+                                            2. <span className="text-[#34495E]">Loan Reduction</span>: Remaining mortgage balance decreases every year.
+                                          </p>
+                                          <div className="p-4 bg-white rounded-2xl border border-stone-200/50 font-mono text-[10px] text-stone-400">
+                                            Final Equity = (Purchased Price × Growth^{formData.timeHorizon}) - Remaining Loan
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                )}
+                                </AnimatePresence>
                             </div>
                         </div>
                   </div>
@@ -1134,12 +1340,28 @@ function CalculatorContent() {
                                     ? "bg-white border-[#D4A373]/20 shadow-lg shadow-[#D4A373]/5" 
                                     : "bg-stone-50/30 border-transparent opacity-50"
                             )}>
-                                <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest block mb-2">Phase 2: Gross Yield</span>
-                                <div className={cn(
-                                    "text-4xl font-black tracking-tighter",
-                                    (step === 'gross_yield' || step === 'net_profit' || step === 'roi' || step === 'projection') ? "text-[#D4A373]" : "text-stone-300"
-                                )}>
-                                    {results.grossYield}<span className="text-lg text-stone-200 ml-2">%</span>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest block">Phase 2: Yield & Costs</span>
+                                    <div className="group/gy2 relative">
+                                        <Info className="size-3 text-stone-300 cursor-help" />
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/gy2:opacity-100 transition-opacity z-50 pointer-events-none text-left">
+                                            Includes both Gross Yield (%) and Total Acquisition Costs (€).
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className={cn(
+                                        "text-3xl font-black tracking-tighter",
+                                        (step === 'gross_yield' || step === 'net_profit' || step === 'roi' || step === 'projection') ? "text-[#D4A373]" : "text-stone-300"
+                                    )}>
+                                        {results.grossYield}<span className="text-lg text-stone-200 ml-2">%</span>
+                                    </div>
+                                    <div className={cn(
+                                        "text-sm font-bold tracking-tight",
+                                        (step === 'gross_yield' || step === 'net_profit' || step === 'roi' || step === 'projection') ? "text-[#D4A373]/60" : "text-stone-200"
+                                    )}>
+                                        €{Math.round(results.totalCapitalNeeded).toLocaleString()} <span className="text-[9px] uppercase">TAC</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1151,11 +1373,19 @@ function CalculatorContent() {
                                     : "bg-stone-50/30 border-transparent opacity-50"
                             )}>
                                 <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest block mb-2">Phase 3: Net Profit</span>
-                                <div className={cn(
-                                    "text-4xl font-black tracking-tighter",
-                                    (step === 'net_profit' || step === 'roi' || step === 'projection') ? "text-[#34495E]" : "text-stone-300"
-                                )}>
-                                    €{Math.round(results.profitAfterMortgage / 12).toLocaleString()}<span className="text-lg ml-2">/mo</span>
+                                <div className="space-y-1">
+                                    <div className={cn(
+                                        "text-3xl font-black tracking-tighter",
+                                        (step === 'net_profit' || step === 'roi' || step === 'projection') ? "text-[#34495E]" : "text-stone-300"
+                                    )}>
+                                        €{Math.round(results.profitAfterMortgage / 12).toLocaleString()}<span className="text-lg ml-2">/mo</span>
+                                    </div>
+                                    <div className={cn(
+                                        "text-sm font-bold tracking-tight",
+                                        (step === 'net_profit' || step === 'roi' || step === 'projection') ? "text-[#34495E]/60" : "text-stone-200"
+                                    )}>
+                                        €{Math.round(results.profitAfterMortgage).toLocaleString()}<span className="text-[9px] uppercase ml-1">Yearly</span>
+                                    </div>
                                 </div>
                             </div>
 
