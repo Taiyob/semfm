@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --font-montserrat: "Montserrat", sans-serif;
+  --color-background: #FDFCFB; /* Creme White */
+  --color-foreground: #2C3E50; /* Dark Blue-Gray */
+  --color-primary: #34495E; /* Blue-Gray */
+  --color-secondary: #D4A373; /* Keeping Gold for accents/arcs */
+  --color-accent: #3E5C6B; /* Teal-Gray */
+  --color-muted: #F5F2EF; /* Beige */
+  --color-border: #E5E1D8;
+}
+
+:root {
+  --background: #FDFCFB;
+  --foreground: #2C3E50;
+  --muted: #F5F2EF;
+  --muted-foreground: #7F8C8D;
+  --popover: #FDFCFB;
+  --popover-foreground: #2C3E50;
+  --card: #ffffff;
+  --card-foreground: #2C3E50;
+  --border: #E5E1D8;
+  --input: #E5E1D8;
+  --primary: #34495E;
+  --primary-foreground: #ffffff;
+  --secondary: #D4A373;
+  --secondary-foreground: #ffffff;
+  --accent: #F5F2EF;
+  --accent-foreground: #34495E;
+  --destructive: #E74C3C;
+  --destructive-foreground: #ffffff;
+  --ring: #34495E;
+  --radius: 1rem;
+}
+
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-montserrat);
+  -webkit-font-smoothing: antialiased;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[#34495E] to-[#D4A373];
+}
+
+.glass {
+  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+}
+
+.glass-card {
+  @apply bg-white border border-stone-100 shadow-sm hover:shadow-xl hover:shadow-stone-200/50 transition-all duration-500;
+}
+
+.hero-gradient {
+  background: radial-gradient(circle at top right, rgba(181, 93, 62, 0.05), transparent),
+              radial-gradient(circle at bottom left, rgba(212, 163, 115, 0.05), transparent);
+}
+
+/* Custom utility for section headers */
+.section-tag {
+  @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#34495E]/10 text-[#34495E] text-[10px] font-bold uppercase tracking-widest border border-[#34495E]/20;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply px-8 py-4 bg-[#34495E] text-white font-bold rounded-xl hover:bg-[#2C3E50] transition-all shadow-lg shadow-[#34495E]/20 active:scale-[0.98];
+}
+
+.btn-secondary {
+  @apply px-8 py-4 bg-white text-stone-900 font-bold rounded-xl border border-stone-200 hover:bg-stone-50 transition-all active:scale-[0.98];
+}
+
