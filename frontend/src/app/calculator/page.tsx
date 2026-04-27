@@ -948,7 +948,7 @@ function CalculatorContent() {
                                               </div>
                                               {formData.includePrincipal && (
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-[9px] font-black text-[#D4A373] uppercase tracking-widest">Annual Monthly Repayment</span>
+                                                    <span className="text-[9px] font-black text-[#D4A373] uppercase tracking-widest">Monthly Repayment</span>
                                                     <span className="text-sm font-black text-[#D4A373]">€{Math.round(results.yearlyPrincipal).toLocaleString()}</span>
                                                 </div>
                                               )}
