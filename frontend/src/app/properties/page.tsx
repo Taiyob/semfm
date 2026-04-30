@@ -19,8 +19,11 @@ import {
   TrendingUp,
   Calculator,
   ArrowUpDown,
-  Lock
+  Lock,
+  Heart
 } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store/store';
 
 import { fetchProperties, Property } from '@/lib/airtable';
 import { GatedData } from '@/components/gated-data';
@@ -29,6 +32,7 @@ import { cn } from '@/lib/utils';
 type SortType = 'price-asc' | 'price-desc' | 'yield-desc' | 'yield-asc' | 'appreciation-desc' | 'appreciation-asc';
 
 export default function PropertiesPage() {
+  const auth = useSelector((state: RootState) => state.auth);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -309,6 +313,17 @@ export default function PropertiesPage() {
                                 {property.yield}% Yield
                             </span>
                         </div>
+                        
+                        {/* Save Property Button */}
+                        <button 
+                          className={cn(
+                            "absolute top-6 right-6 size-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl transition-all duration-300 group/heart",
+                            auth?.isAuthenticated ? "hover:bg-red-50 text-stone-300 hover:text-red-500" : "opacity-40 cursor-not-allowed text-stone-400"
+                          )}
+                          title={auth?.isAuthenticated ? "Save to Dashboard" : "Login to save properties"}
+                        >
+                           <Heart className={cn("size-5 transition-transform group-hover/heart:scale-110", !auth?.isAuthenticated && "fill-transparent")} />
+                        </button>
                         </div>
 
                         <div className="p-8 space-y-6 flex-grow flex flex-col justify-between">

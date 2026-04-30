@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Montserrat } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
+import { Providers } from '@/lib/store/Providers';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -30,6 +31,8 @@ export const metadata: Metadata = {
 };
 
 
+import { LayoutWrapper } from '@/components/LayoutWrapper';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,10 +44,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-primary/30">
-
-        <Navbar />
-        <main className="flex-grow pt-24">{children}</main>
-        <Footer />
+        <Providers>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+        </Providers>
       </body>
     </html>
   );

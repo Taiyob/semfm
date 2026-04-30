@@ -13,9 +13,14 @@ import {
   UserCircle2,
   TrendingUp,
   MapPin,
-  Tag
+  Tag,
+  LogOut,
+  LayoutDashboard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store/store';
+import { useLogoutMutation } from '@/lib/store/features/auth/authApi';
 
 const navLinks = [
   { name: 'Markets', href: '/#market-selection', icon: Globe },
@@ -27,8 +32,21 @@ const navLinks = [
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const [logout] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap();
+      window.location.href = '/login';
+    } catch (err) {
+      console.error('Logout failed', err);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -61,17 +79,76 @@ export function Navbar() {
                 {link.name}
               </Link>
             ))}
+            {isAuthenticated && (
+              <Link
+                href="/dashboard"
+                className={`px-4 py-2 text-sm font-bold transition-all rounded-xl flex items-center gap-2 ${
+                  pathname?.startsWith('/dashboard')
+                    ? 'text-[#34495E] bg-[#34495E]/5'
+                    : 'text-stone-600 hover:text-[#2C3E50] hover:bg-stone-50'
+                }`}
+              >
+                <LayoutDashboard className="size-4" />
+                Dashboard
+              </Link>
+            )}
           </div>
 
           <div className="h-6 w-px bg-slate-200" />
 
           <div className="flex items-center gap-4">
-            <Link href="/login" className="px-4 py-2 text-sm font-bold text-stone-600 hover:text-[#2C3E50]">
-                Sign In
-            </Link>
-            <Link href="/register" className="px-6 py-2.5 bg-[#34495E] text-white font-bold rounded-xl text-sm hover:bg-[#34495E] transition-all shadow-lg shadow-stone-950/10">
-                Get Started
-            </Link>
+            {isAuthenticated ? (
+              <div className="relative">
+                <button 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-stone-50 transition-all border border-transparent hover:border-stone-100"
+                >
+                  <UserCircle2 className="size-5 text-[#34495E]" />
+                  <span className="text-sm font-bold text-[#2C3E50]">{user?.firstName || user?.name || 'Dashboard'}</span>
+                  <ChevronDown className={`size-4 text-stone-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl shadow-stone-200/50 border border-stone-100 overflow-hidden py-2"
+                    >
+                      <Link 
+                        href="/dashboard/profile"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-stone-600 hover:text-[#2C3E50] hover:bg-stone-50 transition-colors"
+                      >
+                        <LayoutDashboard className="size-4" />
+                        Dashboard
+                      </Link>
+                      <div className="h-px bg-stone-100 my-1"></div>
+                      <button 
+                        onClick={() => {
+                          handleLogout();
+                          setIsDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors text-left"
+                      >
+                        <LogOut className="size-4" />
+                        Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <>
+                <Link href="/login" className="px-4 py-2 text-sm font-bold text-stone-600 hover:text-[#2C3E50]">
+                    Sign In
+                </Link>
+                <Link href="/register" className="px-6 py-2.5 bg-[#34495E] text-white font-bold rounded-xl text-sm hover:bg-[#34495E] transition-all shadow-lg shadow-stone-950/10">
+                    Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -108,12 +185,34 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="pt-6 border-t border-slate-100 grid grid-cols-2 gap-4">
-                <Link href="/login" onClick={() => setIsOpen(false)} className="w-full py-4 text-center font-bold text-slate-600 bg-slate-50 rounded-2xl">
-                    Sign In
-                </Link>
-                <Link href="/register" onClick={() => setIsOpen(false)} className="w-full py-4 text-center font-bold text-white bg-[#34495E] rounded-2xl">
-                    Register
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <Link 
+                      href="/dashboard/profile"
+                      onClick={() => setIsOpen(false)}
+                      className="col-span-2 w-full py-4 text-center font-bold text-stone-600 bg-stone-50 rounded-2xl flex items-center justify-center gap-2"
+                    >
+                      <LayoutDashboard className="size-5" />
+                      Dashboard
+                    </Link>
+                    <button 
+                      onClick={() => { handleLogout(); setIsOpen(false); }}
+                      className="col-span-2 w-full py-4 text-center font-bold text-red-600 bg-red-50 rounded-2xl flex items-center justify-center gap-2"
+                    >
+                      <LogOut className="size-5" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setIsOpen(false)} className="w-full py-4 text-center font-bold text-slate-600 bg-slate-50 rounded-2xl">
+                        Sign In
+                    </Link>
+                    <Link href="/register" onClick={() => setIsOpen(false)} className="w-full py-4 text-center font-bold text-white bg-[#34495E] rounded-2xl">
+                        Register
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

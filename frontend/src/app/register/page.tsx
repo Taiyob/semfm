@@ -4,9 +4,39 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Logo } from '@/components/logo';
 import { Mail, Lock, ArrowRight, User, ShieldCheck, TrendingUp, Building2, UserCircle2, CheckCircle2 } from 'lucide-react';
+import { useRegisterMutation } from '@/lib/store/features/auth/authApi';
 
 export default function RegisterPage() {
   const [accountType, setAccountType] = useState<'investor' | 'agent'>('investor');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  
+  const [register, { isLoading }] = useRegisterMutation();
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !password) {
+        setError('Please fill in all fields');
+        return;
+    }
+    
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await register({ name, email, password, accountType }).unwrap();
+
+      setSuccess(response.data?.message || 'Registration successful! Redirecting to login...');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+    } catch (err: any) {
+      setError(err.data?.error?.message || err.message || 'Registration failed');
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 hero-gradient font-montserrat">
@@ -88,13 +118,15 @@ export default function RegisterPage() {
                 </button>
             </div>
 
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-6" onSubmit={handleRegister}>
                 <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name / Entity</label>
                     <div className="relative">
                         <User className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
                         <input 
                         type="text" 
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         placeholder={accountType === 'investor' ? "John Doe" : "Agency Name"}
                         className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-slate-600"
                         />
@@ -106,6 +138,8 @@ export default function RegisterPage() {
                         <Mail className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
                         <input 
                         type="email" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         placeholder="name@company.com"
                         className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-slate-600"
                         />
@@ -117,19 +151,38 @@ export default function RegisterPage() {
                         <Lock className="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
                         <input 
                         type="password" 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
                         className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4.5 pl-14 pr-6 focus:ring-2 focus:ring-[#34495E] focus:bg-white transition-all font-bold text-slate-600"
                         />
                     </div>
                 </div>
 
+                {error && (
+                    <div className="p-3 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-100 flex items-center gap-2">
+                        {error}
+                    </div>
+                )}
+                
+                {success && (
+                    <div className="p-3 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-xl border border-emerald-100 flex items-center gap-2">
+                        {success}
+                    </div>
+                )}
+
                 <div className="flex items-center gap-2 px-1">
                     <CheckCircle2 className="size-4 text-emerald-500" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">By joining you agree to our Investor Terms</span>
                 </div>
 
-                <button className="w-full py-5 bg-[#34495E] text-white font-black rounded-2xl hover:bg-[#34495E] transition-all shadow-xl shadow-stone-900/20 flex items-center justify-center gap-3 group mt-6 uppercase tracking-widest text-[10px]">
-                    Create {accountType} Account <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full py-5 bg-[#34495E] text-white font-black rounded-2xl hover:bg-[#34495E] transition-all shadow-xl shadow-stone-900/20 flex items-center justify-center gap-3 group mt-6 uppercase tracking-widest text-[10px] disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {isLoading ? 'Creating Account...' : `Create ${accountType} Account`} 
+                    {!isLoading && <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />}
                 </button>
             </form>
 
