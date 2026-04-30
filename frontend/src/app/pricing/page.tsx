@@ -20,9 +20,11 @@ import {
   Lock,
   Search,
   ArrowUpDown,
-  Laptop
+  Laptop,
+  MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useGetPropertiesQuery } from '@/lib/store/features/property/propertyApi';
 
 type UserType = 'investor' | 'agent';
 
@@ -257,8 +259,18 @@ export default function PricingPage() {
             </AnimatePresence>
         </div>
 
+        {/* Market Preview Section */}
+        <div className="mt-40 space-y-12">
+            <div className="text-center">
+                <h2 className="text-3xl font-black text-[#2C3E50] uppercase tracking-tighter">Verified Market Opportunities</h2>
+                <p className="text-stone-400 font-bold text-sm uppercase tracking-widest mt-2">Glimpse of current high-yield assets in our network</p>
+            </div>
+
+            <PropertyPreviewList />
+        </div>
+
         {/* Confidence Footer */}
-        <div className="mt-24 text-center">
+        <div className="mt-32 text-center">
             <p className="text-xs font-bold text-stone-400 uppercase tracking-[0.3em]">
                 Secure payments processed via secure gateway
             </p>
@@ -271,5 +283,68 @@ export default function PricingPage() {
       </div>
     </div>
   );
+}
+
+function PropertyPreviewList() {
+    const { data: propertiesData, isLoading } = useGetPropertiesQuery({ page: 1, limit: 3 });
+    const properties = propertiesData?.data || [];
+
+    if (isLoading) {
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="h-[400px] bg-stone-50 rounded-[48px] animate-pulse" />
+                ))}
+            </div>
+        );
+    }
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {properties.map((property: any, index: number) => (
+                <motion.div 
+                    key={property.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group bg-white rounded-[48px] overflow-hidden border border-stone-100 shadow-xl shadow-stone-200/20 flex flex-col hover:border-[#D4A373]/20 transition-all"
+                >
+                    <div className="h-56 relative overflow-hidden">
+                        {property.image ? (
+                            <img src={property.image} alt={property.title} className="size-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        ) : (
+                            <div className="size-full bg-stone-50 flex items-center justify-center">
+                                <Building2 className="size-10 text-stone-200" />
+                            </div>
+                        )}
+                        <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-black text-[#2C3E50] uppercase tracking-widest shadow-xl">
+                            {property.type}
+                        </div>
+                    </div>
+                    
+                    <div className="p-8 flex flex-col flex-grow">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-lg font-black text-[#2C3E50] leading-tight line-clamp-1">{property.title}</h3>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-stone-400 font-bold text-[10px] uppercase tracking-widest mb-6">
+                            <MapPin className="size-3" /> {property.location}
+                        </div>
+
+                        <div className="mt-auto pt-6 border-t border-stone-50 flex items-center justify-between">
+                            <div>
+                                <span className="block text-[9px] font-black text-stone-300 uppercase tracking-widest">Entry Price</span>
+                                <span className="text-xl font-black text-[#2C3E50]">€{property.price.toLocaleString()}</span>
+                            </div>
+                            <div className="text-right">
+                                <span className="block text-[9px] font-black text-stone-300 uppercase tracking-widest">Net Yield</span>
+                                <span className="text-xl font-black text-emerald-500">{property.yield}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
+        </div>
+    );
 }
 

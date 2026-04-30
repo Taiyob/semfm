@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './features/auth/authSlice';
 import { authApi } from './features/auth/authApi';
+import { propertyApi } from './features/property/propertyApi';
 import {
   persistReducer,
   persistStore,
@@ -41,13 +42,14 @@ export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
     [authApi.reducerPath]: authApi.reducer,
+    [propertyApi.reducerPath]: propertyApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat([authApi.middleware]),
+    }).concat([authApi.middleware, propertyApi.middleware]),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

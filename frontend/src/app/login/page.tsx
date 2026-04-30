@@ -1,19 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Logo } from '@/components/logo';
 import { Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 import { FaGithub, FaGoogle } from 'react-icons/fa6';
 import { useLoginMutation } from '@/lib/store/features/auth/authApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store/store';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const auth = useSelector((state: RootState) => state.auth);
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const [login, { isLoading }] = useLoginMutation();
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      router.replace('/');
+    }
+  }, [auth.isAuthenticated, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

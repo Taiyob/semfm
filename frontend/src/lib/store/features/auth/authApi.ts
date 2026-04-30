@@ -74,6 +74,27 @@ export const authApi = createApi({
       },
       invalidatesTags: ['Auth', 'User', 'Profile'],
     }),
+
+    updateProfile: builder.mutation({
+      query: (userData) => ({
+        url: '/users/profile',
+        method: 'PATCH',
+        data: userData,
+      }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            setCredentials({
+              user: (data as any).data.user,
+            })
+          );
+        } catch (error) {
+          console.error('Update profile failed:', error);
+        }
+      },
+      invalidatesTags: ['User', 'Profile'],
+    }),
   }),
 });
 
@@ -82,4 +103,5 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useLogoutMutation,
+  useUpdateProfileMutation,
 } = authApi;

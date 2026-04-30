@@ -1,6 +1,9 @@
 'use client';
 
-import { useCreatePropertyMutation } from '@/lib/store/features/property/propertyApi';
+import { 
+  useGetPropertyByIdQuery, 
+  useUpdatePropertyMutation 
+} from '@/lib/store/features/property/propertyApi';
 import { 
   Building2, 
   Euro, 
@@ -15,14 +18,19 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'motion/react';
+import Swal from 'sweetalert2';
 
-export default function AddPropertyPage() {
+export default function EditPropertyPage() {
   const router = useRouter();
+  const { id } = useParams();
   const [step, setStep] = useState(1);
-  const [createProperty, { isLoading }] = useCreatePropertyMutation();
+  
+  const { data: propertyResponse, isLoading: isFetching } = useGetPropertyByIdQuery(id as string);
+  const [updateProperty, { isLoading: isUpdating }] = useUpdatePropertyMutation();
+  
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -37,12 +45,34 @@ export default function AddPropertyPage() {
     sqm: '',
     bedrooms: '1',
     region: '',
-    countryId: undefined,
     condition: 'Standard',
     locationType: 'CENTRE',
     outdoorSpace: 'NONE',
     energyLabel: 'C',
   });
+
+  // Populate form data when property data is fetched
+  useEffect(() => {
+    if (propertyResponse?.data) {
+        const p = propertyResponse.data;
+        setFormData({
+            title: p.title || '',
+            description: p.description || '',
+            price: p.price !== undefined && p.price !== null ? String(p.price) : '',
+            yield: p.yield !== undefined && p.yield !== null ? String(p.yield) : '',
+            appreciation: p.appreciation !== undefined && p.appreciation !== null ? String(p.appreciation) : '4.5',
+            location: p.location || '',
+            type: p.type || 'Apartment',
+            sqm: p.sqm !== undefined && p.sqm !== null ? String(p.sqm) : '',
+            bedrooms: p.bedrooms !== undefined && p.bedrooms !== null ? String(p.bedrooms) : '1',
+            region: p.region || '',
+            condition: p.condition || 'Standard',
+            locationType: p.locationType || 'CENTRE',
+            outdoorSpace: p.outdoorSpace || 'NONE',
+            energyLabel: p.energyLabel || 'C',
+        });
+    }
+  }, [propertyResponse]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -58,44 +88,73 @@ export default function AddPropertyPage() {
 
     setStatus('idle');
     try {
-      await createProperty({
+      const payload = {
+        id: id as string,
         title: formData.title,
         description: formData.description,
-        price: Number(formData.price),
-        yield: Number(formData.yield),
-        appreciation: Number(formData.appreciation),
+        price: parseFloat(formData.price) || 0,
+        yield: parseFloat(formData.yield) || 0,
+        appreciation: parseFloat(formData.appreciation) || 0,
         location: formData.location,
         type: formData.type,
-        sqm: Number(formData.sqm),
-        bedrooms: Number(formData.bedrooms),
+        sqm: parseFloat(formData.sqm) || 0,
+        bedrooms: parseInt(formData.bedrooms) || 0,
         region: formData.region,
         condition: formData.condition,
         locationType: formData.locationType,
         outdoorSpace: formData.outdoorSpace,
         energyLabel: formData.energyLabel,
-      }).unwrap();
+      };
+
+      await updateProperty(payload).unwrap();
 
       setStatus('success');
+      
+      Swal.fire({
+        title: 'Updated!',
+        text: 'Property has been updated successfully.',
+        icon: 'success',
+        confirmButtonColor: '#34495E',
+        customClass: {
+            popup: 'rounded-[40px] font-montserrat',
+            title: 'text-2xl font-black text-[#2C3E50] uppercase tracking-tighter',
+            confirmButton: 'px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest',
+        }
+      });
+
       setTimeout(() => {
         router.push('/dashboard/listings');
       }, 2000);
     } catch (err: any) {
-      console.error('Failed to create property:', err);
+      console.error('Update Error Details:', {
+        message: err.message,
+        data: err.data,
+        status: err.status
+      });
       setStatus('error');
-      setErrorMessage(err?.data?.message || 'Failed to create property listing. Please check your inputs.');
+      setErrorMessage(err?.data?.error?.message || err?.data?.message || 'Failed to update property listing. Please check your inputs.');
     }
   };
+
+  if (isFetching) {
+    return (
+      <div className="h-96 flex flex-col items-center justify-center gap-4">
+        <Loader2 className="size-12 text-[#34495E] animate-spin" />
+        <p className="text-stone-400 font-bold text-xs uppercase tracking-widest">Loading Asset Data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl space-y-8 pb-20">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-4">
            <div className="size-16 bg-[#34495E] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-[#34495E]/20">
-              <Building2 className="size-8" />
+              <Edit2 className="size-8" />
            </div>
            <div>
-              <h2 className="text-xl font-black text-[#2C3E50]">List New Property</h2>
-              <p className="text-stone-400 font-bold text-xs uppercase tracking-widest">Marketplace Inventory</p>
+              <h2 className="text-xl font-black text-[#2C3E50]">Edit Property</h2>
+              <p className="text-stone-400 font-bold text-xs uppercase tracking-widest">Update Asset Parameters</p>
            </div>
         </div>
       </header>
@@ -239,14 +298,14 @@ export default function AddPropertyPage() {
             </div>
           )}
 
-          {/* STEP 4: REVIEW & PUBLISH */}
+          {/* STEP 4: REVIEW & SAVE */}
           {step === 4 && (
             <div className="space-y-8">
-               <h3 className="text-lg font-black text-[#2C3E50]">Final Review</h3>
+               <h3 className="text-lg font-black text-[#2C3E50]">Review Updates</h3>
                <div className="p-8 bg-stone-50 rounded-[32px] border border-stone-100 space-y-6">
                   <div className="flex justify-between items-center">
-                    <span className="text-stone-400 text-xs font-bold uppercase tracking-widest">Listing Summary</span>
-                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase">Asset Validated</span>
+                    <span className="text-stone-400 text-xs font-bold uppercase tracking-widest">Update Summary</span>
+                    <span className="px-3 py-1 bg-[#34495E] text-white rounded-full text-[10px] font-black uppercase">Modified Asset</span>
                   </div>
                   <div className="space-y-1">
                     <h4 className="text-xl font-black text-[#2C3E50] leading-none">{formData.title || 'Untitled Asset'}</h4>
@@ -276,7 +335,7 @@ export default function AddPropertyPage() {
                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-3 p-6 bg-emerald-50 text-emerald-600 rounded-3xl border border-emerald-100">
                     <CheckCircle2 className="size-6" />
                     <div className="font-bold">
-                      <p className="text-sm">Listing published successfully!</p>
+                      <p className="text-sm">Changes saved successfully!</p>
                       <p className="text-[10px] opacity-80">Redirecting to your listings...</p>
                     </div>
                  </motion.div>
@@ -286,7 +345,7 @@ export default function AddPropertyPage() {
                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-3 p-6 bg-rose-50 text-rose-600 rounded-3xl border border-rose-100">
                     <AlertCircle className="size-6" />
                     <div className="font-bold">
-                      <p className="text-sm">Error publishing listing</p>
+                      <p className="text-sm">Error saving changes</p>
                       <p className="text-[10px] opacity-80">{errorMessage}</p>
                     </div>
                  </motion.div>
@@ -299,7 +358,7 @@ export default function AddPropertyPage() {
           <div className="flex items-center justify-between">
              <button 
                type="button"
-               disabled={step === 1 || isLoading}
+               disabled={step === 1 || isUpdating}
                onClick={() => setStep(step - 1)}
                className="px-8 py-4 text-stone-400 font-black text-xs uppercase tracking-widest disabled:opacity-0 transition-all hover:text-[#34495E]"
              >
@@ -318,15 +377,15 @@ export default function AddPropertyPage() {
              ) : (
                <button 
                  type="submit"
-                 disabled={isLoading}
+                 disabled={isUpdating}
                  className="flex items-center gap-3 px-10 py-5 bg-[#34495E] disabled:bg-stone-300 text-white font-black rounded-[24px] text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-[#34495E]/20"
                >
-                  {isLoading ? (
+                  {isUpdating ? (
                     <Loader2 className="size-5 animate-spin" />
                   ) : (
                     <Save className="size-5" />
                   )}
-                  {isLoading ? 'Publishing...' : 'Publish Listing'}
+                  {isUpdating ? 'Saving Changes...' : 'Save Changes'}
                </button>
              )}
           </div>
@@ -336,4 +395,12 @@ export default function AddPropertyPage() {
   );
 }
 
-
+// Reuse Edit2 icon
+function Edit2({ className }: { className?: string }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+            <path d="m15 5 4 4"/>
+        </svg>
+    )
+}

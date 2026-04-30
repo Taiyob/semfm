@@ -31,6 +31,11 @@ export interface AxiosRequest<TData = unknown> {
 export const axiosBaseQuery =
   <TData = unknown>(): BaseQueryFn<AxiosRequest<TData>, unknown, unknown> =>
     async ({ url, method, data, params, headers, onUploadProgress }) => {
+      // Debug log for outgoing requests
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🚀 [${method?.toUpperCase()}] ${url}`, { data, params });
+      }
+      
       try {
         const result = await axiosInstance({
           url,

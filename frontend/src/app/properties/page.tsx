@@ -25,7 +25,10 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
 
-import { fetchProperties, Property } from '@/lib/airtable';
+import { 
+  useGetPropertiesQuery,
+  useIncrementViewsMutation 
+} from '@/lib/store/features/property/propertyApi';
 import { GatedData } from '@/components/gated-data';
 import { cn } from '@/lib/utils';
 
@@ -33,8 +36,6 @@ type SortType = 'price-asc' | 'price-desc' | 'yield-desc' | 'yield-asc' | 'appre
 
 export default function PropertiesPage() {
   const auth = useSelector((state: RootState) => state.auth);
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
   
   // Filter States
   const [search, setSearch] = useState('');
@@ -48,17 +49,15 @@ export default function PropertiesPage() {
   const [sqmRange, setSqmRange] = useState(500);
   const [condition, setCondition] = useState('All');
 
-  useEffect(() => {
-    async function loadData() {
-      const data = await fetchProperties('portugal');
-      setProperties(data);
-      setLoading(false);
-    }
-    loadData();
-  }, []);
+  const { data: propertiesData, isLoading: loading } = useGetPropertiesQuery({
+    page: 1,
+    limit: 100, // For now fetch all to use client-side filtering as before
+  });
+
+  const properties = propertiesData?.data || [];
 
   const filteredProperties = useMemo(() => {
-    return properties
+    return (properties as any[])
       .filter(p => {
         const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) || p.location.toLowerCase().includes(search.toLowerCase());
         const matchesCity = city === 'All' || p.location.includes(city);
@@ -300,13 +299,19 @@ export default function PropertiesPage() {
                         className="group bg-white rounded-[48px] overflow-hidden border border-transparent hover:border-[#D4A373]/20 hover:shadow-2xl hover:shadow-[#D4A373]/5 transition-all duration-500 relative flex flex-col"
                     >
                         <div className="relative h-64 m-2 rounded-[40px] overflow-hidden bg-stone-100">
-                        <Image
-                            src={property.image}
-                            alt={property.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 40vw, 33vw"
-                            className="object-cover transition-transform group-hover:scale-105 duration-1000"
-                        />
+                        {property.image ? (
+                            <Image
+                                src={property.image}
+                                alt={property.title}
+                                fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 40vw, 33vw"
+                                className="object-cover transition-transform group-hover:scale-105 duration-1000"
+                            />
+                        ) : (
+                            <div className="size-full flex items-center justify-center bg-stone-50">
+                                <Building2 className="size-12 text-stone-200" />
+                            </div>
+                        )}
                         <div className="absolute top-6 left-6">
                             <span className="px-5 py-3 bg-[#D4A373] text-white rounded-2xl text-xs font-black shadow-xl flex items-center gap-2 uppercase tracking-widest border border-white/20">
                                 <TrendingUp className="size-4" />

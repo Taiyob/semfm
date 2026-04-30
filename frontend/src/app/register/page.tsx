@@ -1,12 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Logo } from '@/components/logo';
 import { Mail, Lock, ArrowRight, User, ShieldCheck, TrendingUp, Building2, UserCircle2, CheckCircle2 } from 'lucide-react';
 import { useRegisterMutation } from '@/lib/store/features/auth/authApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store/store';
+import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
+  const auth = useSelector((state: RootState) => state.auth);
+  const router = useRouter();
   const [accountType, setAccountType] = useState<'investor' | 'agent'>('investor');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,6 +20,12 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState('');
   
   const [register, { isLoading }] = useRegisterMutation();
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      router.replace('/');
+    }
+  }, [auth.isAuthenticated, router]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

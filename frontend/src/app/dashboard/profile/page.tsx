@@ -1,6 +1,6 @@
 'use client';
 
-import { useGetMeQuery } from '@/lib/store/features/auth/authApi';
+import { useGetMeQuery, useUpdateProfileMutation } from '@/lib/store/features/auth/authApi';
 import { 
   UserCircle2, 
   Mail, 
@@ -9,13 +9,17 @@ import {
   User,
   Globe,
   Save,
-  Loader2
+  Loader2,
+  CheckCircle2,
+  Type
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 
 export default function ProfilePage() {
   const { data, isLoading, error } = useGetMeQuery();
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -23,6 +27,8 @@ export default function ProfilePage() {
     displayName: '',
     role: ''
   });
+
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     if (data?.data?.user) {
@@ -36,6 +42,25 @@ export default function ProfilePage() {
       });
     }
   }, [data]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('idle');
+    
+    try {
+      await updateProfile({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        displayName: formData.displayName,
+      }).unwrap();
+      
+      setStatus('success');
+      setTimeout(() => setStatus('idle'), 3000);
+    } catch (err) {
+      console.error('Update failed:', err);
+      setStatus('error');
+    }
+  };
   
   if (isLoading) {
     return (
@@ -53,8 +78,6 @@ export default function ProfilePage() {
       </div>
     );
   }
-
-  const user = data.data.user;
 
   return (
     <div className="max-w-4xl space-y-8">
@@ -79,8 +102,23 @@ export default function ProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white p-10 rounded-[40px] shadow-sm border border-stone-100"
       >
-        <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-8" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Display Name */}
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px] ml-1">Display Name</label>
+              <div className="relative group">
+                <Type className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-stone-400 group-focus-within:text-[#34495E] transition-colors" />
+                <input 
+                  type="text" 
+                  value={formData.displayName}
+                  onChange={(e) => setFormData({...formData, displayName: e.target.value})}
+                  className="w-full pl-12 pr-4 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-stone-700 focus:bg-white focus:border-[#34495E] focus:ring-4 focus:ring-[#34495E]/5 outline-none transition-all"
+                  placeholder="Enter display name"
+                />
+              </div>
+            </div>
+
             {/* First Name */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px] ml-1">First Name</label>
@@ -138,34 +176,34 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-
-            {/* Region */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px] ml-1">Primary Region</label>
-              <div className="relative group">
-                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-stone-400 group-focus-within:text-[#34495E] transition-colors" />
-                <select className="w-full pl-12 pr-4 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-stone-700 focus:bg-white focus:border-[#34495E] outline-none appearance-none cursor-pointer">
-                  <option>Global / European Markets</option>
-                  <option>Spain (ES)</option>
-                  <option>Portugal (PT)</option>
-                  <option>Greece (GR)</option>
-                </select>
-              </div>
-            </div>
           </div>
 
           <div className="h-px bg-stone-100 my-10" />
 
           <div className="flex items-center justify-between gap-4">
              <div className="text-stone-400 text-xs font-bold max-w-xs">
-                Your email address is used for login and cannot be changed here. Contact support for email updates.
+                {status === 'success' ? (
+                  <span className="text-emerald-500 flex items-center gap-2">
+                    <CheckCircle2 className="size-4" />
+                    Changes saved successfully!
+                  </span>
+                ) : status === 'error' ? (
+                  <span className="text-rose-500">Failed to update profile. Please try again.</span>
+                ) : (
+                  "Your email address is used for login and cannot be changed here."
+                )}
              </div>
              <button 
                type="submit"
-               className="flex items-center gap-3 px-10 py-5 bg-[#34495E] text-white font-black rounded-[24px] text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-[#34495E]/20"
+               disabled={isUpdating}
+               className="flex items-center gap-3 px-10 py-5 bg-[#34495E] disabled:bg-stone-300 text-white font-black rounded-[24px] text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-[#34495E]/20"
              >
-                <Save className="size-5" />
-                Save Changes
+                {isUpdating ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  <Save className="size-5" />
+                )}
+                {isUpdating ? 'Saving...' : 'Save Changes'}
              </button>
           </div>
         </form>
@@ -173,3 +211,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

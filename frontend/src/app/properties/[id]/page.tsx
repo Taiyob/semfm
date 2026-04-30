@@ -26,7 +26,11 @@ import {
   HelpCircle,
   BarChart3
 } from 'lucide-react';
-import { fetchProperties, Property } from '@/lib/airtable';
+import { 
+  useGetPropertyByIdQuery, 
+  useIncrementViewsMutation,
+  useIncrementLeadsMutation 
+} from '@/lib/store/features/property/propertyApi';
 import { GatedData } from '@/components/gated-data';
 import { calculateAcquisitionBreakdown } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
@@ -48,19 +52,33 @@ function Tooltip({ text, active }: { text: string; active?: boolean }) {
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [property, setProperty] = useState<Property | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: propertyResponse, isLoading: loading } = useGetPropertyByIdQuery(id);
+  const [incrementViews] = useIncrementViewsMutation();
+  const [incrementLeads] = useIncrementLeadsMutation();
   const [scenario, setScenario] = useState<Scenario>('investor');
 
+  const property = propertyResponse?.data;
+
   useEffect(() => {
-    async function loadData() {
-        const all = await fetchProperties('portugal');
-        const found = all.find(p => p.id === id);
-        setProperty(found || null);
-        setLoading(false);
+    if (id) {
+      // Session-based tracking: check if this property has already been viewed in this session
+      const viewedProperties = JSON.parse(sessionStorage.getItem('viewed_properties') || '[]');
+      
+      if (!viewedProperties.includes(id)) {
+        incrementViews(id);
+        // Add to session storage so we don't count it again in this session
+        sessionStorage.setItem('viewed_properties', JSON.stringify([...viewedProperties, id]));
+      }
     }
-    loadData();
-  }, [id]);
+  }, [id, incrementViews]);
+
+  const handleContactAgent = async () => {
+    if (id) {
+      await incrementLeads(id);
+      // Optional: Add a toast or modal to confirm
+      alert('Interest sent to agent! They will contact you soon.');
+    }
+  };
 
   const costs = useMemo(() => {
     if (!property) return null;
@@ -79,9 +97,14 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       <div className="grid lg:grid-cols-12 gap-16">
         {/* Left: Visuals and Description */}
         <div className="lg:col-span-7 space-y-12">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative aspect-[16/10] rounded-[64px] overflow-hidden shadow-2xl border-4 border-white">
-                <Image src={property.image} alt={property.title} fill priority sizes="(max-width: 1024px) 100vw, 60vw" className="object-cover" />
-                {/* Asset ID badge removed */}
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative aspect-[16/10] rounded-[64px] overflow-hidden shadow-2xl border-4 border-white bg-stone-100">
+                {property.image ? (
+                    <Image src={property.image} alt={property.title} fill priority sizes="(max-width: 1024px) 100vw, 60vw" className="object-cover" />
+                ) : (
+                    <div className="size-full flex items-center justify-center bg-stone-50">
+                        <Building2 className="size-20 text-stone-200" />
+                    </div>
+                )}
             </motion.div>
 
             <div className="space-y-8 p-10 bg-white rounded-[48px] border border-stone-100 shadow-xl shadow-stone-200/40">
@@ -246,9 +269,15 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                          <GatedData blur={true}><div className="text-4xl font-black text-[#2C3E50] tracking-tighter uppercase">+245%</div></GatedData>
                     </div>
                 </div>
-
-                 {/* Full financial audit button removed */}
             </div>
+
+            {/* Contact Agent Action */}
+            <button 
+                onClick={handleContactAgent}
+                className="w-full py-6 bg-[#D4A373] text-white rounded-[32px] text-xs font-black uppercase tracking-[0.3em] shadow-2xl shadow-[#D4A373]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+            >
+                Contact Agent for Details
+            </button>
         </div>
       </div>
     </div>
