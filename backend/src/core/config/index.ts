@@ -5,14 +5,17 @@ const result = dotenv.config();
 
 // Handle .env loading errors
 if (result.error) {
+  const isVercel = process.env.VERCEL === "1";
+  const isProduction = process.env.NODE_ENV === "production";
+
   if (result.error.message.includes("ENOENT")) {
-    if (process.env.NODE_ENV !== "production") {
+    if (!isVercel && !isProduction) {
       throw new Error(
         "⚠️  .env file not found. Please create one based on .env.example",
       );
     } else {
       console.warn(
-        "⚠️  .env file not found. Using provided environment variables.",
+        "⚠️  .env file not found. Using platform environment variables.",
       );
     }
   } else {
@@ -46,6 +49,9 @@ export const config = {
       secret: process.env.JWT_SECRET,
       expiresIn: process.env.JWT_EXPIRES_IN || "1d",
       issuer: process.env.JWT_ISSUER || "ignitor-app",
+    },
+    bcrypt: {
+      saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || "12", 10),
     },
   },
   defaultAdmin: {

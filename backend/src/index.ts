@@ -8,41 +8,59 @@ import { PrismaProvider } from "./providers/PrismaProvider";
 import { prisma } from "./lib/prisma";
 
 // Modules (Business Logic)
+import { AuthModule } from "./modules/Auth/AuthModule";
+
+// Initialize the Ignitor Engine
+const ignitor = new IgnitorApp();
+const expressApp = ignitor.getApp();
+
+let isInitialized = false;
+let initializationPromise: Promise<void> | null = null;
 
 async function bootstrap() {
   try {
     AppLogger.info("🗹 Starting application bootstrap");
 
-    // 1. Initialize the Ignitor Engine
-    const app = new IgnitorApp();
-
-    // 2. Register Infrastructure Providers
+    // 1. Register Infrastructure Providers
     AppLogger.info("⚙ Registering infrastructure...");
-    app.getContext().registerProvider("prisma", new PrismaProvider(prisma));
+    ignitor.getContext().registerProvider("prisma", new PrismaProvider(prisma));
 
-    // 3. Register Application Modules
+    // 2. Register Application Modules
     AppLogger.info("⚙ Registering modules...");
-    // app.registerModule(new AuthModule());
-    // app.registerModule(new ProductModule());
+    ignitor.registerModule(new AuthModule());
+    // ignitor.registerModule(new ProductModule());
     AppLogger.info("✔ All modules registered successfully");
 
-    // 4. Spark the server!
-    await app.spark(config.server.port);
+    // 3. Spark the server!
+    await ignitor.spark(config.server.port);
 
     AppLogger.info("✷ Ignitor sparked successfully");
+    isInitialized = true;
   } catch (error) {
-    // Centralized Bootstrap Error Handling
     AppLogger.error("⬤ Failed to initialize application:", {
       error: error instanceof Error ? error : new Error(String(error)),
       context: "application-bootstrap",
       stack: error instanceof Error ? error.stack : undefined,
     });
-    process.exit(1);
+    throw error;
   }
 }
 
-// Start the application
-bootstrap().catch((err) => {
-  AppLogger.error("❌ Unhandled bootstrap error:", { error: err });
-  process.exit(1);
-});
+// Handler for Vercel
+export default async (req: any, res: any) => {
+  if (!isInitialized) {
+    if (!initializationPromise) {
+      initializationPromise = bootstrap();
+    }
+    await initializationPromise;
+  }
+  return expressApp(req, res);
+};
+
+// Automatic start for local development
+if (process.env.VERCEL !== "1") {
+  bootstrap().catch((err) => {
+    AppLogger.error("❌ Unhandled bootstrap error:", { error: err });
+    process.exit(1);
+  });
+}

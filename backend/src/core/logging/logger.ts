@@ -44,18 +44,17 @@ export class AppLogger {
 
   private static init(): Logger {
     if (!this.instance) {
-      this.instance = createLogger({
-        exitOnError: false,
-        format: combine(
-          errors({ stack: true }),
-          timestamp({
-            format: () => dateFnsFormat(new Date(), "yyyy-MM-dd HH:mm:ss.SSS"),
-          }),
-        ),
-        transports: [
-          new transports.Console({
-            format: combine(consoleFormat),
-          }),
+      const isVercel = process.env.VERCEL === "1";
+
+      const logTransports: any[] = [
+        new transports.Console({
+          format: combine(consoleFormat),
+        }),
+      ];
+
+      // Only add file-based logging if NOT on Vercel
+      if (!isVercel) {
+        logTransports.push(
           new DailyRotateFile({
             dirname: LOG_DIR,
             filename: "app-%DATE%.log",
@@ -64,23 +63,38 @@ export class AppLogger {
             maxSize: "5m",
             format: combine(json({ space: 2 })),
           }),
-        ],
-        exceptionHandlers: [
-          new DailyRotateFile({
-            dirname: LOG_DIR,
-            filename: "exceptions-%DATE%.log",
-            datePattern: "YYYY-MM-DD",
-            format: combine(json({ space: 2 })),
+        );
+      }
+
+      this.instance = createLogger({
+        exitOnError: false,
+        format: combine(
+          errors({ stack: true }),
+          timestamp({
+            format: () => dateFnsFormat(new Date(), "yyyy-MM-dd HH:mm:ss.SSS"),
           }),
-        ],
-        rejectionHandlers: [
-          new DailyRotateFile({
-            dirname: LOG_DIR,
-            filename: "rejections-%DATE%.log",
-            datePattern: "YYYY-MM-DD",
-            format: combine(json({ space: 2 })),
-          }),
-        ],
+        ),
+        transports: logTransports,
+        exceptionHandlers: isVercel
+          ? []
+          : [
+              new DailyRotateFile({
+                dirname: LOG_DIR,
+                filename: "exceptions-%DATE%.log",
+                datePattern: "YYYY-MM-DD",
+                format: combine(json({ space: 2 })),
+              }),
+            ],
+        rejectionHandlers: isVercel
+          ? []
+          : [
+              new DailyRotateFile({
+                dirname: LOG_DIR,
+                filename: "rejections-%DATE%.log",
+                datePattern: "YYYY-MM-DD",
+                format: combine(json({ space: 2 })),
+              }),
+            ],
       });
     }
     return this.instance;

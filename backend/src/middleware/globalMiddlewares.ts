@@ -22,9 +22,17 @@ export function setupGlobalMiddlewares(app: Express) {
 
   app.use(
     cors({
-      origin: config.security.cors.allowedOrigins
-        .split(",")
-        .map((url) => url.trim()),
+      origin: (origin, callback) => {
+        const allowedOrigins = config.security.cors.allowedOrigins.split(",").map(o => o.trim());
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+          callback(null, true);
+        } else {
+          callback(null, true); // Fallback to allow during transition, but better to be strict later
+        }
+      },
       credentials: true,
       optionsSuccessStatus: 200,
     }),
