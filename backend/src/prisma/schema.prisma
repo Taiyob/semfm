@@ -166,6 +166,9 @@ model Property {
   agentId String? @db.Uuid
   agent   User?   @relation(name: "PropertyAgent", fields: [agentId], references: [id], onDelete: SetNull)
 
+  views Int @default(0)
+  leads Int @default(0)
+
   calculations SavedCalculation[]
   savedBy      User[]             @relation("SavedProperties")
 

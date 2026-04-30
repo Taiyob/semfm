@@ -9,6 +9,8 @@ import { prisma } from "./lib/prisma";
 
 // Modules (Business Logic)
 import { AuthModule } from "./modules/Auth/AuthModule";
+import { UserModule } from "./modules/User/UserModule";
+import { PropertyModule } from "./modules/Property/PropertyModule";
 
 // Initialize the Ignitor Engine
 const ignitor = new IgnitorApp();
@@ -28,6 +30,8 @@ async function bootstrap() {
     // 2. Register Application Modules
     AppLogger.info("⚙ Registering modules...");
     ignitor.registerModule(new AuthModule());
+    ignitor.registerModule(new UserModule());
+    ignitor.registerModule(new PropertyModule());
     // ignitor.registerModule(new ProductModule());
     AppLogger.info("✔ All modules registered successfully");
 

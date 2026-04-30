@@ -17,8 +17,8 @@ export const generateToken = (payload: JwtPayload): string => {
         });
     }
 
-    return jwt.sign(payload, config.security.jwt.secret, {
-        expiresIn: config.security.jwt.expiresIn,
+    return jwt.sign(payload, config.security.jwt.secret as string, {
+        expiresIn: config.security.jwt.expiresIn as any,
         issuer: config.security.jwt.issuer,
     });
 };
@@ -32,7 +32,7 @@ export const verifyToken = (token: string): JwtPayload => {
     }
 
     try {
-        return jwt.verify(token, config.security.jwt.secret) as JwtPayload;
+        return jwt.verify(token, config.security.jwt.secret as string) as JwtPayload;
     } catch (error) {
         throw new AppError({
             statusCode: HTTPStatusCode.UNAUTHORIZED,
