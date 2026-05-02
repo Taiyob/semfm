@@ -2,6 +2,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './features/auth/authSlice';
 import { authApi } from './features/auth/authApi';
 import { propertyApi } from './features/property/propertyApi';
+import { leadsApi } from './features/leads/leadsApi';
+import { investmentsApi } from './features/investments/investmentsApi';
+import { calculationApi } from './features/calculations/calculationApi';
 import {
   persistReducer,
   persistStore,
@@ -43,13 +46,16 @@ export const store = configureStore({
     auth: persistedAuthReducer,
     [authApi.reducerPath]: authApi.reducer,
     [propertyApi.reducerPath]: propertyApi.reducer,
+    [leadsApi.reducerPath]: leadsApi.reducer,
+    [investmentsApi.reducerPath]: investmentsApi.reducer,
+    [calculationApi.reducerPath]: calculationApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat([authApi.middleware, propertyApi.middleware]),
+    }).concat([authApi.middleware, propertyApi.middleware, leadsApi.middleware, investmentsApi.middleware, calculationApi.middleware]),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

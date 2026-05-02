@@ -29,11 +29,14 @@ import {
 import { 
   useGetPropertyByIdQuery, 
   useIncrementViewsMutation,
-  useIncrementLeadsMutation 
 } from '@/lib/store/features/property/propertyApi';
+import { useCreateLeadMutation } from '@/lib/store/features/leads/leadsApi';
+import Swal from 'sweetalert2';
 import { GatedData } from '@/components/gated-data';
 import { calculateAcquisitionBreakdown } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
+import { useAppSelector } from '@/lib/store/hooks';
+import { useRouter } from 'next/navigation';
 
 type Scenario = 'investor' | 'resident' | 'exemption';
 
@@ -52,9 +55,11 @@ function Tooltip({ text, active }: { text: string; active?: boolean }) {
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
+  const { user: currentUser } = useAppSelector((state) => state.auth);
   const { data: propertyResponse, isLoading: loading } = useGetPropertyByIdQuery(id);
   const [incrementViews] = useIncrementViewsMutation();
-  const [incrementLeads] = useIncrementLeadsMutation();
+  const [createLead, { isLoading: isCreatingLead }] = useCreateLeadMutation();
   const [scenario, setScenario] = useState<Scenario>('investor');
 
   const property = propertyResponse?.data;
@@ -73,10 +78,56 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   }, [id, incrementViews]);
 
   const handleContactAgent = async () => {
-    if (id) {
-      await incrementLeads(id);
-      // Optional: Add a toast or modal to confirm
-      alert('Interest sent to agent! They will contact you soon.');
+    if (!id) return;
+
+    // Check if user is logged in
+    if (!currentUser) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Please sign in to contact the agent about this property.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#34495E',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sign In Now'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push('/login');
+        }
+      });
+      return;
+    }
+
+    try {
+      await createLead({ propertyId: id }).unwrap();
+      
+      Swal.fire({
+        title: 'Interest Registered!',
+        text: 'The agent has been notified and will contact you shortly.',
+        icon: 'success',
+        background: '#ffffff',
+        color: '#2C3E50',
+        confirmButtonColor: '#34495E',
+        confirmButtonText: 'GREAT',
+        buttonsStyling: true,
+        customClass: {
+          popup: 'rounded-[32px] border-none shadow-2xl',
+          confirmButton: 'rounded-xl px-8 py-3 font-black uppercase tracking-widest text-[10px]'
+        },
+        showClass: {
+          popup: 'animate__animated animate__fadeInUp animate__faster'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__fadeOutDown animate__faster'
+        }
+      });
+    } catch (error: any) {
+      Swal.fire({
+        title: 'Oops!',
+        text: error?.data?.message || 'Something went wrong while sending your inquiry.',
+        icon: 'error',
+        confirmButtonColor: '#E74C3C'
+      });
     }
   };
 
@@ -274,9 +325,19 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             {/* Contact Agent Action */}
             <button 
                 onClick={handleContactAgent}
-                className="w-full py-6 bg-[#D4A373] text-white rounded-[32px] text-xs font-black uppercase tracking-[0.3em] shadow-2xl shadow-[#D4A373]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                disabled={isCreatingLead || (propertyResponse?.data as any)?.hasActiveInquiry}
+                className={cn(
+                  "w-full py-6 rounded-[32px] text-xs font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3",
+                  (propertyResponse?.data as any)?.hasActiveInquiry 
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed border border-stone-200" 
+                    : "bg-[#D4A373] text-white shadow-2xl shadow-[#D4A373]/20 hover:scale-[1.02] active:scale-[0.98]"
+                )}
             >
-                Contact Agent for Details
+                {(propertyResponse?.data as any)?.hasActiveInquiry ? (
+                  <>Inquiry Sent <CheckCircle2 className="size-4" /></>
+                ) : (
+                  isCreatingLead ? "Sending..." : "Contact Agent for Details"
+                )}
             </button>
         </div>
       </div>

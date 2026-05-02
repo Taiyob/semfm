@@ -21,7 +21,6 @@ export const authApi = createApi({
             })
           );
         } catch (error) {
-          console.error('getMe failed, logging out:', error);
           dispatch(logout());
         }
       },
@@ -43,7 +42,7 @@ export const authApi = createApi({
             })
           );
         } catch (error) {
-          console.error('Login failed:', error);
+          console.warn('Login failed:', error);
         }
       },
       invalidatesTags: ['Auth', 'User'],
@@ -67,7 +66,7 @@ export const authApi = createApi({
         try {
           await queryFulfilled;
         } catch (error) {
-          console.error('Server logout failed:', error);
+          console.warn('Server logout failed:', error);
         } finally {
           dispatch(logout());
         }
@@ -90,7 +89,7 @@ export const authApi = createApi({
             })
           );
         } catch (error) {
-          console.error('Update profile failed:', error);
+          console.warn('Update profile failed:', error);
         }
       },
       invalidatesTags: ['User', 'Profile'],

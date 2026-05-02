@@ -24,10 +24,12 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
+import Swal from 'sweetalert2';
 
 import { 
   useGetPropertiesQuery,
-  useIncrementViewsMutation 
+  useIncrementViewsMutation,
+  useToggleSavePropertyMutation 
 } from '@/lib/store/features/property/propertyApi';
 import { GatedData } from '@/components/gated-data';
 import { cn } from '@/lib/utils';
@@ -53,6 +55,30 @@ export default function PropertiesPage() {
     page: 1,
     limit: 100, // For now fetch all to use client-side filtering as before
   });
+  const [toggleSave] = useToggleSavePropertyMutation();
+
+  const handleToggleSave = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!auth.isAuthenticated) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Please sign in to save properties to your dashboard.',
+        icon: 'info',
+        confirmButtonColor: '#34495E',
+        confirmButtonText: 'Login Now'
+      });
+      return;
+    }
+
+    try {
+      await toggleSave(id).unwrap();
+      // Optional: Show a subtle toast instead of a full alert for better UX
+    } catch (error) {
+      Swal.fire('Error', 'Failed to update save status', 'error');
+    }
+  };
 
   const properties = propertiesData?.data || [];
 
@@ -321,13 +347,15 @@ export default function PropertiesPage() {
                         
                         {/* Save Property Button */}
                         <button 
+                          onClick={(e) => handleToggleSave(property.id, e)}
                           className={cn(
                             "absolute top-6 right-6 size-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl transition-all duration-300 group/heart",
-                            auth?.isAuthenticated ? "hover:bg-red-50 text-stone-300 hover:text-red-500" : "opacity-40 cursor-not-allowed text-stone-400"
+                            auth?.isAuthenticated ? "hover:bg-white text-stone-300" : "opacity-40 cursor-not-allowed text-stone-400",
+                            property.isSaved && "text-red-500"
                           )}
-                          title={auth?.isAuthenticated ? "Save to Dashboard" : "Login to save properties"}
+                          title={auth?.isAuthenticated ? (property.isSaved ? "Unsave" : "Save to Dashboard") : "Login to save properties"}
                         >
-                           <Heart className={cn("size-5 transition-transform group-hover/heart:scale-110", !auth?.isAuthenticated && "fill-transparent")} />
+                           <Heart className={cn("size-5 transition-transform group-hover/heart:scale-110", property.isSaved && "fill-current")} />
                         </button>
                         </div>
 
