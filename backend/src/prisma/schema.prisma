@@ -64,6 +64,24 @@ enum SubscriptionStatus {
   TRIALING
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+enum AssetStatus {
+  GROWING
+  STABLE
+  CORRECTION
+}
+
+enum AssetType {
+  RESIDENTIAL
+  LUXURY
+  OTHER
+}
+
 // ------------------------------------
 // MODELS
 // ------------------------------------
@@ -100,6 +118,9 @@ model User {
   properties      Property[]         @relation("PropertyAgent")
   savedProperties Property[]         @relation("SavedProperties")
   matchAlerts     MatchAlert[]
+  leadsSent       Lead[]        @relation("UserLeads")
+  leadsReceived   Lead[]        @relation("AgentLeads")
+  investments     Investment[]
 
   isDeleted   Boolean   @default(false)
   lastLoginAt DateTime?
@@ -117,6 +138,7 @@ model Country {
 
   properties Property[]
   insights   MarketInsight[]
+  investments Investment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -169,6 +191,7 @@ model Property {
   views Int @default(0)
   leads Int @default(0)
 
+  leadsList Lead[]
   calculations SavedCalculation[]
   savedBy      User[]             @relation("SavedProperties")
 
@@ -244,6 +267,43 @@ model BlogPost {
   imageUrl    String?
   isFeatured  Boolean @default(false)
   isPublished Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Investment {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String      @db.Uuid
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  assetName   String      // e.g., 'Valencia Residential Apt'
+  amount      Float       // Purchase Price or Current Total
+  growth      Float?      // Profit amount e.g., 12400
+  growthPerc  Float?      // Profit percentage e.g., 6.8
+  status      AssetStatus @default(STABLE)
+  type        AssetType   @default(RESIDENTIAL)
+
+  countryId String?  @db.Uuid
+  country   Country? @relation(fields: [countryId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+model Lead {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message   String?
+  status    LeadStatus @default(NEW)
+
+  propertyId String   @db.Uuid
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  userId String @db.Uuid // The person inquiring (Investor)
+  user   User   @relation("UserLeads", fields: [userId], references: [id], onDelete: Cascade)
+
+  agentId String @db.Uuid // The agent receiving the lead
+  agent   User   @relation("AgentLeads", fields: [agentId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

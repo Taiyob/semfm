@@ -38,7 +38,8 @@ export class PropertyController extends BaseController {
      */
     public getById = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params;
-        const result = await this.propertyService.getPropertyById(id);
+        const userId = req.user?.id;
+        const result = await this.propertyService.getPropertyById(id, userId);
         
         if (!result) {
             throw new AppError({
@@ -55,7 +56,8 @@ export class PropertyController extends BaseController {
      * @desc Get all properties (Public)
      */
     public getAll = catchAsync(async (req: Request, res: Response) => {
-        const result = await this.propertyService.getAllProperties(req.query);
+        const userId = req.user?.id;
+        const result = await this.propertyService.getAllProperties(req.query, userId);
         const { data, ...pagination } = result;
         return this.sendPaginatedResponse(req, res, pagination, 'Properties fetched successfully', data);
     });
@@ -121,6 +123,25 @@ export class PropertyController extends BaseController {
         }
 
         return this.sendResponse(req, res, 'Property updated successfully', undefined, result);
+    });
+
+    /**
+     * @route POST /api/properties/:id/save
+     * @desc Toggle save property (Private)
+     */
+    public toggleSave = catchAsync(async (req: Request, res: Response) => {
+        const { id } = req.params;
+        await this.propertyService.toggleSaveProperty(req.user.id, id);
+        return this.sendResponse(req, res, 'Save status updated successfully');
+    });
+
+    /**
+     * @route GET /api/properties/saved
+     * @desc Get current user's saved properties (Private)
+     */
+    public getSaved = catchAsync(async (req: Request, res: Response) => {
+        const result = await this.propertyService.getSavedProperties(req.user.id);
+        return this.sendResponse(req, res, 'Saved properties fetched successfully', undefined, result);
     });
 
     /**

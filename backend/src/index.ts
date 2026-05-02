@@ -11,6 +11,9 @@ import { prisma } from "./lib/prisma";
 import { AuthModule } from "./modules/Auth/AuthModule";
 import { UserModule } from "./modules/User/UserModule";
 import { PropertyModule } from "./modules/Property/PropertyModule";
+import { LeadModule } from "./modules/Lead/LeadModule";
+import { InvestmentModule } from "./modules/Investment/InvestmentModule";
+import { CalculationModule } from "./modules/Calculation/CalculationModule";
 
 // Initialize the Ignitor Engine
 const ignitor = new IgnitorApp();
@@ -32,6 +35,9 @@ async function bootstrap() {
     ignitor.registerModule(new AuthModule());
     ignitor.registerModule(new UserModule());
     ignitor.registerModule(new PropertyModule());
+    ignitor.registerModule(new LeadModule());
+    ignitor.registerModule(new InvestmentModule());
+    ignitor.registerModule(new CalculationModule());
     // ignitor.registerModule(new ProductModule());
     AppLogger.info("✔ All modules registered successfully");
 

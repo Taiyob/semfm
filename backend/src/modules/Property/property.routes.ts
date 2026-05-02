@@ -16,9 +16,10 @@ export class PropertyRoutes {
     }
 
     private initializeRoutes(): void {
-        // Get all properties (Public)
+        // List properties (Public with optional auth)
         this.router.get(
             '/',
+            optionalAuthMiddleware,
             this.propertyController.getAll
         );
 
@@ -29,10 +30,25 @@ export class PropertyRoutes {
             this.propertyController.getMyProperties
         );
 
-        // Get single property (Public)
+        // Get saved properties
+        this.router.get(
+            '/saved',
+            authMiddleware,
+            this.propertyController.getSaved
+        );
+
+        // Get single property (Public with optional auth)
         this.router.get(
             '/:id',
+            optionalAuthMiddleware,
             this.propertyController.getById
+        );
+
+        // Toggle save property
+        this.router.post(
+            '/:id/save',
+            authMiddleware,
+            this.propertyController.toggleSave
         );
 
         // Create property (Private - Agent only)

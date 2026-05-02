@@ -28,20 +28,137 @@ export class PropertyService extends BaseService<Property> {
     /**
      * Get a single property by ID
      */
-    async getPropertyById(id: string) {
-        return this.findOne({ id });
+    async getPropertyById(id: string, userId?: string) {
+        const property = await this.findOne({ id });
+        if (!property) return null;
+
+        let hasActiveInquiry = false;
+        let isSaved = false;
+
+        if (userId) {
+            // Check active inquiry
+            const lead = await this.prisma.lead.findFirst({
+                where: {
+                    propertyId: id,
+                    userId,
+                    status: { in: ['NEW', 'CONTACTED'] }
+                }
+            });
+            hasActiveInquiry = !!lead;
+
+            // Check if saved
+            const saved = await this.prisma.user.findFirst({
+                where: {
+                    id: userId,
+                    savedProperties: { some: { id } }
+                }
+            });
+            isSaved = !!saved;
+        }
+
+        return {
+            ...property,
+            hasActiveInquiry,
+            isSaved
+        };
+    }
+
+    /**
+     * Toggle save property (Save/Unsave)
+     */
+    async toggleSaveProperty(userId: string, propertyId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            include: { savedProperties: { select: { id: true } } }
+        });
+
+        if (!user) throw new Error('User not found');
+
+        const isAlreadySaved = user.savedProperties.some(p => p.id === propertyId);
+
+        if (isAlreadySaved) {
+            // Unsave
+            return this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    savedProperties: { disconnect: { id: propertyId } }
+                }
+            });
+        } else {
+            // Save
+            return this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    savedProperties: { connect: { id: propertyId } }
+                }
+            });
+        }
+    }
+
+    /**
+     * Get all saved properties for a user
+     */
+    async getSavedProperties(userId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                savedProperties: {
+                    include: {
+                        country: true
+                    }
+                }
+            }
+        });
+
+        return user?.savedProperties || [];
     }
 
     /**
      * Get all properties (public)
      */
-    async getAllProperties(query: any) {
-        const { page, limit, ...filters } = query;
-        return this.findMany(
-            filters,
-            { page: Number(page) || 1, limit: Number(limit) || 10 },
-            { createdAt: 'desc' }
-        );
+    async getAllProperties(query: any, userId?: string) {
+        const { page = 1, limit = 10, ...filters } = query;
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const where: any = {
+            ...filters,
+        };
+
+        const [data, total] = await Promise.all([
+            this.prisma.property.findMany({
+                where,
+                skip,
+                take: Number(limit),
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    country: true,
+                }
+            }),
+            this.prisma.property.count({ where }),
+        ]);
+
+        // If userId is provided, check which properties are saved
+        let savedPropertyIds: string[] = [];
+        if (userId) {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                select: { savedProperties: { select: { id: true } } }
+            });
+            savedPropertyIds = user?.savedProperties.map(p => p.id) || [];
+        }
+
+        const propertiesWithSavedStatus = data.map(property => ({
+            ...property,
+            isSaved: savedPropertyIds.includes(property.id)
+        }));
+
+        return {
+            data: propertiesWithSavedStatus,
+            total,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages: Math.ceil(total / Number(limit)),
+        };
     }
 
     /**
