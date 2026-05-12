@@ -86,7 +86,13 @@ export class AuthService extends BaseService<User> {    constructor(prisma: Pris
         // Find user with role
         const user = await this.prisma.user.findUnique({
             where: { email },
-            include: { role: true },
+            include: { 
+                role: true,
+                subscriptions: {
+                    where: { status: 'ACTIVE' },
+                    include: { plan: true }
+                }
+            },
         });
 
         if (!user) {

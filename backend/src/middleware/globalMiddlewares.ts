@@ -26,7 +26,7 @@ export function setupGlobalMiddlewares(app: Express) {
         const allowedOrigins = config.security.cors.allowedOrigins.split(",").map(o => o.trim());
         // Allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true);
-        
+
         if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
           callback(null, true);
         } else {
@@ -39,7 +39,16 @@ export function setupGlobalMiddlewares(app: Express) {
   );
 
   app.use(cookieParser());
-  app.use(express.json({ limit: "10mb" }));
+  app.use(
+    express.json({
+      limit: "10mb",
+      verify: (req: any, _res, buf) => {
+        if (req.originalUrl.includes("/webhook")) {
+          req.rawBody = buf;
+        }
+      },
+    }),
+  );
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
   app.use(requestLogger());
 

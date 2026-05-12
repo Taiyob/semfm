@@ -222,12 +222,36 @@ model NewsletterSubscriber {
   updatedAt DateTime @default(now()) @updatedAt
 }
 
+model Plan {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   // e.g., 'Investor Pro'
+  description String?
+  price       Float    // e.g., 30.00
+  currency    String   @default("eur")
+  interval    String   @default("month") // month or year
+  
+  // Frontend Features (JSON array)
+  features    Json     @default("[]") 
+  
+  // Stripe Sync IDs
+  stripeProductId String? @unique
+  stripePriceId   String? @unique
+  
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  subscriptions Subscription[]
+}
+
 model Subscription {
   id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  planType SubscriptionPlan   @default(INVESTOR_FREE)
+  planId String @db.Uuid
+  plan   Plan   @relation(fields: [planId], references: [id])
+
   status   SubscriptionStatus @default(TRIALING)
 
   stripeCustomerId     String?   @unique

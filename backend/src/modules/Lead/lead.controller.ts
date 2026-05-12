@@ -38,7 +38,7 @@ export class LeadController {
 
   updateLeadStatus = catchAsync(async (req: Request, res: Response) => {
     const agentId = (req as any).user.id;
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { status } = req.body;
 
     const lead = await this.leadService.updateLeadStatus(id, agentId, status);
@@ -51,7 +51,7 @@ export class LeadController {
 
   getLeadDetails = catchAsync(async (req: Request, res: Response) => {
     const agentId = (req as any).user.id;
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const lead = await this.leadService.getLeadById(id, agentId);
 
@@ -63,7 +63,7 @@ export class LeadController {
 
   deleteLead = catchAsync(async (req: Request, res: Response) => {
     const agentId = (req as any).user.id;
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     await this.leadService.deleteLead(id, agentId);
 

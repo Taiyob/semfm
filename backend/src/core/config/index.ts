@@ -62,6 +62,11 @@ export const config = {
     level: process.env.LOG_LEVEL || "info",
     path: process.env.LOG_FILE_PATH || "logs/app.log",
   },
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY || "",
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+    currency: process.env.STRIPE_CURRENCY || "eur",
+  },
 };
 
 export default config;

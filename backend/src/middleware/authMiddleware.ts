@@ -24,7 +24,13 @@ export const authMiddleware = catchAsync(async (req: Request, res: Response, nex
     // Check if user still exists
     const currentUser = await prisma.user.findUnique({
         where: { id: decoded.id },
-        include: { role: true },
+        include: { 
+            role: true,
+            subscriptions: {
+                where: { status: 'ACTIVE' },
+                include: { plan: true }
+            }
+        },
     });
 
     if (!currentUser) {
@@ -59,7 +65,13 @@ export const optionalAuthMiddleware = catchAsync(async (req: Request, res: Respo
         const decoded = verifyToken(token);
         const currentUser = await prisma.user.findUnique({
             where: { id: decoded.id },
-            include: { role: true },
+            include: { 
+                role: true,
+                subscriptions: {
+                    where: { status: 'ACTIVE' },
+                    include: { plan: true }
+                }
+            },
         });
 
         if (currentUser && currentUser.status === 'active') {
