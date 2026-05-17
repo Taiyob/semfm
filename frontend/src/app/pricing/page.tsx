@@ -6,166 +6,76 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   CheckCircle2, 
   ShieldCheck, 
-  TrendingUp, 
-  Globe, 
-  Zap,
   ArrowRight,
   UserCircle2,
   Building2,
-  Layout,
-  FileText,
-  PieChart,
-  Target,
-  BarChart3,
   Lock,
-  Search,
-  ArrowUpDown,
-  Laptop,
+  Globe,
   MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGetPropertiesQuery } from '@/lib/store/features/property/propertyApi';
+import { useGetPlansQuery } from '@/lib/store/features/plan/planApi';
+import { useCreateCheckoutSessionMutation, useCreatePortalSessionMutation } from '@/lib/store/features/subscription/subscriptionApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store/store';
+import { useRouter } from 'next/navigation';
 
 type UserType = 'investor' | 'agent';
 
-interface Plan {
-  id: string;
-  name: string;
-  price: string;
-  period?: string;
-  description: string;
-  features: string[];
-  cta: string;
-  popular: boolean;
-}
-
-const investorPlans: Plan[] = [
-  {
-    id: 'investor-free',
-    name: 'Free',
-    price: '0',
-    description: 'Essential data for market explorers.',
-    features: [
-      'Rent estimates',
-      'Gross yield',
-      'Properties overview',
-      '5 saved listings (only if you make an account)',
-      'No Property match alerts',
-    ],
-    cta: 'Get Started',
-    popular: false
-  },
-  {
-    id: 'investor-basic',
-    name: 'Investor Basic',
-    price: '20',
-    description: 'Deeper insights for active searchers.',
-    features: [
-      'Net profit insights',
-      'Sort by investor metrics',
-      '20 saved listings',
-      '1 match alert / month',
-    ],
-    cta: 'Select Basic',
-    popular: false
-  },
-  {
-    id: 'investor-pro',
-    name: 'Investor Pro',
-    price: '30',
-    description: 'The strategy engine for professional investors.',
-    features: [
-      'All calculator tools',
-      'Compare up to 5 listings',
-      'Portfolio simulator (up to 5 properties)',
-      'Export to PDF',
-      'Up to 15 match alerts',
-    ],
-    cta: 'Upgrade to Pro',
-    popular: false
-  },
-  {
-    id: 'investor-premium',
-    name: 'Investor Premium',
-    price: '50',
-    description: 'Full portfolio intelligence platform.',
-    features: [
-      'Everything from Free, Basic, and Pro',
-      'Unlimited saved properties',
-      'Portfolio simulator (up to 25 properties)',
-      'Unlimited match alerts',
-    ],
-    cta: 'Go Premium',
-    popular: false
-  }
-];
-
-const agentPlans: Plan[] = [
-  {
-    id: 'agent-listing',
-    name: 'Pay-per-listing',
-    price: '50',
-    period: 'per listing',
-    description: 'Post verified listings on demand.',
-    features: [
-      'Verified listing placement',
-      'Regional reach',
-      'Basic lead notifications',
-    ],
-    cta: 'Post Now',
-    popular: false
-  },
-  {
-    id: 'agent-unlimited',
-    name: 'Agent Unlimited',
-    price: '200',
-    description: 'Scale your inventory without limits.',
-    features: [
-      'Unlimited listings',
-      'Up to 3 team members',
-      'Basic analytics (views, leads)',
-    ],
-    cta: 'Select Unlimited',
-    popular: false
-  },
-  {
-    id: 'agent-pro',
-    name: 'Agent Pro',
-    price: '350',
-    description: 'Professional-grade agency tools.',
-    features: [
-      'Everything in Unlimited',
-      '5 boosts/month (48 hours)',
-      'Up to 10 team members',
-      'Listing performance insights:',
-      '• Best-performing cities',
-      '• Most viewed listings',
-    ],
-    cta: 'Get Pro',
-    popular: false
-  },
-  {
-    id: 'agent-premium',
-    name: 'Agent Premium',
-    price: '500',
-    description: 'Full network dominance platform.',
-    features: [
-      'Everything in Pro',
-      '15 boosts/month (48 hours)',
-      'Priority support',
-      'Up to 20 team members',
-      'Scheduled price changes',
-      'Lead export (CSV)',
-    ],
-    cta: 'Go Premium',
-    popular: false
-  }
-];
-
 export default function PricingPage() {
   const [userType, setUserType] = useState<UserType>('investor');
+  const router = useRouter();
+  const { user } = useSelector((state: RootState) => state.auth);
+  
+  const { data: plansData, isLoading: plansLoading } = useGetPlansQuery();
+  const [createCheckout, { isLoading: isRedirecting }] = useCreateCheckoutSessionMutation();
+  const [createPortal, { isLoading: isPortalLoading }] = useCreatePortalSessionMutation();
 
-  const activePlans = userType === 'investor' ? investorPlans : agentPlans;
+  const handlePlanSelect = async (plan: any) => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    const hasActiveSubscription = user?.subscriptions?.length > 0;
+
+    try {
+      if (hasActiveSubscription) {
+        // If already has a plan, open customer portal for upgrade/downgrade
+        const response = await createPortal().unwrap();
+        if (response?.data?.url) {
+          window.location.href = response.data.url;
+        }
+      } else {
+        // New subscription
+        const response = await createCheckout({ planId: plan.id }).unwrap();
+        const checkoutUrl = response?.data?.url;
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to initiate checkout/portal:', error);
+    }
+  };
+
+  // Determine user type based on role if logged in
+  const effectiveUserType = user 
+    ? (user.role?.name?.toLowerCase() === 'agent' ? 'agent' : 'investor')
+    : userType;
+
+  const allPlans = plansData?.data || [];
+  
+  const investorPlans = allPlans.filter((p: any) => 
+    p.name.toLowerCase().includes('investor') || p.name === 'Free'
+  ).sort((a: any, b: any) => a.price - b.price);
+
+  const agentPlans = allPlans.filter((p: any) => 
+    p.name.toLowerCase().includes('agent') || p.name.includes('listing')
+  ).sort((a: any, b: any) => a.price - b.price);
+
+  const activePlans = effectiveUserType === 'investor' ? investorPlans : agentPlans;
 
   return (
     <div className="min-h-screen pt-32 pb-24 font-montserrat hero-gradient">
@@ -178,85 +88,120 @@ export default function PricingPage() {
                 “Select the intelligence layer that matches your deployment strategy. From individual scouts to multinational agencies.”
             </p>
 
-            {/* Toggle User Type */}
-            <div className="flex items-center justify-center pt-10">
-                <div className="bg-white p-2 rounded-[32px] border border-stone-100 shadow-xl flex gap-2">
-                    <button 
-                        onClick={() => setUserType('investor')}
-                        className={cn(
-                            "px-10 py-4 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-                            userType === 'investor' ? "bg-[#2C3E50] text-white shadow-lg" : "text-stone-400 hover:text-[#2C3E50]"
-                        )}
-                    >
-                        <UserCircle2 className="size-4" /> Investor
-                    </button>
-                    <button 
-                        onClick={() => setUserType('agent')}
-                        className={cn(
-                            "px-10 py-4 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-                            userType === 'agent' ? "bg-[#2C3E50] text-white shadow-lg" : "text-stone-400 hover:text-[#2C3E50]"
-                        )}
-                    >
-                        <Building2 className="size-4" /> Agent
-                    </button>
+            {/* Toggle User Type - Hidden if logged in */}
+            {!user && (
+                <div className="flex items-center justify-center pt-10">
+                    <div className="bg-white p-2 rounded-[32px] border border-stone-100 shadow-xl flex gap-2">
+                        <button 
+                            onClick={() => setUserType('investor')}
+                            className={cn(
+                                "px-10 py-4 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                                userType === 'investor' ? "bg-[#2C3E50] text-white shadow-lg" : "text-stone-400 hover:text-[#2C3E50]"
+                            )}
+                        >
+                            <UserCircle2 className="size-4" /> Investor
+                        </button>
+                        <button 
+                            onClick={() => setUserType('agent')}
+                            className={cn(
+                                "px-10 py-4 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                                userType === 'agent' ? "bg-[#2C3E50] text-white shadow-lg" : "text-stone-400 hover:text-[#2C3E50]"
+                            )}
+                        >
+                            <Building2 className="size-4" /> Agent
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {user && (
+                <div className="pt-10">
+                    <span className="px-6 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                        Tailored for your {effectiveUserType} account
+                    </span>
+                </div>
+            )}
         </div>
 
         {/* Pricing Cards Grid */}
         <div className={cn(
             "grid gap-8 transition-all duration-500",
-            userType === 'investor' ? "lg:grid-cols-4" : "lg:grid-cols-4"
+            activePlans.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-4"
         )}>
-            <AnimatePresence mode="wait">
-                {activePlans.map((plan, index) => (
-                    <motion.div 
-                        key={plan.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ delay: index * 0.1 }}
-                        className={`relative p-8 rounded-[48px] bg-white border border-stone-100 transition-all duration-500 h-full flex flex-col hover:border-[#D4A373]/20 hover:shadow-2xl hover:shadow-stone-200/50`}
-                    >
-                        <div className="mb-10 text-left">
-                            <h3 className="text-xl font-black text-[#2C3E50] mb-2 tracking-tighter uppercase">{plan.name}</h3>
-                            <p className="text-stone-400 text-[10px] font-bold leading-relaxed italic">{plan.description}</p>
-                        </div>
+            {plansLoading ? (
+                // Skeleton loading
+                [1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-[600px] bg-white rounded-[48px] animate-pulse border border-stone-100" />
+                ))
+            ) : (
+                <AnimatePresence mode="wait">
+                    {activePlans.map((plan: any, index: number) => {
+                        const isCurrentPlan = user?.subscriptions?.some((sub: any) => sub.planId === plan.id);
 
-                        <div className="mb-10 text-left">
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-6xl font-black text-[#2C3E50] tracking-tighter self-start">€{plan.price}</span>
-                                <div className="flex flex-col">
-                                    <span className="text-stone-300 font-black uppercase tracking-widest text-[9px]">EUR</span>
-                                    <span className="text-[#D4A373] font-black uppercase tracking-widest text-[9px] truncate">
-                                        {plan.period || 'per month'}
-                                    </span>
+                        return (
+                            <motion.div 
+                                key={plan.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ delay: index * 0.1 }}
+                                className={`relative p-8 rounded-[48px] bg-white border border-stone-100 transition-all duration-500 h-full flex flex-col hover:border-[#D4A373]/20 hover:shadow-2xl hover:shadow-stone-200/50`}
+                            >
+                                <div className="mb-10 text-left">
+                                    <h3 className="text-xl font-black text-[#2C3E50] mb-2 tracking-tighter uppercase">{plan.name}</h3>
+                                    <p className="text-stone-400 text-[10px] font-bold leading-relaxed italic line-clamp-2">{plan.description}</p>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="space-y-4 mb-10 flex-grow">
-                            {plan.features.map(feature => (
-                                <div key={feature} className="flex gap-3 items-start">
-                                    <CheckCircle2 className="size-4 text-[#D4A373] shrink-0 mt-0.5" />
-                                    <span className="text-[11px] font-bold text-stone-600 leading-tight">{feature}</span>
+                                <div className="mb-10 text-left">
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-6xl font-black text-[#2C3E50] tracking-tighter self-start">€{plan.price}</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-stone-300 font-black uppercase tracking-widest text-[9px]">EUR</span>
+                                            <span className="text-[#D4A373] font-black uppercase tracking-widest text-[9px] truncate">
+                                                {plan.interval === 'month' ? 'per month' : plan.interval || 'one time'}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
 
-                        <button 
-                            className={cn(
-                                "w-full py-5 rounded-[20px] font-black transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-widest",
-                                plan.id.includes('premium') || plan.id.includes('pro')
-                                ? 'bg-[#2C3E50] text-white hover:bg-[#D4A373] shadow-xl shadow-[#2C3E50]/10' 
-                                : 'bg-stone-50 text-[#2C3E50] hover:bg-stone-100'
-                            )}
-                        >
-                            {plan.cta} <ArrowRight className="size-4" />
-                        </button>
-                    </motion.div>
-                ))}
-            </AnimatePresence>
+                                <div className="space-y-4 mb-10 flex-grow">
+                                    {plan.features?.map((feature: string) => (
+                                        <div key={feature} className="flex gap-3 items-start">
+                                            <CheckCircle2 className="size-4 text-[#D4A373] shrink-0 mt-0.5" />
+                                            <span className="text-[11px] font-bold text-stone-600 leading-tight">{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <button 
+                                    onClick={() => !isCurrentPlan && handlePlanSelect(plan)}
+                                    disabled={isRedirecting || isPortalLoading || isCurrentPlan}
+                                    className={cn(
+                                        "w-full py-5 rounded-[20px] font-black transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-widest",
+                                        "cursor-pointer active:scale-95 disabled:active:scale-100",
+                                        isCurrentPlan 
+                                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-not-allowed"
+                                            : (plan.name.includes('Premium') || plan.name.includes('Pro')
+                                                ? 'bg-[#2C3E50] text-white hover:bg-[#D4A373] shadow-xl shadow-[#2C3E50]/10' 
+                                                : 'bg-stone-50 text-[#2C3E50] hover:bg-stone-100 border border-stone-100 hover:border-[#D4A373]/30'),
+                                        (isRedirecting || isPortalLoading) && "opacity-50 cursor-wait"
+                                    )}
+                                >
+                                    {isRedirecting || isPortalLoading 
+                                        ? 'Processing...' 
+                                        : (isCurrentPlan 
+                                            ? 'Current Plan' 
+                                            : (user?.subscriptions?.length > 0 
+                                                ? 'Upgrade / Manage' 
+                                                : (plan.price === 0 ? 'Get Started' : 'Subscribe Now')))} 
+                                    {!isCurrentPlan && <ArrowRight className="size-4" />}
+                                    {isCurrentPlan && <CheckCircle2 className="size-4" />}
+                                </button>
+                            </motion.div>
+                        );
+                    })}
+                </AnimatePresence>
+            )}
         </div>
 
         {/* Market Preview Section */}
@@ -334,7 +279,7 @@ function PropertyPreviewList() {
                         <div className="mt-auto pt-6 border-t border-stone-50 flex items-center justify-between">
                             <div>
                                 <span className="block text-[9px] font-black text-stone-300 uppercase tracking-widest">Entry Price</span>
-                                <span className="text-xl font-black text-[#2C3E50]">€{property.price.toLocaleString()}</span>
+                                <span className="text-xl font-black text-[#2C3E50]">€{property.price?.toLocaleString()}</span>
                             </div>
                             <div className="text-right">
                                 <span className="block text-[9px] font-black text-stone-300 uppercase tracking-widest">Net Yield</span>

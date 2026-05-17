@@ -17,11 +17,12 @@ import { Logo } from '../logo';
 import { useLogoutMutation } from '@/lib/store/features/auth/authApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
-import { PlusCircle, MessageSquare, List } from 'lucide-react';
+import { PlusCircle, MessageSquare, List, Bell } from 'lucide-react';
 
 const investorMenuItems = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { name: 'My Properties', href: '/dashboard/properties', icon: Search },
+  { name: 'Alerts', href: '/dashboard/alerts', icon: Bell },
   { name: 'Investments', href: '/dashboard/investments', icon: Briefcase },
   { name: 'Calculator', href: '/dashboard/calculator', icon: TrendingUp },
   { name: 'Profile', href: '/dashboard/profile', icon: UserCircle2 },
@@ -56,31 +57,37 @@ export function Sidebar() {
 
   return (
     <aside className="w-72 bg-white border-r border-stone-100 flex flex-col h-screen sticky top-0 overflow-hidden">
-      <div className="p-8">
-        <Link href="/">
+      <div className="p-8 mb-4">
+        <Link href="/" className="group block">
           <Logo />
+          <div className="h-0.5 w-0 group-hover:w-full transition-all duration-500" style={{ backgroundColor: '#D4AF37' }} />
         </Link>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1">
+      <nav className="flex-1 px-6 space-y-2 mt-4">
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${
+              className={`flex items-center gap-4 px-5 py-4 rounded-3xl text-sm font-black transition-all group ${
                 isActive 
-                  ? 'bg-[#34495E] text-white shadow-lg shadow-[#34495E]/20' 
-                  : 'text-stone-500 hover:text-[#34495E] hover:bg-stone-50'
+                  ? 'bg-[#2C3E50] text-white shadow-2xl shadow-[#2C3E50]/20 scale-[1.02]' 
+                  : 'text-stone-400 hover:text-[#2C3E50] hover:bg-stone-50'
               }`}
             >
-              <item.icon className={`size-5 ${isActive ? 'text-white' : 'text-stone-400'}`} />
-              {item.name}
+              <item.icon 
+                className={`size-5 transition-all group-hover:scale-110 ${
+                  isActive ? 'text-[#D4AF37]' : 'text-stone-300'
+                }`} 
+              />
+              <span className="tracking-tight">{item.name}</span>
               {isActive && (
                 <motion.div 
-                  layoutId="active-pill"
-                  className="ml-auto size-1.5 bg-white rounded-full"
+                  layoutId="active-indicator"
+                  className="ml-auto size-2 rounded-full shadow-[0_0_10px_#D4AF37]"
+                  style={{ backgroundColor: '#D4AF37' }}
                 />
               )}
             </Link>
@@ -88,12 +95,12 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-6 mt-auto">
+      <div className="p-8 mt-auto border-t border-stone-50">
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all group"
+          className="w-full flex items-center gap-4 px-6 py-4 rounded-3xl text-sm font-black text-rose-500 hover:bg-rose-50 transition-all group"
         >
-          <LogOut className="size-5 transition-transform group-hover:translate-x-1" />
+          <LogOut className="size-5 transition-transform group-hover:-translate-x-1" />
           Logout
         </button>
       </div>

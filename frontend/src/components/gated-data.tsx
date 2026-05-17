@@ -3,6 +3,7 @@
 import { useState, ReactNode } from 'react';
 import { Lock, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { useAppSelector } from '@/lib/store/hooks';
 
 interface GatedDataProps {
   children: ReactNode;
@@ -11,10 +12,9 @@ interface GatedDataProps {
 }
 
 export function GatedData({ children, blur = true }: GatedDataProps) {
-  // Simulate auth state (In production, use a real useAuth hook)
-  const [isLoggedIn] = useState(false); 
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-  if (isLoggedIn) {
+  if (isAuthenticated) {
     return <>{children}</>;
   }
 
@@ -32,7 +32,7 @@ export function GatedData({ children, blur = true }: GatedDataProps) {
             View data
         </Link>
       </div>
-      {!isLoggedIn && !blur && (
+      {!isAuthenticated && !blur && (
          <div className="flex items-center gap-1 mt-1 text-[9px] font-black text-[#34495E] uppercase tracking-widest">
             <Zap className="size-3 fill-current" />
             Unlock High Fidelity Metrics

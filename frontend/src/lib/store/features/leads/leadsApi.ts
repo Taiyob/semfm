@@ -4,20 +4,27 @@ import { axiosBaseQuery } from '@/lib/store/axiosBaseQuery';
 export interface Lead {
   id: string;
   message: string | null;
-  status: 'NEW' | 'CONTACTED' | 'CLOSED';
+  status: 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'VIEWING_SCHEDULED' | 'OFFER_SUBMITTED' | 'CLOSED_WON' | 'CLOSED_LOST' | 'ARCHIVED';
+  budget: string | null;
+  financing: string | null;
   propertyId: string;
   userId: string;
   agentId: string;
+  calculationId?: string | null;
+  calculation?: any;
   createdAt: string;
   updatedAt: string;
   property: {
     title: string;
     location: string;
+    region: string | null;
+    price?: number;
   };
   user: {
     firstName: string;
     lastName: string;
     email: string;
+    phone: string | null;
     avatarUrl: string | null;
   };
 }
@@ -44,7 +51,7 @@ export const leadsApi = createApi({
       invalidatesTags: ['Lead'],
     }),
 
-    createLead: builder.mutation<any, { propertyId: string; message?: string }>({
+    createLead: builder.mutation<any, { propertyId: string; message?: string; budget?: string; financing?: string; calculationId?: string }>({
       query: (data) => ({
         url: '/leads',
         method: 'POST',

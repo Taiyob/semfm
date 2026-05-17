@@ -28,8 +28,13 @@ export interface AxiosRequest<TData = unknown> {
   onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
 }
 
+export interface BaseQueryError {
+  status: number | string | undefined;
+  data: any;
+}
+
 export const axiosBaseQuery =
-  <TData = unknown>(): BaseQueryFn<AxiosRequest<TData>, unknown, unknown> =>
+  (): BaseQueryFn<AxiosRequest, unknown, BaseQueryError> =>
     async ({ url, method, data, params, headers, onUploadProgress }) => {
       // Debug log for outgoing requests
       if (process.env.NODE_ENV === 'development') {
@@ -45,7 +50,7 @@ export const axiosBaseQuery =
           headers,
           onUploadProgress,
         });
-        return { data: result.data as TData };
+        return { data: result.data as any };
       } catch (err) {
         const error = err as AxiosError<any>;
         const status = error.response?.status;

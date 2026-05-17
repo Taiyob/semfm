@@ -5,9 +5,9 @@ import { setCredentials, logout } from './authSlice';
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Auth', 'User', 'Profile'],
+  tagTypes: ['Auth', 'User', 'Profile'] as const,
   endpoints: (builder) => ({
-    getMe: builder.query<{ data: { user: any } }, void>({
+    getMe: builder.query<any, void>({
       query: () => ({
         url: '/auth/me',
         method: 'GET',
@@ -27,7 +27,7 @@ export const authApi = createApi({
       providesTags: ['User', 'Profile'],
     }),
 
-    login: builder.mutation({
+    login: builder.mutation<any, any>({
       query: (credentials) => ({
         url: '/auth/login',
         method: 'POST',
@@ -48,7 +48,7 @@ export const authApi = createApi({
       invalidatesTags: ['Auth', 'User'],
     }),
 
-    register: builder.mutation({
+    register: builder.mutation<any, any>({
       query: (userData) => ({
         url: '/auth/register',
         method: 'POST',
@@ -57,7 +57,7 @@ export const authApi = createApi({
       invalidatesTags: ['Auth', 'User'],
     }),
 
-    logout: builder.mutation<{ message: string }, void>({
+    logout: builder.mutation<any, void>({
       query: () => ({
         url: '/auth/logout',
         method: 'POST',
@@ -74,7 +74,7 @@ export const authApi = createApi({
       invalidatesTags: ['Auth', 'User', 'Profile'],
     }),
 
-    updateProfile: builder.mutation({
+    updateProfile: builder.mutation<any, any>({
       query: (userData) => ({
         url: '/users/profile',
         method: 'PATCH',

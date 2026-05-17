@@ -43,13 +43,21 @@ export default function PropertiesPage() {
   const [search, setSearch] = useState('');
   const [city, setCity] = useState('All');
   const [type, setType] = useState('All');
-  const [priceRange, setPriceRange] = useState(2500000);
+  const [minPrice, setMinPrice] = useState<number | ''>('');
+  const [maxPrice, setMaxPrice] = useState<number | ''>('');
   const [yieldRange, setYieldRange] = useState(0);
   const [sortBy, setSortBy] = useState<SortType>('yield-desc');
   const [country, setCountry] = useState('All');
   const [bedrooms, setBedrooms] = useState('All');
   const [sqmRange, setSqmRange] = useState(500);
   const [condition, setCondition] = useState('All');
+
+  const regionsByCountry: Record<string, string[]> = {
+    'All': ['All'],
+    'Portugal': ['All', 'Lisbon', 'Porto', 'Braga', 'Faro'],
+    'Spain': ['All', 'Valencia', 'Alicante', 'Málaga', 'Las Palmas (Gran Canaria)'],
+    'Greece': ['All']
+  };
 
   const { data: propertiesData, isLoading: loading } = useGetPropertiesQuery({
     page: 1,
@@ -89,7 +97,7 @@ export default function PropertiesPage() {
         const matchesCity = city === 'All' || p.location.includes(city);
         const matchesCountry = country === 'All' || p.location.toLowerCase().includes(country.toLowerCase());
         const matchesType = type === 'All' || p.type === type;
-        const matchesPrice = p.price <= priceRange;
+        const matchesPrice = (minPrice === '' || p.price >= minPrice) && (maxPrice === '' || p.price <= maxPrice);
         const matchesYield = p.yield >= yieldRange;
         const matchesBedrooms = bedrooms === 'All' || (bedrooms === '5+' ? p.bedrooms >= 5 : p.bedrooms === Number(bedrooms));
         const matchesSqm = p.sqm <= sqmRange;
@@ -100,13 +108,13 @@ export default function PropertiesPage() {
       .sort((a, b) => {
         if (sortBy === 'price-asc') return a.price - b.price;
         if (sortBy === 'price-desc') return b.price - a.price;
-        if (sortBy === 'yield-desc') return b.yield - a.yield;
-        if (sortBy === 'yield-asc') return a.yield - b.yield;
-        if (sortBy === 'appreciation-desc') return b.appreciation - a.appreciation;
-        if (sortBy === 'appreciation-asc') return a.appreciation - b.appreciation;
+        if (sortBy === 'yield-desc') return (b.yield || 0) - (a.yield || 0);
+        if (sortBy === 'yield-asc') return (a.yield || 0) - (b.yield || 0);
+        if (sortBy === 'appreciation-desc') return (b.appreciation || 0) - (a.appreciation || 0);
+        if (sortBy === 'appreciation-asc') return (a.appreciation || 0) - (b.appreciation || 0);
         return 0;
       });
-  }, [properties, search, city, type, priceRange, yieldRange, sortBy]);
+  }, [properties, search, city, type, minPrice, maxPrice, yieldRange, sortBy, country, bedrooms, sqmRange, condition]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-montserrat hero-gradient min-h-screen">
@@ -151,7 +159,7 @@ export default function PropertiesPage() {
                     <div className="space-y-3">
                         <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-2">Location Context</label>
                         <div className="flex flex-wrap gap-2">
-                            {['All', 'Lisbon', 'Porto', 'Braga', 'Faro'].map(c => (
+                            {regionsByCountry[country].map(c => (
                                 <button key={c} onClick={() => setCity(c)} className={cn("px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all", city === c ? "bg-[#2C3E50] text-white shadow-lg" : "bg-stone-50 text-stone-400 hover:bg-stone-100")}>
                                     {c}
                                 </button>
@@ -185,11 +193,29 @@ export default function PropertiesPage() {
 
                     {/* Price Range */}
                     <div className="space-y-4">
-                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                            <span className="text-stone-400">Max Asking Price</span>
-                            <span className="text-[#2C3E50]">€{(priceRange/1000).toLocaleString()}k</span>
+                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-2">Asking Price Range (€)</label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-[10px] font-black">€</span>
+                                <input 
+                                    type="number" 
+                                    placeholder="Min" 
+                                    value={minPrice} 
+                                    onChange={(e) => setMinPrice(e.target.value ? Number(e.target.value) : '')} 
+                                    className="w-full bg-stone-50 border-2 border-transparent rounded-2xl py-4 pl-8 pr-4 outline-none focus:border-[#D4A373] transition-all font-bold text-[#2C3E50] text-sm"
+                                />
+                            </div>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-[10px] font-black">€</span>
+                                <input 
+                                    type="number" 
+                                    placeholder="Max" 
+                                    value={maxPrice} 
+                                    onChange={(e) => setMaxPrice(e.target.value ? Number(e.target.value) : '')} 
+                                    className="w-full bg-stone-50 border-2 border-transparent rounded-2xl py-4 pl-8 pr-4 outline-none focus:border-[#D4A373] transition-all font-bold text-[#2C3E50] text-sm"
+                                />
+                            </div>
                         </div>
-                        <input type="range" min={100000} max={2500000} step={50000} value={priceRange} onChange={(e) => setPriceRange(Number(e.target.value))} className="w-full accent-[#2C3E50]" />
                     </div>
 
                     {/* SQM filter */}
@@ -226,7 +252,8 @@ export default function PropertiesPage() {
                     <button onClick={() => {
                         setCity('All'); 
                         setType('All'); 
-                        setPriceRange(2500000); 
+                        setMinPrice(''); 
+                        setMaxPrice(''); 
                         setYieldRange(0); 
                         setSearch('');
                         setCountry('All');
@@ -259,54 +286,18 @@ export default function PropertiesPage() {
                       />
                   </div>
                   <div className="flex items-center gap-4 w-full md:w-auto bg-white p-3 rounded-2xl border border-stone-100 shadow-sm">
-                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest whitespace-nowrap ml-2">Standard Sort:</span>
+                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest whitespace-nowrap ml-2">Sort By:</span>
                       <select 
-                          value={sortBy.includes('price') ? sortBy : 'price-asc'}
+                          value={sortBy}
                           onChange={(e) => setSortBy(e.target.value as SortType)}
                           className="bg-stone-50 border-none rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#2C3E50] outline-none cursor-pointer hover:bg-stone-100 transition-all"
                       >
+                          <option value="yield-desc">Highest Yield</option>
                           <option value="price-asc">Price: Low to High</option>
                           <option value="price-desc">Price: High to Low</option>
+                          <option value="appreciation-desc">Highest Appreciation</option>
                       </select>
                   </div>
-              </div>
-
-              {/* Investor Metric Sorting - Locked/Premium UI */}
-              <div className="relative group">
-                <div className="bg-[#D4A373]/5 border border-[#D4A373]/20 rounded-[32px] p-6 flex flex-col lg:flex-row items-center justify-between gap-6 overflow-hidden relative">
-                  {/* Shiny Shimmer Effect Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#D4A373]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-                  
-                  <div className="flex items-center gap-8 blur-[1.5px] opacity-40 select-none pointer-events-none transition-all group-hover:blur-[0.5px] group-hover:opacity-60 overflow-hidden">
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="size-8 bg-[#D4A373] rounded-lg flex items-center justify-center shadow-lg shadow-[#D4A373]/20">
-                        <TrendingUp className="size-4 text-white" />
-                      </div>
-                      <span className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest whitespace-nowrap">Investor Metrics:</span>
-                    </div>
-                    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-                      {[
-                        'Highest Gross Yield', 
-                        'Highest Rental Estimate', 
-                        'Highest Appreciation'
-                      ].map(opt => (
-                        <div key={opt} className="px-5 py-2 bg-white rounded-xl text-[9px] font-black uppercase tracking-tight text-[#2C3E50] border border-[#D4A373]/20 whitespace-nowrap shadow-sm">
-                          {opt}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 flex items-center gap-6 relative z-10">
-                    <div className="text-right hidden sm:block">
-                      <div className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest">Premium Sorting</div>
-                      <div className="text-[9px] font-bold text-stone-400 italic">Premium access required</div>
-                    </div>
-                    <Link href="/pricing" className="px-6 py-3 bg-[#D4A373] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-xl shadow-[#D4A373]/20 flex items-center gap-3 hover:scale-105 active:scale-95 transition-all">
-                      <Lock className="size-4" /> Unlock Metrics
-                    </Link>
-                  </div>
-                </div>
               </div>
             </div>
 

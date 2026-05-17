@@ -5,6 +5,10 @@ import { propertyApi } from './features/property/propertyApi';
 import { leadsApi } from './features/leads/leadsApi';
 import { investmentsApi } from './features/investments/investmentsApi';
 import { calculationApi } from './features/calculations/calculationApi';
+import { planApi } from './features/plan/planApi';
+import { subscriptionApi } from './features/subscription/subscriptionApi';
+import { alertsApi } from './features/alerts/alertsApi';
+import { dashboardApi } from './features/dashboard/dashboardApi';
 import {
   persistReducer,
   persistStore,
@@ -49,13 +53,27 @@ export const store = configureStore({
     [leadsApi.reducerPath]: leadsApi.reducer,
     [investmentsApi.reducerPath]: investmentsApi.reducer,
     [calculationApi.reducerPath]: calculationApi.reducer,
+    [planApi.reducerPath]: planApi.reducer,
+    [subscriptionApi.reducerPath]: subscriptionApi.reducer,
+    [alertsApi.reducerPath]: alertsApi.reducer,
+    [dashboardApi.reducerPath]: dashboardApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat([authApi.middleware, propertyApi.middleware, leadsApi.middleware, investmentsApi.middleware, calculationApi.middleware]),
+    }).concat([
+      authApi.middleware, 
+      propertyApi.middleware, 
+      leadsApi.middleware, 
+      investmentsApi.middleware, 
+      calculationApi.middleware,
+      planApi.middleware,
+      subscriptionApi.middleware,
+      alertsApi.middleware,
+      dashboardApi.middleware
+    ]),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

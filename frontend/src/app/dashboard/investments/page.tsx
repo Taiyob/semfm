@@ -234,7 +234,7 @@ export default function InvestmentsPage() {
                   <th className="px-10 py-6 text-[10px] font-black text-stone-400 uppercase tracking-widest">Amount</th>
                   <th className="px-10 py-6 text-[10px] font-black text-stone-400 uppercase tracking-widest">Growth</th>
                   <th className="px-10 py-6 text-[10px] font-black text-stone-400 uppercase tracking-widest">Status</th>
-                  <th className="px-10 py-6"></th>
+                  <th className="px-10 py-6 text-[10px] font-black text-stone-400 uppercase tracking-widest text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-50">
@@ -276,9 +276,9 @@ export default function InvestmentsPage() {
                       </span>
                     </td>
                     <td className="px-10 py-8 text-right">
-                      <button 
+                       <button 
                         onClick={() => handleDelete(asset.id)}
-                        className="p-3 text-stone-200 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                        className="p-3 text-stone-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
                       >
                          <Trash2 className="size-4" />
                       </button>

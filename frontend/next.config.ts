@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
   async rewrites() {
     // Determine the backend URL based on the environment
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sem-backend.vercel.app/api';

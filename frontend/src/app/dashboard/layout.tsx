@@ -31,22 +31,6 @@ export default function DashboardLayout({
       <Sidebar />
       <main className="flex-1 overflow-y-auto max-h-screen custom-scrollbar">
         <div className="p-10">
-          <header className="mb-10 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-black text-[#2C3E50]">
-                Welcome back, {user?.firstName || user?.name || 'User'}
-              </h1>
-              <p className="text-stone-400 font-bold text-sm">
-                Here's what's happening with your portfolio today.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-               {/* Search or notifications can go here */}
-               <div className="size-12 bg-white rounded-2xl shadow-sm border border-stone-100 flex items-center justify-center">
-                  <div className="size-2 bg-emerald-500 rounded-full animate-pulse" />
-               </div>
-            </div>
-          </header>
           {children}
         </div>
       </main>

@@ -31,6 +31,9 @@ import {
   useIncrementViewsMutation,
 } from '@/lib/store/features/property/propertyApi';
 import { useCreateLeadMutation } from '@/lib/store/features/leads/leadsApi';
+import { 
+  useAddInvestmentMutation 
+} from '@/lib/store/features/investments/investmentsApi';
 import Swal from 'sweetalert2';
 import { GatedData } from '@/components/gated-data';
 import { calculateAcquisitionBreakdown } from '@/lib/calculations';
@@ -60,6 +63,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const { data: propertyResponse, isLoading: loading } = useGetPropertyByIdQuery(id);
   const [incrementViews] = useIncrementViewsMutation();
   const [createLead, { isLoading: isCreatingLead }] = useCreateLeadMutation();
+  const [addInvestment, { isLoading: isAddingInvestment }] = useAddInvestmentMutation();
   const [scenario, setScenario] = useState<Scenario>('investor');
 
   const property = propertyResponse?.data;
@@ -322,23 +326,56 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 </div>
             </div>
 
-            {/* Contact Agent Action */}
-            <button 
-                onClick={handleContactAgent}
-                disabled={isCreatingLead || (propertyResponse?.data as any)?.hasActiveInquiry}
-                className={cn(
-                  "w-full py-6 rounded-[32px] text-xs font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3",
-                  (propertyResponse?.data as any)?.hasActiveInquiry 
-                    ? "bg-stone-100 text-stone-400 cursor-not-allowed border border-stone-200" 
-                    : "bg-[#D4A373] text-white shadow-2xl shadow-[#D4A373]/20 hover:scale-[1.02] active:scale-[0.98]"
-                )}
-            >
-                {(propertyResponse?.data as any)?.hasActiveInquiry ? (
-                  <>Inquiry Sent <CheckCircle2 className="size-4" /></>
-                ) : (
-                  isCreatingLead ? "Sending..." : "Contact Agent for Details"
-                )}
-            </button>
+            {/* Investment & Contact Actions */}
+            <div className="space-y-4">
+              {/* Note: This is a simulation/tracking portal. 'Invest' adds the asset to the user's dashboard for performance tracking. */}
+              {currentUser && !['agent', 'admin'].includes(currentUser?.role?.name?.toLowerCase()) && (
+                <button 
+                    onClick={async () => {
+                        try {
+                            await addInvestment({
+                                assetName: property.title,
+                                amount: property.price,
+                                countryId: property.countryId,
+                                type: property.type === 'Luxury' ? 'LUXURY' : 'RESIDENTIAL'
+                            }).unwrap();
+                            
+                            Swal.fire({
+                                title: 'Investment Added!',
+                                text: 'This property has been added to your portfolio tracking. No real payment was processed as this is a simulation.',
+                                icon: 'success',
+                                confirmButtonColor: '#D4A373'
+                            }).then(() => {
+                                router.push('/dashboard/investments');
+                            });
+                        } catch (err) {
+                            Swal.fire('Error', 'Failed to add investment', 'error');
+                        }
+                    }}
+                    disabled={isAddingInvestment}
+                    className="w-full py-6 rounded-[32px] text-xs font-black uppercase tracking-[0.3em] bg-[#2C3E50] text-white shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 border-2 border-transparent hover:border-[#D4A373]/30"
+                >
+                    {isAddingInvestment ? "Processing..." : "Invest in this Asset"}
+                </button>
+              )}
+
+              <button 
+                  onClick={handleContactAgent}
+                  disabled={isCreatingLead || (propertyResponse?.data as any)?.hasActiveInquiry}
+                  className={cn(
+                    "w-full py-6 rounded-[32px] text-xs font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3",
+                    (propertyResponse?.data as any)?.hasActiveInquiry 
+                      ? "bg-stone-100 text-stone-400 cursor-not-allowed border border-stone-200" 
+                      : "bg-[#D4A373] text-white shadow-2xl shadow-[#D4A373]/20 hover:scale-[1.02] active:scale-[0.98]"
+                  )}
+              >
+                  {(propertyResponse?.data as any)?.hasActiveInquiry ? (
+                    <>Inquiry Sent <CheckCircle2 className="size-4" /></>
+                  ) : (
+                    isCreatingLead ? "Sending..." : "Contact Agent for Details"
+                  )}
+              </button>
+            </div>
         </div>
       </div>
     </div>

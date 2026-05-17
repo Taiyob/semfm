@@ -1,38 +1,38 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '../../axiosBaseQuery';
+import { axiosBaseQuery } from '@/lib/store/axiosBaseQuery';
 
 export const investmentsApi = createApi({
   reducerPath: 'investmentsApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Investment'],
+  tagTypes: ['Investments'],
   endpoints: (builder) => ({
     getInvestments: builder.query<any, void>({
       query: () => ({
         url: '/investments',
         method: 'GET',
       }),
-      providesTags: ['Investment'],
+      providesTags: ['Investments'],
     }),
-    addInvestment: builder.mutation({
+    addInvestment: builder.mutation<any, any>({
       query: (data) => ({
         url: '/investments',
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Investment'],
+      invalidatesTags: ['Investments'],
     }),
-    deleteInvestment: builder.mutation({
+    deleteInvestment: builder.mutation<any, string>({
       query: (id) => ({
         url: `/investments/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Investment'],
+      invalidatesTags: ['Investments'],
     }),
   }),
 });
 
-export const {
-  useGetInvestmentsQuery,
-  useAddInvestmentMutation,
-  useDeleteInvestmentMutation,
+export const { 
+  useGetInvestmentsQuery, 
+  useAddInvestmentMutation, 
+  useDeleteInvestmentMutation 
 } = investmentsApi;
