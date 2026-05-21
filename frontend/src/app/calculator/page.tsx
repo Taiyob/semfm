@@ -177,41 +177,41 @@ function CalculatorContent() {
         }
     };
 
-    // useEffect(() => {
-    //     const countryData = formData.country === 'Spain' ? spainRegions : portugalRegions;
-    //     const regionData = countryData.find(r => r.name === formData.region) || countryData[0];
+    useEffect(() => {
+        const countryData = formData.country === 'Spain' ? spainRegions : portugalRegions;
+        const regionData = countryData.find(r => r.name === formData.region) || countryData[0];
 
-    //     const baseSqmRent = regionData.avgRent;
-    //     const size = Number(formData.size) || 0;
+        const baseSqmRent = regionData.avgRent;
+        const size = Number(formData.size) || 0;
 
-    //     // Model Multipliers
-    //     const areaMultipliers: Record<string, number> = {
-    //         'Centre': 1.15,
-    //         'Semi-Centre': 1.0,
-    //         'Outside Centre': 0.85
-    //     };
+        // Model Multipliers
+        const areaMultipliers: Record<string, number> = {
+            'Centre': 1.15,
+            'Semi-Centre': 1.0,
+            'Outside Centre': 0.85
+        };
 
-    //     const conditionMultipliers: Record<string, number> = {
-    //         'In need of renovation': 0.7,
-    //         'Outdated': 0.85,
-    //         'Basic': 0.95,
-    //         'Standard': 1.0,
-    //         'Good': 1.1,
-    //         'Premium': 1.25,
-    //         'High-End': 1.4
-    //     };
+        const conditionMultipliers: Record<string, number> = {
+            'In need of renovation': 0.7,
+            'Outdated': 0.85,
+            'Basic': 0.95,
+            'Standard': 1.0,
+            'Good': 1.1,
+            'Premium': 1.25,
+            'High-End': 1.4
+        };
 
-    //     const bedroomBonus = 1 + ((Number(formData.bedrooms) - 1) * 0.05); // 5% bonus per additional bedroom
+        const bedroomBonus = 1 + ((Number(formData.bedrooms) - 1) * 0.05); // 5% bonus per additional bedroom
 
-    //     const areaFactor = areaMultipliers[formData.areaType] || 1.0;
-    //     const conditionFactor = conditionMultipliers[formData.propertyCondition] || 1.0;
+        const areaFactor = areaMultipliers[formData.areaType] || 1.0;
+        const conditionFactor = conditionMultipliers[formData.propertyCondition] || 1.0;
 
-    //     const calculatedRent = Math.round(baseSqmRent * size * areaFactor * conditionFactor * bedroomBonus);
+        const calculatedRent = Math.round(baseSqmRent * size * areaFactor * conditionFactor * bedroomBonus);
 
-    //     if (calculatedRent > 0 && calculatedRent !== formData.estimatedRent) {
-    //         setFormData(prev => ({ ...prev, estimatedRent: calculatedRent }));
-    //     }
-    // }, [formData.country, formData.region, formData.size, formData.areaType, formData.propertyCondition, formData.bedrooms]);
+        if (calculatedRent > 0 && calculatedRent !== formData.estimatedRent) {
+            setFormData(prev => ({ ...prev, estimatedRent: calculatedRent }));
+        }
+    }, [formData.country, formData.region, formData.size, formData.areaType, formData.propertyCondition, formData.bedrooms]);
 
     useEffect(() => {
         const price = searchParams.get('price');
