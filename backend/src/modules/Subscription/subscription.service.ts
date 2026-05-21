@@ -189,7 +189,7 @@ export class SubscriptionService extends BaseService<Subscription> {
     }
 
     /**
-     * Create a Customer Portal Session
+     * Create a Portal Session
      */
     async createPortalSession(userId: string, origin: string) {
         const subscription = await this.prisma.subscription.findFirst({
@@ -206,5 +206,20 @@ export class SubscriptionService extends BaseService<Subscription> {
         });
 
         return { url: session.url };
+    }
+
+    /**
+     * Get active subscription for a user
+     */
+    async getUserSubscription(userId: string) {
+        return await this.prisma.subscription.findFirst({
+            where: { 
+                userId,
+                status: 'ACTIVE'
+            },
+            include: {
+                plan: true
+            }
+        });
     }
 }

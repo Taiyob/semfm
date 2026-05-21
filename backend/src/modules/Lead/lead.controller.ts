@@ -11,12 +11,15 @@ export class LeadController {
 
   createLead = catchAsync(async (req: Request, res: Response) => {
     const userId = (req as any).user.id;
-    const { propertyId, message } = req.body;
+    const { propertyId, message, budget, financing, calculationId } = req.body;
 
     const lead = await this.leadService.createLead({
       propertyId,
       userId,
       message,
+      budget,
+      financing,
+      calculationId,
     });
 
     res.status(201).json({

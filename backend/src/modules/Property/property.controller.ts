@@ -39,7 +39,7 @@ export class PropertyController extends BaseController {
     public getById = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params;
         const userId = req.user?.id;
-        const result = await this.propertyService.getPropertyById(id, userId);
+        const result = await this.propertyService.getPropertyById(id as string, userId);
         
         if (!result) {
             throw new AppError({
@@ -80,7 +80,7 @@ export class PropertyController extends BaseController {
         const { id } = req.params;
         
         // Fetch property to check agent
-        const property = await this.propertyService.getPropertyById(id);
+        const property = await this.propertyService.getPropertyById(id as string);
         if (!property) {
             throw new AppError({
                 statusCode: HTTPStatusCode.NOT_FOUND,
@@ -93,7 +93,7 @@ export class PropertyController extends BaseController {
             return this.sendResponse(req, res, 'Agent view not counted', undefined, property);
         }
 
-        const result = await this.propertyService.incrementViews(id);
+        const result = await this.propertyService.incrementViews(id as string);
         return this.sendResponse(req, res, 'View counted', undefined, result);
     });
 
@@ -103,7 +103,7 @@ export class PropertyController extends BaseController {
      */
     public incrementLeads = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params;
-        const result = await this.propertyService.incrementLeads(id);
+        const result = await this.propertyService.incrementLeads(id as string);
         return this.sendResponse(req, res, 'Lead counted', undefined, result);
     });
 
@@ -113,7 +113,7 @@ export class PropertyController extends BaseController {
      */
     public update = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params;
-        const result = await this.propertyService.updateProperty(id, req.user.id, req.body);
+        const result = await this.propertyService.updateProperty(id as string, req.user.id, req.body);
         
         if (!result) {
             throw new AppError({
@@ -131,7 +131,7 @@ export class PropertyController extends BaseController {
      */
     public toggleSave = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params;
-        await this.propertyService.toggleSaveProperty(req.user.id, id);
+        await this.propertyService.toggleSaveProperty(req.user.id, id as string);
         return this.sendResponse(req, res, 'Save status updated successfully');
     });
 
@@ -150,7 +150,7 @@ export class PropertyController extends BaseController {
      */
     public delete = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params;
-        const result = await this.propertyService.deleteProperty(id, req.user.id);
+        const result = await this.propertyService.deleteProperty(id as string, req.user.id);
         
         if (!result) {
             throw new AppError({

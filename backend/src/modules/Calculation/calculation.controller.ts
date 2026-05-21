@@ -29,7 +29,7 @@ export class CalculationController {
         const userId = (req as any).user.id;
         const { id } = req.params;
         
-        await this.calculationService.deleteCalculation(userId, id);
+        await this.calculationService.deleteCalculation(userId, id as string);
 
         res.json({
             status: 'success',

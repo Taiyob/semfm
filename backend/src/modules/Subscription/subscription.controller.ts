@@ -45,4 +45,14 @@ export class SubscriptionController extends BaseController {
         const result = await this.subscriptionService.createPortalSession(userId, origin);
         return this.sendResponse(req, res, 'Portal session created successfully', undefined, result);
     });
+
+    /**
+     * Get My Subscription
+     */
+    public getMySubscription = catchAsync(async (req: Request, res: Response) => {
+        const userId = (req as any).user.id;
+        const subscription = await this.subscriptionService.getUserSubscription(userId);
+        
+        return this.sendResponse(req, res, 'Subscription retrieved successfully', undefined, subscription);
+    });
 }

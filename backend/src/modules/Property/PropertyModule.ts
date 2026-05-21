@@ -3,6 +3,7 @@ import { BaseModule } from '@/core/BaseModule';
 import { PropertyService } from './property.service';
 import { PropertyController } from './property.controller';
 import { PropertyRoutes } from './property.routes';
+import { AlertService } from '../Alert/alert.service';
 import { AppLogger } from '@/core/logging/logger';
 
 export class PropertyModule extends BaseModule {
@@ -16,7 +17,9 @@ export class PropertyModule extends BaseModule {
     private propertyRoutes!: PropertyRoutes;
 
     protected async setupUseCases(): Promise<void> {
-        this.propertyService = new PropertyService(this.context.getService('prisma'));
+        const prisma = this.context.getService('prisma');
+        const alertService = new AlertService(prisma);
+        this.propertyService = new PropertyService(prisma, alertService);
         AppLogger.info('PropertyService initialized successfully');
     }
 

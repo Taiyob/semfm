@@ -19,6 +19,9 @@ export class SubscriptionRoutes {
         
         // Customer portal session requires authentication
         this.router.post('/create-portal-session', authMiddleware, this.subscriptionController.createPortalSession);
+
+        // Get current user's subscription
+        this.router.get('/me', authMiddleware, this.subscriptionController.getMySubscription);
     }
 
     public getRouter(): Router {

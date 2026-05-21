@@ -35,7 +35,7 @@ export class InvestmentController extends BaseController {
      */
     public delete = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params;
-        await this.investmentService.deleteInvestment(req.user.id, id);
+        await this.investmentService.deleteInvestment(req.user.id, id as string);
         return this.sendResponse(req, res, 'Investment deleted successfully');
     });
 }

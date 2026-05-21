@@ -16,6 +16,8 @@ import { InvestmentModule } from "./modules/Investment/InvestmentModule";
 import { CalculationModule } from "./modules/Calculation/CalculationModule";
 import { PlanModule } from "./modules/Plan/PlanModule";
 import { SubscriptionModule } from "./modules/Subscription/SubscriptionModule";
+import { AlertModule } from "./modules/Alert/AlertModule";
+import { DashboardModule } from "./modules/Dashboard/DashboardModule";
 
 // Initialize the Ignitor Engine
 const ignitor = new IgnitorApp();
@@ -36,12 +38,14 @@ async function bootstrap() {
     AppLogger.info("⚙ Registering modules...");
     ignitor.registerModule(new AuthModule());
     ignitor.registerModule(new UserModule());
+    ignitor.registerModule(new AlertModule());
     ignitor.registerModule(new PropertyModule());
     ignitor.registerModule(new LeadModule());
     ignitor.registerModule(new InvestmentModule());
     ignitor.registerModule(new CalculationModule());
     ignitor.registerModule(new PlanModule());
     ignitor.registerModule(new SubscriptionModule());
+    ignitor.registerModule(new DashboardModule());
     // ignitor.registerModule(new ProductModule());
     AppLogger.info("✔ All modules registered successfully");
 

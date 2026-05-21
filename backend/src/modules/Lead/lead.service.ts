@@ -13,7 +13,7 @@ export class LeadService extends BaseService<Lead> {
     return this.prisma.lead;
   }
 
-  async createLead(data: { propertyId: string; userId: string; message?: string }) {
+  async createLead(data: { propertyId: string; userId: string; message?: string; budget?: string; financing?: string; calculationId?: string }) {
     // 1. Check if a lead already exists for this user and property
     const existingLead = await this.prisma.lead.findFirst({
       where: {
@@ -44,15 +44,19 @@ export class LeadService extends BaseService<Lead> {
         userId: data.userId,
         agentId: property.agentId,
         message: data.message,
+        budget: data.budget,
+        financing: data.financing,
+        calculationId: data.calculationId,
         status: LeadStatus.NEW,
       },
       include: {
         property: {
-          select: { title: true, location: true }
+          select: { title: true, location: true, region: true, country: { select: { name: true } } }
         },
         user: {
-          select: { firstName: true, lastName: true, email: true }
-        }
+          select: { firstName: true, lastName: true, email: true, phone: true }
+        },
+        calculation: true
       }
     });
 
@@ -70,11 +74,12 @@ export class LeadService extends BaseService<Lead> {
       where: { agentId },
       include: {
         property: {
-          select: { title: true, location: true }
+          select: { title: true, location: true, region: true, price: true, country: { select: { name: true } } }
         },
         user: {
-          select: { firstName: true, lastName: true, email: true, avatarUrl: true }
-        }
+          select: { firstName: true, lastName: true, email: true, avatarUrl: true, phone: true }
+        },
+        calculation: true
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -96,10 +101,10 @@ export class LeadService extends BaseService<Lead> {
       data: { status },
     });
 
-    // If deal is closed, automatically add to investor's portfolio
-    if (status === LeadStatus.CLOSED && lead.property) {
+    // If deal is closed (WON), automatically add to investor's portfolio
+    if (status === LeadStatus.CLOSED_WON && lead.property) {
       const property = lead.property;
-      console.log(`[Automation] Lead ${id} closed. Attempting to create investment for user ${lead.userId}`);
+      console.log(`[Automation] Lead ${id} closed won. Attempting to create investment for user ${lead.userId}`);
       
       try {
         // Check if already added for THIS property to avoid duplicates
@@ -147,10 +152,13 @@ export class LeadService extends BaseService<Lead> {
     const lead = await this.prisma.lead.findUnique({
       where: { id },
       include: {
-        property: true,
+        property: {
+          select: { title: true, location: true, region: true, price: true, country: { select: { name: true } } }
+        },
         user: {
-          select: { firstName: true, lastName: true, email: true, avatarUrl: true }
-        }
+          select: { firstName: true, lastName: true, email: true, avatarUrl: true, phone: true }
+        },
+        calculation: true
       },
     });
 

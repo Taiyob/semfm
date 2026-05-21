@@ -14,14 +14,21 @@ export const PropertyValidation = {
         appreciation: z.number().min(0).max(100),
         type: z.string().min(1, 'Property type is required'),
         image: z.string().url('Invalid image URL').optional().or(z.literal('')),
+        photos: z.array(z.string()).optional().default([]),
         sqm: z.number().positive('SQM must be positive'),
         bedrooms: z.number().int().min(0),
+        bathrooms: z.number().int().min(0).optional().default(0),
+        exteriorSize: z.number().min(0).optional(),
+        plotSize: z.number().min(0).optional(),
+        yearBuilt: z.number().int().optional(),
+        features: z.array(z.string()).optional().default([]),
+        estimatedRent: z.number().min(0).optional(),
         status: z.nativeEnum(PropertyStatus).default(PropertyStatus.AVAILABLE),
         outdoorSpace: z.nativeEnum(OutdoorSpace).default(OutdoorSpace.NONE),
         energyLabel: z.nativeEnum(EnergyLabel).default(EnergyLabel.C),
         locationType: z.nativeEnum(LocationType).default(LocationType.CENTRE),
         condition: z.string().default('Standard'),
-    }).strict(),
+    }),
 };
 
 export type CreatePropertyInput = z.infer<typeof PropertyValidation.create>;

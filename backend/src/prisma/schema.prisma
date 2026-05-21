@@ -67,7 +67,12 @@ enum SubscriptionStatus {
 enum LeadStatus {
   NEW
   CONTACTED
-  CLOSED
+  QUALIFIED
+  VIEWING_SCHEDULED
+  OFFER_SUBMITTED
+  CLOSED_WON
+  CLOSED_LOST
+  ARCHIVED
 }
 
 enum AssetStatus {
@@ -107,6 +112,7 @@ model User {
   emailVerifiedAt DateTime?
   bio             String?
   avatarUrl       String?
+  phone           String?
 
   // Role Relation
   roleId String @db.Uuid
@@ -176,8 +182,15 @@ model Property {
   appreciation Float // Expected appreciation percentage
   type         String // e.g., Apartment, Studio, Villa, etc.
   image        String?
+  photos       String[] @default([]) // Array of image URLs
   sqm          Float
   bedrooms     Int     @default(0)
+  bathrooms    Int     @default(0)
+  exteriorSize Float?
+  plotSize     Float?
+  yearBuilt    Int?
+  features     String[] @default([]) // e.g., ["Pool", "Garage", "Garden"]
+  estimatedRent Float? // Stored estimated rent or override
 
   status       PropertyStatus @default(AVAILABLE)
   outdoorSpace OutdoorSpace   @default(NONE)
@@ -207,6 +220,9 @@ model MatchAlert {
   name     String?
   criteria Json
   isActive Boolean @default(true)
+
+  lastTriggeredAt DateTime?
+  triggerCount    Int       @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -274,6 +290,8 @@ model SavedCalculation {
   inputData   Json // The parameters inputted in the calculator
   resultsData Json // The resulting calculations
 
+  leads Lead[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
@@ -319,6 +337,8 @@ model Lead {
   id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   message   String?
   status    LeadStatus @default(NEW)
+  budget    String?    // e.g., "€300,000 – €450,000"
+  financing String?    // e.g., "Cash Buyer", "Mortgage"
 
   propertyId String   @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -328,6 +348,9 @@ model Lead {
 
   agentId String @db.Uuid // The agent receiving the lead
   agent   User   @relation("AgentLeads", fields: [agentId], references: [id], onDelete: Cascade)
+
+  calculationId String?           @db.Uuid
+  calculation   SavedCalculation? @relation(fields: [calculationId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

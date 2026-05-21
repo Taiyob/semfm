@@ -1,14 +1,17 @@
-// src/modules/Property/property.service.ts
 import { PrismaClient, Property } from '@/generated/prisma/client';
 import { BaseService } from '@/core/BaseService';
 import { CreatePropertyInput } from './property.validation';
+import { AlertService } from '../Alert/alert.service';
 
 export class PropertyService extends BaseService<Property> {
-    constructor(prisma: PrismaClient) {
+    private alertService?: AlertService;
+
+    constructor(prisma: PrismaClient, alertService?: AlertService) {
         super(prisma, 'Property', {
             enableSoftDelete: false,
             enableAuditFields: false,
         });
+        this.alertService = alertService;
     }
 
     protected getModel() {
@@ -19,10 +22,19 @@ export class PropertyService extends BaseService<Property> {
      * Create a new property listing
      */
     async createProperty(agentId: string, data: CreatePropertyInput): Promise<Property> {
-        return this.create({
+        const property = await this.create({
             ...data,
             agentId,
         });
+
+        // Trigger matching alerts
+        if (this.alertService) {
+            this.alertService.processPropertyAgainstAlerts(property).catch(err => {
+                console.error('Error processing alerts for property:', err);
+            });
+        }
+
+        return property;
     }
 
     /**
@@ -152,12 +164,17 @@ export class PropertyService extends BaseService<Property> {
             isSaved: savedPropertyIds.includes(property.id)
         }));
 
+        const totalPages = Math.ceil(total / Number(limit));
+        const currentPage = Number(page);
+
         return {
             data: propertiesWithSavedStatus,
             total,
-            page: Number(page),
+            page: currentPage,
             limit: Number(limit),
-            totalPages: Math.ceil(total / Number(limit)),
+            totalPages,
+            hasNext: currentPage < totalPages,
+            hasPrevious: currentPage > 1,
         };
     }
 

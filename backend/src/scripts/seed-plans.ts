@@ -22,7 +22,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2025-01-27.acacia',
+    apiVersion: '2025-01-27.acacia' as any,
 });
 
 const plans = [
