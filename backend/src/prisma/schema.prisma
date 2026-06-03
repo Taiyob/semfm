@@ -172,6 +172,7 @@ model Property {
   title       String
   description String?
   location    String
+  streetName  String?
   region      String?
 
   countryId String?  @db.Uuid

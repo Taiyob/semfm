@@ -7,6 +7,7 @@ export const PropertyValidation = {
         title: z.string().min(3, 'Title must be at least 3 characters').max(255),
         description: z.string().optional(),
         location: z.string().min(2, 'Location is required'),
+        streetName: z.string().optional(),
         region: z.string().optional(),
         countryId: z.string().uuid('Invalid country ID').optional(),
         price: z.number().positive('Price must be positive'),

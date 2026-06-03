@@ -23,8 +23,26 @@ export class LeadService extends BaseService<Lead> {
     });
 
     if (existingLead) {
-      // If it exists, just return the existing lead
-      return existingLead;
+      // If it exists, update it with new calculation ID/message instead of ignoring
+      return this.prisma.lead.update({
+        where: { id: existingLead.id },
+        data: {
+          calculationId: data.calculationId || existingLead.calculationId,
+          message: data.message || existingLead.message,
+          budget: data.budget || existingLead.budget,
+          financing: data.financing || existingLead.financing,
+          status: LeadStatus.NEW, // Reset status so agent sees it
+        },
+        include: {
+          property: {
+            select: { title: true, location: true, region: true, country: { select: { name: true } } }
+          },
+          user: {
+            select: { firstName: true, lastName: true, email: true, phone: true }
+          },
+          calculation: true
+        }
+      });
     }
 
     // 2. Get the property to find the agentId
