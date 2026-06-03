@@ -11,7 +11,6 @@ import {
   Users,
   Eye,
   MessageSquare,
-  Plus,
   Calculator,
   Search,
   Bell,
@@ -53,6 +52,7 @@ export default function DashboardHome() {
   const dashboardData = dashboardResponse?.data;
 
   const [graphView, setGraphView] = useState<'month' | 'year'>('year');
+  const [leadsGraphView, setLeadsGraphView] = useState<'month' | 'year'>('year');
 
   const stats = (dashboardData?.stats || (isAgent ? agentStats : investorStats)).map((s: any) => {
     let icon = Wallet;
@@ -67,6 +67,9 @@ export default function DashboardHome() {
     ? [40, 70, 45, 90, 65, 80, 50, 95, 75, 100, 85, 110] 
     : [60, 85, 110, 95, 80, 70, 60, 50, 40, 30, 20, 10]);
   const analyticsData = graphView === 'month' ? rawAnalytics.slice(-4) : rawAnalytics;
+
+  const rawAnalyticsLeads = dashboardData?.analyticsLeads || [30, 50, 35, 70, 55, 65, 40, 80, 60, 90, 70, 95];
+  const analyticsLeadsData = leadsGraphView === 'month' ? rawAnalyticsLeads.slice(-4) : rawAnalyticsLeads;
 
   return (
     <div className="space-y-16 pb-12">
@@ -98,10 +101,9 @@ export default function DashboardHome() {
 
       {/* Premium Quick Actions */}
       {!isAgent && (
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <section className="grid grid-cols-2 lg:grid-cols-3 gap-8">
           {[
             { name: 'New Calculation', icon: Calculator, href: '/dashboard/calculator', desc: 'ROI Analysis' },
-            { name: 'Add Property', icon: Plus, href: '/dashboard/properties/add', desc: 'Portfolio Entry' },
             { name: 'Compare', icon: Activity, href: '/dashboard/calculator', desc: 'Market Bench' },
             { name: 'Create Alert', icon: Bell, href: '/dashboard/alerts', desc: 'Deal Scanner' },
           ].map((action, i) => (
@@ -169,17 +171,17 @@ export default function DashboardHome() {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Main Graph Card */}
+        {/* Main Graph Card — Listings (or Portfolio for investor) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.6 }}
-          className="lg:col-span-6 bg-white p-8 rounded-[48px] shadow-sm border border-stone-100 relative overflow-hidden h-full flex flex-col"
+          className={`${isAgent ? 'lg:col-span-6' : 'lg:col-span-6'} bg-white p-8 rounded-[48px] shadow-sm border border-stone-100 relative overflow-hidden flex flex-col`}
         >
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 relative z-10">
             <div>
-              <h3 className="text-lg font-black text-[#2C3E50]">Analytics</h3>
-              <p className="text-stone-400 font-bold text-[10px] mt-0.5">Growth Tracking</p>
+              <h3 className="text-lg font-black text-[#2C3E50]">{isAgent ? 'Total Listings' : 'Analytics'}</h3>
+              <p className="text-stone-400 font-bold text-[10px] mt-0.5">{isAgent ? 'Monthly Growth' : 'Growth Tracking'}</p>
             </div>
             <div className="flex gap-2 bg-stone-50 p-1 rounded-xl border border-stone-100">
               <button 
@@ -204,7 +206,7 @@ export default function DashboardHome() {
           </div>
 
           {/* Real Graph with Labels */}
-          <div className="flex-1 w-full relative flex items-end justify-between gap-1.5 px-2 z-10 border-b border-stone-50 pb-6 mb-4">
+          <div className="h-[160px] w-full relative flex items-end justify-between gap-1.5 px-2 z-10 border-b border-stone-50 pb-6 mb-4">
             {analyticsData.map((height: number, iValue: number) => {
               let label = '';
               if (graphView === 'year') {
@@ -219,7 +221,6 @@ export default function DashboardHome() {
 
               return (
                 <div key={`${graphView}-${iValue}`} className="flex-1 h-full flex flex-col items-center justify-end group relative">
-                  {/* Tooltip */}
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#2C3E50] text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 whitespace-nowrap">
                     {graphView === 'year' ? label : `Week ${iValue + 1}`}: {height.toFixed(1)}%
                   </div>
@@ -242,7 +243,79 @@ export default function DashboardHome() {
           </div>
         </motion.div>
 
-        {/* Workspace Section */}
+        {/* Second Graph — Leads (agent only) */}
+        {isAgent && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.65 }}
+            className="lg:col-span-6 bg-white p-8 rounded-[48px] shadow-sm border border-stone-100 relative overflow-hidden flex flex-col"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 relative z-10">
+              <div>
+                <h3 className="text-lg font-black text-[#2C3E50]">Total Leads</h3>
+                <p className="text-stone-400 font-bold text-[10px] mt-0.5">Monthly Inquiries</p>
+              </div>
+              {/* Shared toggle — same graphView state */}
+              <div className="flex gap-2 bg-stone-50 p-1 rounded-xl border border-stone-100">
+                <button 
+                  onClick={() => setLeadsGraphView('month')}
+                  className={`px-4 py-2 font-black rounded-lg text-[9px] uppercase tracking-widest transition-all ${
+                    leadsGraphView === 'month' ? 'text-white shadow-lg' : 'text-stone-400'
+                  }`}
+                  style={leadsGraphView === 'month' ? { background: 'linear-gradient(135deg, #2C3E50 0%, #34495E 100%)' } : {}}
+                >
+                  M
+                </button>
+                <button 
+                  onClick={() => setLeadsGraphView('year')}
+                  className={`px-4 py-2 font-black rounded-lg text-[9px] uppercase tracking-widest transition-all ${
+                    leadsGraphView === 'year' ? 'text-white shadow-lg' : 'text-stone-400'
+                  }`}
+                  style={leadsGraphView === 'year' ? { background: 'linear-gradient(135deg, #2C3E50 0%, #34495E 100%)' } : {}}
+                >
+                  Y
+                </button>
+              </div>
+            </div>
+
+            <div className="h-[160px] w-full relative flex items-end justify-between gap-1.5 px-2 z-10 border-b border-stone-50 pb-6 mb-4">
+              {analyticsLeadsData.map((height: number, iValue: number) => {
+                let label = '';
+                if (leadsGraphView === 'year') {
+                  const monthDate = new Date();
+                  monthDate.setMonth(monthDate.getMonth() - (11 - iValue));
+                  label = monthDate.toLocaleString('default', { month: 'short' });
+                } else {
+                  label = `W${iValue + 1}`;
+                }
+                const shouldShowLabel = leadsGraphView === 'year' ? (iValue % 3 === 0 || iValue === 11) : true;
+
+                return (
+                  <div key={`leads-${leadsGraphView}-${iValue}`} className="flex-1 h-full flex flex-col items-center justify-end group relative">
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#2C3E50] text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 whitespace-nowrap">
+                      {leadsGraphView === 'year' ? label : `Week ${iValue + 1}`}: {height.toFixed(1)}%
+                    </div>
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: `${height}%`, opacity: 1 }}
+                      transition={{ delay: iValue * 0.05 }}
+                      className="w-full rounded-t-lg relative overflow-hidden group-hover:brightness-110 transition-all cursor-crosshair"
+                      style={{ background: 'linear-gradient(135deg, #2C3E50 0%, #34495E 100%)' }}
+                    />
+                    {shouldShowLabel && (
+                      <span className="text-[7px] font-black text-stone-400 mt-2 absolute -bottom-5 uppercase tracking-tighter">
+                        {label}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Workspace Section — investor only */}
         {!isAgent && (
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
@@ -307,7 +380,7 @@ export default function DashboardHome() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.8 }}
-          className="lg:col-span-3 bg-white p-8 rounded-[48px] shadow-sm border border-stone-100 flex flex-col h-full"
+          className={`${isAgent ? 'lg:col-span-12' : 'lg:col-span-3'} bg-white p-8 rounded-[48px] shadow-sm border border-stone-100 flex flex-col h-full`}
         >
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">

@@ -58,7 +58,7 @@ const countries = [
     region: 'Southern Europe',
     investors: '5k+',
     image: '/assets/greece_market_hero.png',
-    status: 'Active',
+    status: 'Coming Soon',
     color: 'border-zinc-200'
   },
 ];
@@ -288,8 +288,8 @@ export default function GlobalHomePage() {
                     Discover {country.name} <ChevronRight className="size-5 group-hover/btn:translate-x-1 transition-transform" />
                   </Link>
                 ) : (
-                  <button className="w-full mt-auto py-4 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed">
-                    Launching Q3 2026
+                  <button className="w-full mt-auto py-4 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed blur-[1px]">
+                    Coming Soon
                   </button>
                 )}
               </div>

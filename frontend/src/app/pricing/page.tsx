@@ -30,7 +30,7 @@ export default function PricingPage() {
   
   const { data: plansData, isLoading: plansLoading } = useGetPlansQuery();
   const [createCheckout, { isLoading: isRedirecting }] = useCreateCheckoutSessionMutation();
-  const [createPortal, { isLoading: isPortalLoading }] = useCreatePortalSessionMutation();
+  const [, { isLoading: isPortalLoading }] = useCreatePortalSessionMutation();
 
   const handlePlanSelect = async (plan: any) => {
     if (!user) {
@@ -42,10 +42,11 @@ export default function PricingPage() {
 
     try {
       if (hasActiveSubscription) {
-        // If already has a plan, open customer portal for upgrade/downgrade
-        const response = await createPortal().unwrap();
-        if (response?.data?.url) {
-          window.location.href = response.data.url;
+        // Only allow upgrade (higher price), not downgrade
+        const response = await createCheckout({ planId: plan.id }).unwrap();
+        const checkoutUrl = response?.data?.url;
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
         }
       } else {
         // New subscription
@@ -138,6 +139,13 @@ export default function PricingPage() {
                     {activePlans.map((plan: any, index: number) => {
                         const isCurrentPlan = user?.subscriptions?.some((sub: any) => sub.planId === plan.id);
 
+                        // Find the current subscribed plan's price to determine upgrade vs downgrade
+                        const currentSubscribedPlan = user?.subscriptions?.length > 0
+                          ? activePlans.find((p: any) => user.subscriptions.some((sub: any) => sub.planId === p.id))
+                          : null;
+                        const isDowngrade = currentSubscribedPlan && !isCurrentPlan && plan.price < currentSubscribedPlan.price;
+                        const isUpgrade = currentSubscribedPlan && !isCurrentPlan && plan.price > currentSubscribedPlan.price;
+
                         return (
                             <motion.div 
                                 key={plan.id}
@@ -174,27 +182,31 @@ export default function PricingPage() {
                                 </div>
 
                                 <button 
-                                    onClick={() => !isCurrentPlan && handlePlanSelect(plan)}
-                                    disabled={isRedirecting || isPortalLoading || isCurrentPlan}
+                                    onClick={() => !isCurrentPlan && !isDowngrade && handlePlanSelect(plan)}
+                                    disabled={isRedirecting || isPortalLoading || isCurrentPlan || !!isDowngrade}
                                     className={cn(
                                         "w-full py-5 rounded-[20px] font-black transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-widest",
-                                        "cursor-pointer active:scale-95 disabled:active:scale-100",
+                                        "active:scale-95 disabled:active:scale-100",
                                         isCurrentPlan 
                                             ? "bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-not-allowed"
-                                            : (plan.name.includes('Premium') || plan.name.includes('Pro')
-                                                ? 'bg-[#2C3E50] text-white hover:bg-[#D4A373] shadow-xl shadow-[#2C3E50]/10' 
-                                                : 'bg-stone-50 text-[#2C3E50] hover:bg-stone-100 border border-stone-100 hover:border-[#D4A373]/30'),
+                                            : isDowngrade
+                                                ? "bg-stone-100 text-stone-300 border border-stone-100 cursor-not-allowed opacity-50"
+                                                : (plan.name.includes('Premium') || plan.name.includes('Pro')
+                                                    ? 'bg-[#2C3E50] text-white hover:bg-[#D4A373] shadow-xl shadow-[#2C3E50]/10 cursor-pointer' 
+                                                    : 'bg-stone-50 text-[#2C3E50] hover:bg-stone-100 border border-stone-100 hover:border-[#D4A373]/30 cursor-pointer'),
                                         (isRedirecting || isPortalLoading) && "opacity-50 cursor-wait"
                                     )}
                                 >
                                     {isRedirecting || isPortalLoading 
                                         ? 'Processing...' 
-                                        : (isCurrentPlan 
-                                            ? 'Current Plan' 
-                                            : (user?.subscriptions?.length > 0 
-                                                ? 'Upgrade / Manage' 
-                                                : (plan.price === 0 ? 'Get Started' : 'Subscribe Now')))} 
-                                    {!isCurrentPlan && <ArrowRight className="size-4" />}
+                                        : isCurrentPlan 
+                                            ? 'Current Plan'
+                                            : isDowngrade
+                                                ? 'Not Available'
+                                                : isUpgrade
+                                                    ? 'Upgrade'
+                                                    : (plan.price === 0 ? 'Get Started' : 'Subscribe Now')}
+                                    {!isCurrentPlan && !isDowngrade && <ArrowRight className="size-4" />}
                                     {isCurrentPlan && <CheckCircle2 className="size-4" />}
                                 </button>
                             </motion.div>

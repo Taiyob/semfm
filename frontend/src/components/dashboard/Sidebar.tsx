@@ -23,7 +23,7 @@ const investorMenuItems = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { name: 'My Properties', href: '/dashboard/properties', icon: Search },
   { name: 'Alerts', href: '/dashboard/alerts', icon: Bell },
-  { name: 'Investments', href: '/dashboard/investments', icon: Briefcase },
+  // { name: 'Investments', href: '/dashboard/investments', icon: Briefcase },
   { name: 'Calculator', href: '/dashboard/calculator', icon: TrendingUp },
   { name: 'Profile', href: '/dashboard/profile', icon: UserCircle2 },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },

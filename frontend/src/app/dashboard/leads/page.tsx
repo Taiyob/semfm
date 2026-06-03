@@ -353,9 +353,9 @@ export default function LeadsPage() {
                       <p className="text-sm font-black text-[#2C3E50]">{lead.financing || 'Cash Buyer'}</p>
                    </div>
                    <div>
-                      <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Received</p>
+                      <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Last Updated</p>
                       <p className="text-sm font-black text-stone-500">
-                        {new Date(lead.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {new Date(lead.updatedAt || lead.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                    </div>
                 </div>
@@ -406,7 +406,56 @@ export default function LeadsPage() {
                          Schedule Call
                        </button>
                         <button 
-                          onClick={() => Swal.fire('Lead Details', `Inquiry Message: ${lead.message || 'No message provided.'}`, 'info')}
+                          onClick={() => {
+                            const msg = lead.message || 'No message provided.';
+                            const source = lead.calculation 
+                              ? 'Calculator Inquiry' 
+                              : (lead.message && lead.message.toLowerCase().includes('calculator'))
+                                ? 'Calculator Inquiry (no analysis attached)'
+                                : 'Direct Property Inquiry';
+                            const date = new Date(lead.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                            Swal.fire({
+                              title: `<div style="text-align:left;">
+                                <span style="font-size:10px;font-weight:900;color:#D4A373;letter-spacing:2px;text-transform:uppercase;">Lead Details</span>
+                                <br/><span style="font-size:18px;font-weight:900;color:#2C3E50;">${lead.user.firstName} ${lead.user.lastName}</span>
+                                <br/><span style="font-size:11px;color:#a8a29e;font-weight:700;">${date}</span>
+                              </div>`,
+                              html: `
+                                <div style="text-align:left;font-family:inherit;padding:10px 5px;space-y:12px;">
+                                  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f5f5f4;border-radius:10px;margin-bottom:8px;">
+                                    <span style="font-size:11px;color:#78716c;font-weight:700;">Source</span>
+                                    <span style="font-size:12px;color:#2C3E50;font-weight:900;">${source}</span>
+                                  </div>
+                                  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f5f5f4;border-radius:10px;margin-bottom:8px;">
+                                    <span style="font-size:11px;color:#78716c;font-weight:700;">Property</span>
+                                    <span style="font-size:12px;color:#2C3E50;font-weight:900;max-width:200px;text-align:right;">${lead.property.title}</span>
+                                  </div>
+                                  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f5f5f4;border-radius:10px;margin-bottom:8px;">
+                                    <span style="font-size:11px;color:#78716c;font-weight:700;">Status</span>
+                                    <span style="font-size:12px;color:#2C3E50;font-weight:900;">${lead.status.replace('_', ' ')}</span>
+                                  </div>
+                                  ${lead.budget ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f5f5f4;border-radius:10px;margin-bottom:8px;">
+                                    <span style="font-size:11px;color:#78716c;font-weight:700;">Budget</span>
+                                    <span style="font-size:12px;color:#2C3E50;font-weight:900;">${lead.budget}</span>
+                                  </div>` : ''}
+                                  ${lead.financing ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f5f5f4;border-radius:10px;margin-bottom:8px;">
+                                    <span style="font-size:11px;color:#78716c;font-weight:700;">Financing</span>
+                                    <span style="font-size:12px;color:#2C3E50;font-weight:900;">${lead.financing}</span>
+                                  </div>` : ''}
+                                  <div style="padding:12px;background:#fafaf9;border:1px solid #e7e5e4;border-radius:12px;margin-top:12px;">
+                                    <p style="font-size:9px;font-weight:900;color:#a8a29e;letter-spacing:2px;text-transform:uppercase;margin:0 0 6px 0;">Message</p>
+                                    <p style="font-size:12px;color:#44403c;font-weight:600;margin:0;line-height:1.6;">${msg}</p>
+                                  </div>
+                                  ${lead.calculation ? `<div style="padding:10px 12px;background:#D4A373/10;border:1px solid #D4A373;border-radius:12px;margin-top:10px;display:flex;align-items:center;gap:8px;">
+                                    <span style="font-size:11px;color:#D4A373;font-weight:900;">📊 Calculation attached — click "View Client Calculation" below</span>
+                                  </div>` : ''}
+                                </div>
+                              `,
+                              confirmButtonColor: '#2C3E50',
+                              confirmButtonText: 'CLOSE',
+                              customClass: { popup: 'rounded-[32px]' }
+                            });
+                          }}
                           className="px-4 py-2.5 bg-stone-100 text-[#2C3E50] text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-stone-200 transition-all"
                         >
                           View Details
@@ -414,59 +463,166 @@ export default function LeadsPage() {
                      </div>
 
                      {lead.calculation && (
-                       <div className="w-full">
-                         <button 
-                            onClick={() => {
-                              const results = lead.calculation.resultsData as any;
-                              const inputs = lead.calculation.inputData as any;
-                              const isAdvanced = !!inputs.purchasePrice;
-                              const price = isAdvanced ? (inputs.purchasePrice || 0) : (inputs.price || 0);
-                              const yieldVal = isAdvanced ? (results.grossYield || 0) : (results.yield || 0);
-                              const annualProfit = isAdvanced ? (results.profitAfterMortgage || 0) : (results.annualProfit || 0);
-                              const rent = isAdvanced ? (results.annualRent / 12 || inputs.estimatedRent || 0) : (inputs.rent || 0);
-                              const cashInvested = isAdvanced ? (results.cashInvested || 0) : (results.cashInvested || results.totalCapitalNeeded || 0);
+                        <div className="w-full">
+                          <button 
+                             onClick={() => {
+                               const results = lead.calculation.resultsData as any;
+                               const inputs = lead.calculation.inputData as any;
+                               const isAdvanced = !!inputs.purchasePrice;
+                               const price = isAdvanced ? (inputs.purchasePrice || 0) : (inputs.price || 0);
+                               const yieldVal = isAdvanced ? (results.grossYield || 0) : (results.yield || 0);
+                               const netYield = isAdvanced ? (results.netYield || 0) : 0;
+                               const annualProfit = isAdvanced ? (results.profitAfterMortgage || 0) : (results.annualProfit || 0);
+                               const rent = isAdvanced ? (inputs.estimatedRent || (results.annualRent ? results.annualRent / 12 : 0)) : (inputs.rent || 0);
+                               const cashInvested = isAdvanced ? (results.cashInvested || 0) : (results.cashInvested || results.totalCapitalNeeded || 0);
+                               const totalCapitalNeeded = results.totalCapitalNeeded || 0;
+                               const acquisitionCosts = results.acquisitionCosts || 0;
+                               const cashOnCash = results.cashOnCash || results.cashOnCashReturn || 0;
+                               const ltv = results.ltv || 0;
+                               const totalOpex = results.totalOpex || 0;
+                               const annualRent = results.annualRent || (rent * 12);
+                               const netAnnualIncome = results.netAnnualIncome || 0;
+                               const mortgageCosts = results.mortgageCosts || 0;
+                               const yearlyInterest = results.yearlyInterest || 0;
+                               const yearlyPrincipal = results.yearlyPrincipal || 0;
+                               const currentROE = results.currentROE || 0;
+                               const avgAnnualReturn = results.avgAnnualReturn || 0;
+                               const totalHorizonProfit = results.totalHorizonProfit || 0;
+                               const totalReturnMultiple = results.totalReturnMultiple || 0;
+                               
+                               const opex = results.opexBreakdown || {};
+                               const acq = results.breakdown || {};
+                               
+                               const country = inputs.country || 'N/A';
+                               const region = inputs.region || 'N/A';
+                               const propertyType = inputs.propertyType || 'N/A';
+                               const renovationCost = inputs.renovationCost || 0;
+                               const downPayment = inputs.downPayment || 0;
+                               const interestRate = inputs.interestRate || 0;
+                               const mortgageTerm = inputs.mortgageTerm || 0;
+                               const appreciationRate = inputs.appreciationRate || 0;
+                               const rentGrowthRate = inputs.rentGrowthRate || 0;
+                               const timeHorizon = inputs.timeHorizon || 20;
+                               const isRental = inputs.isRental;
 
-                              Swal.fire({
-                                title: `<span style="color: #D4AF37">${lead.calculation.name}</span>`,
-                                width: '600px',
-                                html: `
-                                  <div style="text-align: left; font-family: Montserrat; padding: 20px;">
-                                    <div style="display: grid; grid-template-cols: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                                      <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #eee;">
-                                        <p style="font-size: 9px; color: #999; margin: 0; font-weight: 800; letter-spacing: 1px;">PURCHASE PRICE</p>
-                                        <p style="font-weight: 900; font-size: 18px; margin: 5px 0; color: #2C3E50;">€${Math.round(price).toLocaleString()}</p>
-                                      </div>
-                                      <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #eee;">
-                                        <p style="font-size: 9px; color: #999; margin: 0; font-weight: 800; letter-spacing: 1px;">GROSS YIELD</p>
-                                        <p style="font-weight: 900; font-size: 18px; margin: 5px 0; color: #D4A373;">${Number(yieldVal).toFixed(2)}%</p>
-                                      </div>
-                                      <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #eee;">
-                                        <p style="font-size: 9px; color: #999; margin: 0; font-weight: 800; letter-spacing: 1px;">MONTHLY RENT</p>
-                                        <p style="font-weight: 900; font-size: 18px; margin: 5px 0; color: #2C3E50;">€${Math.round(rent).toLocaleString()}</p>
-                                      </div>
-                                      <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #eee;">
-                                        <p style="font-size: 9px; color: #999; margin: 0; font-weight: 800; letter-spacing: 1px;">CASH INVESTED</p>
-                                        <p style="font-weight: 900; font-size: 18px; margin: 5px 0; color: #2C3E50;">€${Math.round(cashInvested).toLocaleString()}</p>
-                                      </div>
-                                    </div>
-                                    <div style="background: #2C3E50; color: white; padding: 25px; border-radius: 20px;">
-                                      <p style="font-size: 9px; color: rgba(255,255,255,0.5); margin: 0; font-weight: 800; letter-spacing: 2px;">ESTIMATED NET ANNUAL PROFIT</p>
-                                      <p style="font-size: 32px; font-weight: 900; margin: 5px 0; color: #D4A373;">€${Math.round(annualProfit).toLocaleString()}</p>
-                                    </div>
-                                    ${isAdvanced ? `<div style="margin-top: 15px; padding: 10px; background: #fcf8f3; border-radius: 8px; font-size: 11px;"><b>Advanced Analysis Attached:</b> ${inputs.country} / ${inputs.region}</div>` : ''}
-                                  </div>
-                                `,
-                                confirmButtonColor: '#2C3E50',
-                                confirmButtonText: 'CLOSE ANALYSIS',
-                                customClass: { popup: 'rounded-[32px]' }
-                              });
-                            }}
-                           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#D4A373]/10 text-[#D4A373] text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-[#D4A373] hover:text-white transition-all"
-                         >
-                           <Calculator className="size-3.5" />
-                           View Client Calculation
-                         </button>
-                       </div>
+                               const fmt = (v: number) => `€${Math.round(v).toLocaleString()}`;
+                               const pct = (v: number) => `${Number(v).toFixed(2)}%`;
+                               
+                               const makeRow = (label: string, value: string, highlight = false) => 
+                                 `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;${highlight ? 'background:#f0fdf4;border-radius:8px;' : ''}">
+                                    <span style="font-size:11px;color:#78716c;font-weight:700;">${label}</span>
+                                    <span style="font-size:13px;color:${highlight ? '#059669' : '#2C3E50'};font-weight:900;">${value}</span>
+                                  </div>`;
+                               
+                               const makeSection = (title: string, rows: string) =>
+                                 `<div style="margin-bottom:20px;">
+                                    <p style="font-size:9px;font-weight:900;color:#a8a29e;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px 0;padding-bottom:8px;border-bottom:1px solid #f5f5f4;">${title}</p>
+                                    ${rows}
+                                  </div>`;
+
+                               Swal.fire({
+                                 title: `<div style="text-align:left;">
+                                   <span style="font-size:10px;font-weight:900;color:#D4A373;letter-spacing:2px;text-transform:uppercase;">Client Calculation</span>
+                                   <br/><span style="font-size:18px;font-weight:900;color:#2C3E50;">${lead.calculation.name}</span>
+                                   <br/><span style="font-size:11px;color:#a8a29e;font-weight:700;">${new Date(lead.calculation.createdAt).toLocaleDateString(undefined, { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}</span>
+                                 </div>`,
+                                 width: '720px',
+                                 html: `
+                                   <div style="text-align:left;font-family:inherit;max-height:60vh;overflow-y:auto;padding:10px 5px;">
+                                     
+                                     ${makeSection('📍 Investment Parameters', `
+                                       ${makeRow('Country', country)}
+                                       ${makeRow('Region', region)}
+                                       ${makeRow('Property Type', propertyType)}
+                                       ${makeRow('Purpose', isRental === false ? 'Residential (Own Use)' : 'Rental Investment')}
+                                       ${makeRow('Time Horizon', `${timeHorizon} years`)}
+                                     `)}
+                                     
+                                     ${makeSection('💰 Purchase & Costs', `
+                                       ${makeRow('Purchase Price', fmt(price))}
+                                       ${Number(renovationCost) > 0 ? makeRow('Renovation Cost', fmt(Number(renovationCost))) : ''}
+                                       ${makeRow('Acquisition Costs', fmt(acquisitionCosts))}
+                                       ${makeRow('Total Capital Needed', fmt(totalCapitalNeeded), true)}
+                                     `)}
+
+                                     ${(acq.imt || acq.stampDuty || acq.legalFees || acq.notaryFees) ? makeSection('📋 Acquisition Breakdown', `
+                                       ${acq.imt ? makeRow('IMT (Transfer Tax)', fmt(acq.imt)) : ''}
+                                       ${acq.itp ? makeRow('ITP (Transfer Tax)', fmt(acq.itp)) : ''}
+                                       ${acq.stampDuty ? makeRow('Stamp Duty', fmt(acq.stampDuty)) : ''}
+                                       ${acq.legalFees ? makeRow('Legal Fees', fmt(acq.legalFees)) : ''}
+                                       ${acq.notaryFees ? makeRow('Notary Fees', fmt(acq.notaryFees)) : ''}
+                                       ${acq.iva ? makeRow('IVA (VAT)', fmt(acq.iva)) : ''}
+                                       ${acq.ajd ? makeRow('AJD (Stamp Tax)', fmt(acq.ajd)) : ''}
+                                     `) : ''}
+
+                                     ${(Number(downPayment) > 0 || Number(interestRate) > 0) ? makeSection('🏦 Mortgage Details', `
+                                       ${makeRow('Down Payment', fmt(Number(downPayment)))}
+                                       ${makeRow('Interest Rate', pct(Number(interestRate)))}
+                                       ${makeRow('Mortgage Term', `${mortgageTerm} years`)}
+                                       ${makeRow('LTV', pct(ltv))}
+                                       ${makeRow('Annual Interest', fmt(yearlyInterest))}
+                                       ${makeRow('Annual Principal', fmt(yearlyPrincipal))}
+                                       ${makeRow('Total Mortgage Cost/yr', fmt(mortgageCosts))}
+                                     `) : ''}
+
+                                     ${makeSection('🏠 Rental Income', `
+                                       ${makeRow('Monthly Rent', fmt(rent))}
+                                       ${makeRow('Annual Rent', fmt(annualRent))}
+                                       ${makeRow('Total Operating Expenses', fmt(totalOpex))}
+                                       ${makeRow('Net Annual Income (NOI)', fmt(netAnnualIncome), true)}
+                                     `)}
+
+                                     ${Object.keys(opex).length > 0 ? makeSection('📊 OpEx Breakdown', `
+                                       ${opex.vacancy ? makeRow('Vacancy', fmt(opex.vacancy)) : ''}
+                                       ${opex.maintenance ? makeRow('Maintenance', fmt(opex.maintenance)) : ''}
+                                       ${opex.capex ? makeRow('CapEx Reserve', fmt(opex.capex)) : ''}
+                                       ${opex.insurance ? makeRow('Insurance', fmt(opex.insurance)) : ''}
+                                       ${opex.propertyTax ? makeRow('Property Tax (IMI)', fmt(opex.propertyTax)) : ''}
+                                       ${opex.condo ? makeRow('Condo / HOA', fmt(opex.condo)) : ''}
+                                       ${opex.management ? makeRow('Management Fee', fmt(opex.management)) : ''}
+                                       ${opex.admin ? makeRow('Admin / Other', fmt(opex.admin)) : ''}
+                                     `) : ''}
+
+                                     <div style="background:#2C3E50;color:white;padding:20px;border-radius:20px;margin:15px 0;">
+                                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                         <div>
+                                           <p style="font-size:9px;color:rgba(255,255,255,0.4);margin:0;font-weight:800;letter-spacing:1px;">CASH INVESTED</p>
+                                           <p style="font-size:20px;font-weight:900;margin:4px 0;color:white;">${fmt(cashInvested)}</p>
+                                         </div>
+                                         <div>
+                                           <p style="font-size:9px;color:rgba(255,255,255,0.4);margin:0;font-weight:800;letter-spacing:1px;">NET ANNUAL PROFIT</p>
+                                           <p style="font-size:20px;font-weight:900;margin:4px 0;color:#D4A373;">${fmt(annualProfit)}</p>
+                                         </div>
+                                       </div>
+                                     </div>
+
+                                     ${makeSection('📈 Returns & Yields', `
+                                       ${makeRow('Gross Yield', pct(yieldVal))}
+                                       ${Number(netYield) > 0 ? makeRow('Net Yield', pct(netYield)) : ''}
+                                       ${makeRow('Cash-on-Cash Return', pct(cashOnCash))}
+                                       ${Number(currentROE) > 0 ? makeRow('Return on Equity (ROE)', pct(currentROE)) : ''}
+                                       ${Number(appreciationRate) > 0 ? makeRow('Appreciation Rate', pct(Number(appreciationRate))) : ''}
+                                       ${Number(rentGrowthRate) > 0 ? makeRow('Rent Growth Rate', pct(Number(rentGrowthRate))) : ''}
+                                     `)}
+
+                                     ${Number(totalHorizonProfit) > 0 ? makeSection(`🔮 ${timeHorizon}-Year Projection`, `
+                                       ${makeRow('Total Horizon Profit', fmt(totalHorizonProfit), true)}
+                                       ${makeRow('Avg. Annual Return', pct(avgAnnualReturn))}
+                                       ${makeRow('Return Multiple', `${Number(totalReturnMultiple).toFixed(2)}x`)}
+                                     `) : ''}
+                                   </div>
+                                 `,
+                                 confirmButtonColor: '#2C3E50',
+                                 confirmButtonText: 'CLOSE ANALYSIS',
+                                 customClass: { popup: 'rounded-[32px]' }
+                               });
+                             }}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#D4A373]/10 text-[#D4A373] text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-[#D4A373] hover:text-white transition-all"
+                          >
+                            <Calculator className="size-3.5" />
+                            View Client Calculation
+                          </button>
+                        </div>
                      )}
                 </div>
               </div>

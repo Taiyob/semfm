@@ -170,10 +170,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                         </div>
                         <h3 className="text-xl font-black text-[#2C3E50] uppercase tracking-tight">Description</h3>
                     </div>
-                    <div className="flex flex-col items-end">
-                        <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Rental Estimate</span>
-                        <div className="text-lg font-black text-[#D4A373]">€{Math.round((property.yield * property.price) / 1200).toLocaleString()}/mo</div>
-                    </div>
                 </div>
                 <p className="text-stone-600 font-bold leading-relaxed text-lg italic">
                    {property.description}
@@ -302,26 +298,16 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             {/* Metrics Section */}
-            <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                    <div className="p-8 bg-white rounded-[40px] border border-stone-100 shadow-xl shadow-stone-200/40 space-y-2">
-                        <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest block">Gross Yield</span>
-                        <div className="text-4xl font-black text-[#2C3E50]">{property.yield}%</div>
-                    </div>
-                    <div className="p-8 bg-[#D4A373]/5 rounded-[40px] border border-[#D4A373]/10 space-y-2">
-                        <span className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest block">Estimated Net Profit</span>
-                        <GatedData><div className="text-4xl font-black text-[#2C3E50]">€1,420<span className="text-xs ml-1">/mo</span></div></GatedData>
-                    </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div className="p-8 bg-white rounded-[40px] border border-stone-100 shadow-xl shadow-stone-200/40 space-y-2">
+                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Gross Yield</span>
+                    <div className="text-4xl font-black text-[#2C3E50]">{property.yield}%</div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                    <div className="p-8 bg-white rounded-[40px] border border-stone-100 shadow-xl shadow-stone-200/40 space-y-2">
-                        <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest block">Cash ROI</span>
-                        <GatedData><div className="text-4xl font-black text-[#2C3E50]">8.4%</div></GatedData>
-                    </div>
-                    <div className="p-8 bg-[#D4A373]/5 rounded-[40px] border border-[#D4A373]/10 space-y-2 text-center flex flex-col justify-center">
-                         <span className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest block mb-1">20Y Horizon Projection</span>
-                         <GatedData blur={true}><div className="text-4xl font-black text-[#2C3E50] tracking-tighter uppercase">+245%</div></GatedData>
+                <div className="p-8 bg-[#2C3E50] rounded-[40px] space-y-2">
+                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Rental Estimate</span>
+                    <div className="text-4xl font-black text-white">
+                        €{Math.round((property.yield * property.price) / 1200).toLocaleString()}
+                        <span className="text-sm font-bold text-stone-400 ml-1">/mo</span>
                     </div>
                 </div>
             </div>
@@ -358,6 +344,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     {isAddingInvestment ? "Processing..." : "Invest in this Asset"}
                 </button>
               )}
+
+              <Link
+                  href={`/calculator?price=${property.price}&rent=${Math.round((property.yield * property.price) / 1200)}&location=${encodeURIComponent(property.location)}&beds=${property.bedrooms}&sqm=${property.sqm}&propertyId=${property.id}`}
+                  className="w-full py-6 rounded-[32px] text-xs font-black uppercase tracking-[0.3em] bg-white text-[#2C3E50] border-2 border-[#2C3E50] shadow-xl hover:bg-[#2C3E50] hover:text-white hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+              >
+                  <Calculator className="size-4" /> Calculate Investment
+              </Link>
 
               <button 
                   onClick={handleContactAgent}

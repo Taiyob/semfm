@@ -64,7 +64,7 @@ export default function DashboardCalculator() {
       // 2. Create the lead with the calculationId
       await createLead({
         propertyId: selectedPropertyId,
-        calculationId: savedCalc.data.id,
+        calculationId: savedCalc.data.calculation.id,
         message: `I have performed a yield analysis for this property with an estimated net yield of ${yieldValue}%.`
       }).unwrap();
 

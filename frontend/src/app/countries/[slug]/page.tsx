@@ -68,7 +68,7 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
               </Link>
             </div>
 
-            <div className="mt-20 grid grid-cols-2 md:grid-cols-3 gap-12 border-t border-stone-200 pt-10">
+            <div className="mt-20 grid grid-cols-2 md:grid-cols-3 gap-12">
               {data.stats.map((stat) => (
                 <div key={stat.label}>
                   <div className="text-4xl font-black text-[#2C3E50] mb-2">{stat.value}</div>

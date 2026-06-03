@@ -230,11 +230,11 @@ export default function EditPropertyPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div className="space-y-2">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">City Context</label>
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">City</label>
                   <input required type="text" name="location" value={formData.location} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="Lisbon, Portugal" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Region / Neighborhood</label>
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Neighborhood</label>
                   <input type="text" name="region" value={formData.region} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="Alcantara" />
                 </div>
                 <div className="space-y-2">

@@ -35,6 +35,7 @@ export default function AddPropertyPage() {
     yield: '0', // Calculated
     appreciation: '4.5', // System-controlled
     location: '',
+    streetName: '', // New
     type: 'Apartment',
     sqm: '',
     bedrooms: '1',
@@ -55,6 +56,7 @@ export default function AddPropertyPage() {
   const [isYieldOverride, setIsYieldOverride] = useState(false);
   const [isRentOverride, setIsRentOverride] = useState(false);
   const [photoUrlInput, setPhotoUrlInput] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Photo management
   const addPhoto = () => {
@@ -149,6 +151,12 @@ export default function AddPropertyPage() {
 
     if (!isStepValid()) return;
 
+    // Show confirmation modal instead of directly submitting
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmCreate = async () => {
+    setShowConfirmModal(false);
     setStatus('idle');
     try {
       await createProperty({
@@ -159,6 +167,7 @@ export default function AddPropertyPage() {
         yield: Number(formData.yield),
         appreciation: Number(formData.appreciation),
         location: formData.location,
+        streetName: formData.streetName,
         type: formData.type,
         sqm: Number(formData.sqm),
         bedrooms: Number(formData.bedrooms),
@@ -173,7 +182,7 @@ export default function AddPropertyPage() {
         energyLabel: formData.energyLabel,
         features: formData.features,
         photos: formData.photos,
-        image: formData.photos.length > 0 ? formData.photos[0] : '', // Use first photo as main image
+        image: formData.photos.length > 0 ? formData.photos[0] : '',
       }).unwrap();
 
       setStatus('success');
@@ -181,18 +190,16 @@ export default function AddPropertyPage() {
         router.push('/dashboard/listings');
       }, 2000);
     } catch (err: any) {
-      // Better logging for debugging
       console.error('Failed to create property. Full error:', JSON.stringify(err, null, 2));
-      console.dir(err); 
-      
+      console.dir(err);
+
       setStatus('error');
-      
-      // Extract error message from backend standard response
+
       const backendError = err?.data?.error?.message || err?.data?.message || err?.message;
-      const validationDetails = err?.data?.error?.details?.issues 
+      const validationDetails = err?.data?.error?.details?.issues
         ? `: ${err.data.error.details.issues.map((i: any) => i.message).join(', ')}`
         : '';
-        
+
       setErrorMessage(backendError ? `${backendError}${validationDetails}` : 'An unexpected error occurred. Please check your inputs and try again.');
     }
   };
@@ -274,12 +281,16 @@ export default function AddPropertyPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div className="space-y-2">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">City Context</label>
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">City</label>
                   <input required type="text" name="location" value={formData.location} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="Lisbon, Portugal" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Region / Neighborhood</label>
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Neighborhood</label>
                   <input type="text" name="region" value={formData.region} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="Alcantara" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Street Name</label>
+                  <input type="text" name="streetName" value={formData.streetName} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="e.g., Rua Augusta, 123" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Interior Area (sqm)</label>
@@ -592,6 +603,156 @@ export default function AddPropertyPage() {
           </div>
         </form>
       </motion.div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-[40px] shadow-2xl border border-stone-100 w-full max-w-2xl overflow-hidden"
+          >
+            {/* Modal Header */}
+            <div className="bg-[#34495E] px-10 py-8 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="size-10 bg-white/10 rounded-xl flex items-center justify-center">
+                  <Building2 className="size-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-black text-lg">Review & Confirm</h3>
+                  <p className="text-stone-300 text-[10px] font-bold uppercase tracking-widest">Please review your listing before publishing</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="size-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all text-lg font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-10 py-8 space-y-6 max-h-[60vh] overflow-y-auto">
+              {/* Title & Type */}
+              <div className="space-y-1">
+                <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest">Property</p>
+                <p className="text-xl font-black text-[#2C3E50]">{formData.title}</p>
+                <p className="text-xs font-bold text-stone-400">{formData.type}</p>
+                {formData.description && (
+                  <p className="text-xs text-stone-500 font-medium mt-1 leading-relaxed">{formData.description}</p>
+                )}
+              </div>
+
+              <div className="h-px bg-stone-100" />
+
+              {/* Location */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">City</p>
+                  <p className="text-sm font-black text-[#2C3E50]">{formData.location || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Neighborhood</p>
+                  <p className="text-sm font-black text-[#2C3E50]">{formData.region || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Street</p>
+                  <p className="text-sm font-black text-[#2C3E50]">{formData.streetName || '—'}</p>
+                </div>
+              </div>
+
+              <div className="h-px bg-stone-100" />
+
+              {/* Physical Specs */}
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+                {[
+                  { label: 'Price', value: `€${Number(formData.price).toLocaleString()}` },
+                  { label: 'Interior', value: `${formData.sqm}m²` },
+                  { label: 'Bedrooms', value: formData.bedrooms },
+                  { label: 'Bathrooms', value: formData.bathrooms },
+                  { label: 'Year Built', value: formData.yearBuilt || '—' },
+                  { label: 'Condition', value: formData.condition },
+                ].map(item => (
+                  <div key={item.label}>
+                    <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">{item.label}</p>
+                    <p className="text-sm font-black text-[#2C3E50]">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="h-px bg-stone-100" />
+
+              {/* Financials */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Est. Rent / mo</p>
+                  <p className="text-sm font-black text-[#2C3E50]">€{formData.estimatedRent}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Gross Yield</p>
+                  <p className="text-sm font-black text-emerald-600">{formData.yield}%</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Appreciation</p>
+                  <p className="text-sm font-black text-[#D4A373]">{formData.appreciation}%</p>
+                </div>
+              </div>
+
+              {/* Features */}
+              {formData.features.length > 0 && (
+                <>
+                  <div className="h-px bg-stone-100" />
+                  <div>
+                    <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-3">Features</p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.features.map(f => (
+                        <span key={f} className="px-3 py-1 bg-stone-50 border border-stone-100 rounded-full text-[10px] font-black text-[#2C3E50]">{f}</span>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Photos */}
+              {formData.photos.length > 0 && (
+                <>
+                  <div className="h-px bg-stone-100" />
+                  <div>
+                    <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-3">Photos ({formData.photos.length})</p>
+                    <div className="flex gap-3 overflow-x-auto pb-2">
+                      {formData.photos.map((url, idx) => (
+                        <img key={idx} src={url} alt="" className="h-20 w-32 object-cover rounded-xl shrink-0 border border-stone-100" />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-10 py-6 bg-stone-50/50 border-t border-stone-100 flex items-center justify-between gap-4">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-8 py-4 text-stone-400 font-black text-xs uppercase tracking-widest hover:text-[#34495E] transition-all"
+              >
+                Go Back & Edit
+              </button>
+              <button
+                onClick={handleConfirmCreate}
+                disabled={isLoading}
+                className="flex items-center gap-3 px-10 py-5 bg-[#34495E] disabled:bg-stone-300 text-white font-black rounded-[24px] text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-[#34495E]/20"
+              >
+                {isLoading ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  <Save className="size-5" />
+                )}
+                {isLoading ? 'Publishing...' : 'Yes, Publish Listing'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
