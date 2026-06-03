@@ -608,16 +608,53 @@ function CalculatorContent() {
             return;
         }
 
+        const selectedProp = propertiesData?.data?.find((p: any) => p.id === selectedPropertyId);
+
         try {
             // 1. Save the calculation first
             const savedCalc = await saveCalculation({
-                name: `Inquiry: ${propertiesData?.data?.find((p: any) => p.id === selectedPropertyId)?.title}`,
+                name: `Inquiry: ${selectedProp?.title || 'Property'}`,
                 inputData: formData,
                 resultsData: results,
                 propertyId: selectedPropertyId
             }).unwrap();
 
-            // 2. Create the lead
+            // If the agent is NOT registered on our platform
+            if (selectedProp && selectedProp.isAgentRegistered === false) {
+                if (selectedProp.externalListingUrl) {
+                    Swal.fire({
+                        title: 'Redirecting to Agent',
+                        text: 'This agent is not yet on our platform. We saved your calculation and will now redirect you to their website.',
+                        icon: 'info',
+                        confirmButtonColor: '#34495E',
+                        confirmButtonText: 'Continue to Website'
+                    }).then(() => {
+                        window.open(selectedProp.externalListingUrl, '_blank');
+                    });
+                } else if (selectedProp.externalContactPhone || selectedProp.externalContactEmail) {
+                    Swal.fire({
+                        title: 'Agent Contact Info',
+                        html: `
+                            <p>This agent is not yet on our platform. Your calculation has been saved in your history.</p>
+                            <br/>
+                            <p><strong>Phone:</strong> ${selectedProp.externalContactPhone || 'N/A'}</p>
+                            <p><strong>Email:</strong> ${selectedProp.externalContactEmail || 'N/A'}</p>
+                        `,
+                        icon: 'info',
+                        confirmButtonColor: '#34495E'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Agent Not Available',
+                        text: 'This property does not have a registered agent or contact information.',
+                        icon: 'warning',
+                        confirmButtonColor: '#34495E'
+                    });
+                }
+                return;
+            }
+
+            // 2. Create the internal lead if the agent is registered
             await createLead({
                 propertyId: selectedPropertyId,
                 calculationId: savedCalc.data.calculation.id,

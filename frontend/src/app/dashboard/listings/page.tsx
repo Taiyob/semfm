@@ -166,7 +166,7 @@ export default function MyListingsPage() {
                     </td>
                     <td className="px-8 py-6">
                       <span className="text-sm font-black text-[#2C3E50] block">€{listing.price.toLocaleString()}</span>
-                      <span className="text-[10px] font-black text-stone-400 uppercase">{listing.yield}% Net Yield</span>
+                      <span className="text-[10px] font-black text-stone-400 uppercase">{listing.yield}% Gross Yield</span>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-6">

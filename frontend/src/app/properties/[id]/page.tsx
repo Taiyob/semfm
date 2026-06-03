@@ -299,12 +299,16 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
             {/* Metrics Section */}
             <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 p-8 bg-white rounded-[40px] border border-stone-100 shadow-xl shadow-stone-200/40 space-y-2">
+                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Asking Price</span>
+                    <div className="text-4xl font-black text-[#2C3E50]">€{property.price.toLocaleString()}</div>
+                </div>
                 <div className="p-8 bg-white rounded-[40px] border border-stone-100 shadow-xl shadow-stone-200/40 space-y-2">
                     <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Gross Yield</span>
                     <div className="text-4xl font-black text-[#2C3E50]">{property.yield}%</div>
                 </div>
                 <div className="p-8 bg-[#2C3E50] rounded-[40px] space-y-2">
-                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Rental Estimate</span>
+                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block text-stone-400">Rental Estimate</span>
                     <div className="text-4xl font-black text-white">
                         €{Math.round((property.yield * property.price) / 1200).toLocaleString()}
                         <span className="text-sm font-bold text-stone-400 ml-1">/mo</span>

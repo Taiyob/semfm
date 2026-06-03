@@ -93,9 +93,12 @@ export default function PropertiesPage() {
     const filteredProperties = useMemo(() => {
         return (properties as any[])
             .filter(p => {
-                const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) || p.location.toLowerCase().includes(search.toLowerCase());
-                const matchesCity = city === 'All' || p.location.includes(city);
-                const matchesCountry = country === 'All' || p.location.toLowerCase().includes(country.toLowerCase());
+                const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) || (p.location && p.location.toLowerCase().includes(search.toLowerCase()));
+                const matchesCity = city === 'All' || (p.location && p.location.toLowerCase().includes(city.toLowerCase()));
+                const matchesCountry = country === 'All' || 
+                    (p.location && p.location.toLowerCase().includes(country.toLowerCase())) || 
+                    (p.country?.name && p.country.name.toLowerCase() === country.toLowerCase()) ||
+                    (regionsByCountry[country] && regionsByCountry[country].some(c => c !== 'All' && p.location && p.location.toLowerCase().includes(c.toLowerCase())));
                 const matchesType = type === 'All' || p.type === type;
                 const matchesPrice = (minPrice === '' || p.price >= minPrice) && (maxPrice === '' || p.price <= maxPrice);
                 const matchesYield = p.yield >= yieldRange;
