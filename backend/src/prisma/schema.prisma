@@ -199,6 +199,13 @@ model Property {
   locationType LocationType   @default(CENTRE)
   condition    String         @default("Standard") // e.g., Premium, High-End, Basic
 
+  // External Agent Details
+  isAgentRegistered     Boolean @default(true)
+  externalListingUrl    String?
+  externalContactName   String?
+  externalContactEmail  String?
+  externalContactPhone  String?
+
   agentId String? @db.Uuid
   agent   User?   @relation(name: "PropertyAgent", fields: [agentId], references: [id], onDelete: SetNull)
 
