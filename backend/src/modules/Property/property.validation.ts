@@ -29,6 +29,7 @@ export const PropertyValidation = {
         energyLabel: z.nativeEnum(EnergyLabel).default(EnergyLabel.C),
         locationType: z.nativeEnum(LocationType).default(LocationType.CENTRE),
         condition: z.string().default('Standard'),
+        externalListingUrl: z.string().url('Invalid URL format').optional().or(z.literal('')),
     }),
 };
 
