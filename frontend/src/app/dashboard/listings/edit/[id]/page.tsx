@@ -49,6 +49,7 @@ export default function EditPropertyPage() {
     locationType: 'CENTRE',
     outdoorSpace: 'NONE',
     energyLabel: 'C',
+    externalListingUrl: '',
   });
 
   // Populate form data when property data is fetched
@@ -70,6 +71,7 @@ export default function EditPropertyPage() {
             locationType: p.locationType || 'CENTRE',
             outdoorSpace: p.outdoorSpace || 'NONE',
             energyLabel: p.energyLabel || 'C',
+            externalListingUrl: p.externalListingUrl || '',
         });
     }
   }, [propertyResponse]);
@@ -104,6 +106,7 @@ export default function EditPropertyPage() {
         locationType: formData.locationType,
         outdoorSpace: formData.outdoorSpace,
         energyLabel: formData.energyLabel,
+        externalListingUrl: formData.externalListingUrl,
       };
 
       await updateProperty(payload).unwrap();
@@ -214,6 +217,11 @@ export default function EditPropertyPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Appreciation (%)</label>
                   <input required type="number" step="0.1" name="appreciation" value={formData.appreciation} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="4.5" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Original Listing URL</label>
+                  <input type="url" name="externalListingUrl" value={formData.externalListingUrl} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="https://..." />
+                  <p className="text-[10px] text-stone-400 mt-1">View the listing on the real estate agent's website.</p>
                 </div>
               </div>
             </div>
