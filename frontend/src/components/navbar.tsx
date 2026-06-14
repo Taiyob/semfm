@@ -28,6 +28,7 @@ const navLinks = [
   { name: 'Properties', href: '/properties', icon: Search },
   { name: 'Pricing', href: '/pricing', icon: Tag },
   { name: 'Insights', href: '/insights', icon: MapPin },
+  { name: 'Acquisition Club', href: '/acquisition-club', icon: Globe },
 ];
 
 export function Navbar() {

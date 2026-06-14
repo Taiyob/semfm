@@ -28,54 +28,57 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 const plans = [
     {
         name: 'Free',
-        description: 'Essential data for market explorers.',
+        description: 'Entry-level plan for users exploring investment opportunities and testing the platform.',
         price: 0,
+        interval: 'month',
+        stripeInterval: 'month',
+        stripeIntervalCount: 1,
         features: [
             'Rent estimates',
             'Gross yield',
-            'Properties overview',
-            '5 saved listings (only if you make an account)',
-            'No Property match alerts',
+            'Basic property overview',
+            'Up to 5 saved listings',
         ],
     },
     {
-        name: 'Investor Basic',
-        description: 'Deeper insights for active searchers.',
-        price: 20,
+        name: 'Core',
+        description: 'The main working tier for investors actively searching for opportunities.',
+        price: 24.99,
+        interval: '4 weeks',
+        stripeInterval: 'week',
+        stripeIntervalCount: 4,
         features: [
-            'Net profit insights',
-            'Sort by investor metrics',
-            '20 saved listings',
-            '1 match alert / month',
-        ],
-    },
-    {
-        name: 'Investor Pro',
-        description: 'The strategy engine for professional investors.',
-        price: 30,
-        features: [
-            'All calculator tools',
+            'All investment calculators (Net Profit, ROI, Yield, Cashflow)',
             'Compare up to 5 listings',
-            'Portfolio simulator (up to 5 properties)',
-            'Export to PDF',
-            'Up to 15 match alerts',
+            'Portfolio Simulator (up to 5 properties)',
+            'Export analyses to PDF',
+            'Up to 10 match alerts',
+            'Up to 50 saved listings',
         ],
     },
     {
-        name: 'Investor Premium',
-        description: 'Full portfolio intelligence platform.',
-        price: 50,
+        name: 'Pro',
+        description: 'Built for active investors who want to both find opportunities and manage their portfolio in one place.',
+        price: 100,
+        interval: '4 weeks',
+        stripeInterval: 'week',
+        stripeIntervalCount: 4,
         features: [
-            'Everything from Free, Basic, and Pro',
-            'Unlimited saved properties',
-            'Portfolio simulator (up to 25 properties)',
-            'Unlimited match alerts',
+            'Property Management Lite',
+            'Portfolio Simulator (up to 25 properties)',
+            'Unlimited comparisons',
+            'Unlimited exports',
+            'Unlimited saved listings & match alerts',
+            'Exclusive investor newsletter & tips',
         ],
     },
     {
         name: 'Pay-per-listing',
         description: 'Post verified listings on demand.',
         price: 50,
+        interval: 'month',
+        stripeInterval: 'month',
+        stripeIntervalCount: 1,
         features: [
             'Verified listing placement',
             'Regional reach',
@@ -86,6 +89,9 @@ const plans = [
         name: 'Agent Unlimited',
         description: 'Scale your inventory without limits.',
         price: 200,
+        interval: 'month',
+        stripeInterval: 'month',
+        stripeIntervalCount: 1,
         features: [
             'Unlimited listings',
             'Up to 3 team members',
@@ -96,6 +102,9 @@ const plans = [
         name: 'Agent Pro',
         description: 'Professional-grade agency tools.',
         price: 350,
+        interval: 'month',
+        stripeInterval: 'month',
+        stripeIntervalCount: 1,
         features: [
             'Everything in Unlimited',
             '5 boosts/month (48 hours)',
@@ -107,6 +116,9 @@ const plans = [
         name: 'Agent Premium',
         description: 'Full network dominance platform.',
         price: 500,
+        interval: 'month',
+        stripeInterval: 'month',
+        stripeIntervalCount: 1,
         features: [
             'Everything in Pro',
             '15 boosts/month (48 hours)',
@@ -130,15 +142,25 @@ async function seed() {
                 where: { name: planData.name }
             });
 
+            let product;
+            let price;
+
             if (existingPlan) {
-                console.log(`⏭️ Plan ${planData.name} already exists, skipping...`);
+                console.log(`🔄 Plan ${planData.name} exists, updating...`);
+                await prisma.plan.update({
+                    where: { id: existingPlan.id },
+                    data: {
+                        description: planData.description,
+                        features: planData.features,
+                        price: planData.price,
+                        interval: planData.interval || 'month',
+                    }
+                });
+                console.log(`✅ Successfully updated ${planData.name}`);
                 continue;
             }
 
             // 1. Create in Stripe
-            let product;
-            let price;
-
             if (planData.price > 0) {
                 product = await stripe.products.create({
                     name: planData.name,
@@ -150,10 +172,11 @@ async function seed() {
 
                 price = await stripe.prices.create({
                     product: product.id,
-                    unit_amount: planData.price * 100,
+                    unit_amount: Math.round(planData.price * 100),
                     currency: 'eur',
                     recurring: {
-                        interval: 'month',
+                        interval: (planData.stripeInterval || 'month') as any,
+                        interval_count: planData.stripeIntervalCount || 1,
                     },
                 });
                 console.log(`Created Stripe Product/Price for ${planData.name}`);
@@ -166,7 +189,7 @@ async function seed() {
                     description: planData.description,
                     price: planData.price,
                     currency: 'eur',
-                    interval: 'month',
+                    interval: planData.interval || 'month',
                     features: planData.features,
                     stripeProductId: product?.id,
                     stripePriceId: price?.id,

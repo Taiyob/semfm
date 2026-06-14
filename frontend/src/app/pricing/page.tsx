@@ -69,11 +69,11 @@ export default function PricingPage() {
   const allPlans = plansData?.data || [];
   
   const investorPlans = allPlans.filter((p: any) => 
-    p.name.toLowerCase().includes('investor') || p.name === 'Free'
+    p.name.toLowerCase().includes('investor') || p.name === 'Free' || p.name === 'Core' || p.name === 'Pro'
   ).sort((a: any, b: any) => a.price - b.price);
 
   const agentPlans = allPlans.filter((p: any) => 
-    p.name.toLowerCase().includes('agent') || p.name.includes('listing')
+    p.name.toLowerCase().includes('agent') || p.name.toLowerCase().includes('listing')
   ).sort((a: any, b: any) => a.price - b.price);
 
   const activePlans = effectiveUserType === 'investor' ? investorPlans : agentPlans;
@@ -127,7 +127,7 @@ export default function PricingPage() {
         {/* Pricing Cards Grid */}
         <div className={cn(
             "grid gap-8 transition-all duration-500",
-            activePlans.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-4"
+            activePlans.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"
         )}>
             {plansLoading ? (
                 // Skeleton loading
@@ -166,7 +166,7 @@ export default function PricingPage() {
                                         <div className="flex flex-col">
                                             <span className="text-stone-300 font-black uppercase tracking-widest text-[9px]">EUR</span>
                                             <span className="text-[#D4A373] font-black uppercase tracking-widest text-[9px] truncate">
-                                                {plan.interval === 'month' ? 'per month' : plan.interval || 'one time'}
+                                                {plan.interval ? `per ${plan.interval}` : 'one time'}
                                             </span>
                                         </div>
                                     </div>
@@ -214,6 +214,25 @@ export default function PricingPage() {
                     })}
                 </AnimatePresence>
             )}
+        </div>
+
+        {/* Acquisition Club Promo */}
+        <div className="mt-20">
+          <div className="bg-[#2C3E50] rounded-[48px] p-12 text-center flex flex-col items-center justify-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#D4A373]/20 to-transparent"></div>
+            <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter relative z-10 mb-4">
+              JOIN THE EXCLUSIVE ACQUISITION CLUB
+            </h2>
+            <p className="text-[#D4A373] font-bold uppercase tracking-widest text-sm relative z-10 mb-10">
+              Limited spots. Priority access. Serious investors only.
+            </p>
+            <Link 
+              href="/acquisition-club"
+              className="bg-[#D4A373] text-[#2C3E50] px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-white transition-all shadow-xl shadow-[#D4A373]/20 relative z-10 inline-block"
+            >
+              JOIN THE ACQUISITION CLUB
+            </Link>
+          </div>
         </div>
 
         {/* Market Preview Section */}

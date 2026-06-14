@@ -1,0 +1,212 @@
+## সমস্যার সংক্ষিপ্ত সারাংশ (বাংলা)
+
+- **ইউজার লগ‑ইন না করা অবস্থায়** ফ্রন্ট‑এডের কোনো রুট (যেমন `/dashboard`, `/calculator`)‑এ সরাসরি গিয়ে পেজটা রেন্ডার হচ্ছে।  
+- ব্যাক‑এন্ড‑এ টোকেন‑ভিত্তিক `authMiddleware` কাজ করছে, তাই API‑তে **৪০১ (Unauthorized)** রেসপন্স দেয় আর ডেটা না আসে।  
+- তবে পেজটি তবু **খালি** (বা “no data” বার্তা) দেখায়, যা UI‑এর দৃষ্টিকোণ থেকে “protected route‑লুপহোল”‑এর মত দেখায়।  
+
+**মূল লক্ষ্য:** লগ‑ইন না থাকা ইউজারকে ঐ রুটে **দেখাই না** – ফ্রন্ট‑এডে রিডাইরেক্ট/ব্লক করা, আর ব্যাক‑এন্ডে ৪০১ রেসপন্সকে ফ্রন্ট‑এডে হ্যান্ডেল করা।
+
+---
+
+## ১️⃣ ফ্রন্ট‑এডে রুট গার্ড (Next.js `app` রাউটার)
+
+### পদ্ধতি A – Next.js Edge Middleware (সার্ভার‑সাইডে সিকিউরিটি)
+
+`/middleware.ts` (প্রোজেক্ট রুটে) যুক্ত করুন। এই ফাইলটি **অন-দি‑ফ্লাই** রিকোয়েস্ট চালু করার আগে রান হয় এবং কুকি‑তে থাকা JWT‑কে ভেরিফাই করে।
+
+```ts
+// file: d:/taiyob/semfm/middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
+import { config } from './backend/src/core/config'; // আপনার .env‑এর সিক্রেট রিড করার পথ
+
+// কোন রুটগুলোকে প্রটেক্ট করতে চান – এখানে /dashboard, /calculator ইত্যাদি
+const PROTECTED_ROUTES = [/^\/dashboard/, /^\/calculator/, /^\/profile/];
+
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // প্রোটেক্টেড রুট না হলে পাস দাও
+  const isProtected = PROTECTED_ROUTES.some((rx) => rx.test(pathname));
+  if (!isProtected) return NextResponse.next();
+
+  // কুকি‑তে টোকেন আছে কিনা চেক
+  const token = req.cookies.get('token')?.value;
+  if (!token) {
+    // টোকেন নেই → লগ‑ইন পেজে রিডাইরেক্ট
+    const loginUrl = new URL('/login', req.url);
+    loginUrl.searchParams.set('callbackUrl', pathname); // সফল লগ‑ইনের পরে রিডাইরেক্ট
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // টোকেন ভেরিফাই (সিক্রেট আপনার .env‑এ JWT_SECRET)
+  try {
+    const payload = jwt.verify(token, config.security.jwt.secret as string);
+    // টোকেন বৈধ → রিকোয়েস্ট পার হওয়া দাও
+    return NextResponse.next();
+  } catch (err) {
+    // টোকেন অবৈধ/এক্সপায়ারড → লগ‑ইন পেজে রিডাইরেক্ট
+    const loginUrl = new URL('/login', req.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+}
+
+// মিডলওয়্যারকে কোন পাথগুলোতে চালাতে হবে তা নির্ধারণ
+export const config = {
+  matcher: ['/dashboard/:path*', '/calculator/:path*', '/profile/:path*'],
+};
+```
+
+**কি হয়:**  
+- ব্যবহারকারী কোনো প্রোটেক্টেড রুটে সরাসরি URL টাইপ করলে, টোকেন না থাকলে *ইন্টারসেপ্ট* হয়ে `/login`‑এ রিডাইরেক্ট হবে।  
+- টোকেন থাকলেও **JWT ভেরিফিকেশন** না পাস করলে রিডাইরেক্ট হবে।  
+
+> **গুরুত্বপূর্ণ:** Edge Middleware‑এ `jwt.verify` ব্যবহার করার জন্য `jsonwebtoken` প্যাকেজটি প্রকল্পের `package.json`‑এ যোগ করে `bun install` করুন।  
+
+---
+
+### পদ্ধতি B – ক্লায়েন্ট‑সাইড HOC / Guard কম্পোনেন্ট
+
+যদি আপনি **Edge Middleware**‑কে হালকা রাখে, তবুও ক্লায়েন্ট‑সাইডে নিরাপদ গার্ড দরকার (উদাহরণস্বরূপ, ডায়নামিক ফিচার শো/হাইড)।
+
+```tsx
+// file: d:/taiyob/semfm/frontend/src/components/ProtectedRoute.tsx
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/hooks/reduxHooks'; // আপনার রেডাক্স হুক
+
+interface Props {
+  children: React.ReactNode;
+}
+
+export default function ProtectedRoute({ children }: Props) {
+  const router = useRouter();
+  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+  const isLoading = useAppSelector((s) => s.auth.isLoading);
+
+  useEffect(() => {
+    // যদি এখনও লোডিং থাকে, ছোট সময়ের জন্য অপেক্ষা করো
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/login'); // লগইন না থাকলে রিডাইরেক্ট
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // লোডিং থাকলে স্পিনার বা ফাঁকা রিটার্ন করা যায়
+  if (isLoading) return <div className="flex justify-center items-center h-screen">Loading…</div>;
+
+  // অপ্রমাণিত হলে রিডাইরেক্ট হয়েছে, এখানে টাচ হবে না
+  return <>{isAuthenticated ? children : null}</>;
+}
+```
+
+**ব্যবহার:**
+
+```tsx
+// উদাহরণ: d:/taiyob/semfm/frontend/src/app/dashboard/layout.tsx
+import ProtectedRoute from '@/components/ProtectedRoute';
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute>
+      {/* সব ড্যাশবোর্ড UI‑এর ভিতরে থাকবে */}
+      <div className="dashboard-wrapper">{children}</div>
+    </ProtectedRoute>
+  );
+}
+```
+
+> **নোট** – `useAppSelector` আপনার রেডাক্স‑স্টোরের টাইক্ড হুক (যেমন `useSelector`‑এর typed সংস্করণ) হওয়া দরকার।  
+
+---
+
+## ২️⃣ ব্যাক‑এন্ডে ৪০১ রেসপন্সকে ফ্রন্ট‑এডে হ্যান্ডেল করা
+
+যখন `authMiddleware` টোকেন না পায় বা ভেরিফাই ব্যর্থ হয়, রেসপন্সে `401` স্ট্যাটাস দেয়। ফ্রন্ট‑এডের API কলগুলোকে এই স্ট্যাটাসে **রিডাইরেক্ট** বা **toast** দেখাতে কনফিগার করুন।
+
+```ts
+// file: d:/taiyob/semfm/frontend/src/lib/store/axiosBaseQuery.ts
+import axios from 'axios';
+import { logout, setLoading } from '@/lib/store/features/auth/authSlice';
+import { AppDispatch } from '@/store';
+
+export const axiosBaseQuery =
+  ({ baseUrl }: { baseUrl: string } = { baseUrl: '' }) =>
+  async ({ url, method, data, params }, { dispatch }: { dispatch: AppDispatch }) => {
+    try {
+      const result = await axios({
+        url: baseUrl + url,
+        method,
+        data,
+        params,
+        withCredentials: true, // কুকি পাঠাবে
+      });
+      return { data: result.data };
+    } catch (axiosError: any) {
+      const status = axiosError?.response?.status;
+      // 401 → স্বয়ংক্রিয়ভাবে লগআউট ও লগইন পেজে রিডাইরেক্ট
+      if (status === 401) {
+        dispatch(logout());
+        // optional: আপনি `router.push('/login')` করতে পারেন যদি এখানে router আছে
+      }
+      return { error: axiosError.response?.data ?? axiosError.message };
+    }
+  };
+```
+
+- `withCredentials: true` নিশ্চিত করে যে কুকি (HTTP‑Only) রিকোয়েস্টে যাবে।  
+- ৪০১ পেলে `logout` ডিপ্লয় করে Redux‑এ স্টেট রিসেট করে, ফলে ProtectedRoute‑এর `isAuthenticated` ফলস হয়ে রিডাইরেক্ট ট্রিগার হবে।
+
+---
+
+## ৩️⃣ রিডাইরেক্ট/রাওট গার্ডের পূর্ণ ফ্লো (সারাংশ)
+
+1. **ইউজার কোনো প্রোটেক্টেড URL টাইপ করেন** → Browser `GET /dashboard` রিকোয়েস্ট পাঠায়।  
+2. **Edge Middleware** টোকেন কুকি আছে কিনা, বৈধ কিনা চেক করে।  
+   - **না** → `/login?callbackUrl=/dashboard`‑এ রিডাইরেক্ট (সার্ভার‑সাইডে, ক্লায়েন্টে টোকেন কখনো ফ্লো হয় না)।  
+   - **হ্যাঁ** → রিকোয়েস্ট ব্যাক‑এন্ডে যায়।  
+3. ব্যাক‑এন্ডে `authMiddleware` টোকেন ভেরিফাই করে, যদি **নেসেসারি না থাকে** (যেমন GET `/public-data`) → রেসপন্স দেয়; অন্যথা **৪০১** রেসপন্স দেয়।  
+4. ফ্রন্ট‑এডের `axiosBaseQuery`‑এ ৪০১ ধরলে **Redux‑এ `logout`** ডিপ্লয় করে, ফলে `isAuthenticated` ফলস হয়ে **ProtectedRoute**/কম্পোনেন্ট স্বয়ংক্রিয় রিডাইরেক্ট দেয়।  
+
+**ফলাফল:** কোনো অবৈধ/অপ্রমাণিত ইউজার কখনোই UI‑তে প্রোটেক্টেড পেজের কন্টেন্ট দেখতে পারে না; তারা সরাসরি লগ‑ইন পেজে পাঠানো হবে।
+
+---
+
+## ৪️⃣ বাস্তবায়নের ধাপ‑ভিত্তিক পরিকল্পনা (Implementation Plan)
+
+1. **প্রজেক্টে `jsonwebtoken` যুক্ত করুন**  
+   ```bash
+   bun add jsonwebtoken
+   ```
+2. **প্রোজেক্ট রুটে `middleware.ts` তৈরি করুন** (উপরের কোড কপি)।  
+3. **`next.config.js`‑এ কোনো কাস্টম রিকোয়েস্ট হ্যান্ডলার দরকার হলে সেট করুন** (ডিফল্টে Edge Middleware কাজ করবে)।  
+4. **ফ্রন্ট‑এডে `axiosBaseQuery.ts`‑এ `withCredentials: true` এবং ৪০১ হ্যান্ডলিং যুক্ত করুন** (উপরের কোড)।  
+5. **`ProtectedRoute` HOC কম্পোনেন্ট (ঐচ্ছিক) তৈরি করুন** এবং সব প্রোটেক্টেড পেজের (layout বা page) রুটে র‍্যাপ করুন।  
+6. **রিডারেক্ট‑লুপ টেস্ট করুন**  
+   - লগ‑ইন না থাকা অবস্থায় `/dashboard`‑এ যান → লোগিন পেজে যাবে।  
+   - লগ‑ইন করার পরে ফরম‑উইথ‑চেক → সঠিক ডেটা রেন্ডার হবে।  
+   - টোকেন মেয়াদ শেষ/ইনভ্যালিড → স্বয়ংক্রিয় লগ‑আউট ও লগ‑ইন পেজে রিডাইরেক্ট হবে।  
+
+---
+
+## ৫️⃣ আপনার কোড‑বেসে কী পরিবর্তন দরকার (সরাসরি ফাইল লিঙ্ক)
+
+| ফাইল | পরিবর্তনের ধরন | লিংক |
+|------|----------------|------|
+| `middleware.ts` (প্রোজেক্ট রুট) | **নতুন** ফাইল – রুট গার্ড | — |
+| `frontend/src/lib/store/axiosBaseQuery.ts` | **সহকর্মী** – `withCredentials` ও `401` হ্যান্ডলিং | [axiosBaseQuery.ts](file:///d:/taiyob/semfm/frontend/src/lib/store/axiosBaseQuery.ts) |
+| `frontend/src/components/ProtectedRoute.tsx` | **নতুন** কম্পোনেন্ট (ঐচ্ছিক) | — |
+| `frontend/src/app/dashboard/layout.tsx` (বা যেকোনো প্রোটেক্টেড লে‑আউট) | **র‍্যাপ** – `<ProtectedRoute>` দিয়ে | — |
+
+---
+
+### শেষ মন্তব্য
+
+- **এডজ‑মিডলওয়্যার** ব্যবহার করলে টোকেন কখনো ফ্রন্ট‑এডে প্রকাশ পায় না, তাই **সিকিউরিটি সর্বোচ্চ থাকে**।  
+- **ক্লায়েন্ট‑গার্ড** (ProtectedRoute) অতিরিক্ত ইউজার‑ফ্রেন্ডলি অভিজ্ঞতা দেয় – লগ‑ইন না থাকলে তৎক্ষণাৎ রিডাইরেক্ট, ওয়েটার দেখায় না।  
+- **ব্যাক‑এন্ডে ৪০১** রেসপন্সকে ফ্রন্ট‑এডে হ্যান্ডল করলে “ডেটা নেই কিন্তু পেজ দেখাচ্ছে” সমস্যাটাও দূর হবে।
+
+এগুলো একবার বাস্তবায়ন করলে, আপনার **protected URLs‑এর লুপহোল সম্পূর্ণ বিচ্ছিন্ন** হবে, আর ইউজার লগ‑ইন না থাকলে সরাসরি লগ‑ইন পেজে পাঠানো হবে। যদি কোনো ধাপে অতিরিক্ত সাহায্য দরকার (মিডলওয়্যার‑টেস্ট, হুক‑ইম্প্লিমেন্টেশন), জানান—আমি পরের ধাপে কোড‑ডিফ পর্যন্ত সাহায্য করতে পারি।
