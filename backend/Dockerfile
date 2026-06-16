@@ -3,13 +3,14 @@ FROM oven/bun:1.3.10 AS builder
 WORKDIR /app
 
 COPY package.json bun.lock prisma.config.ts ./
-COPY prisma ./prisma/
+COPY src/prisma ./src/prisma/
 
-RUN bun install --frozen-lockfile
+RUN bun install
 RUN bun run db:generate
 
 COPY . .
 
+ENV NODE_ENV=production
 RUN bun run build
 
 # Stage 2: Production stage
