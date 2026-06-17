@@ -16,6 +16,13 @@ export class UserRoutes {
     }
 
     private initializeRoutes(): void {
+        // Get all users
+        this.router.get(
+            '/',
+            authMiddleware,
+            this.userController.getAllUsers
+        );
+
         // Update profile (requires authentication)
         this.router.patch(
             '/profile',
@@ -24,6 +31,13 @@ export class UserRoutes {
                 body: UserValidation.updateProfile,
             }),
             this.userController.updateProfile
+        );
+
+        // Delete user
+        this.router.delete(
+            '/:id',
+            authMiddleware,
+            this.userController.deleteUser
         );
     }
 

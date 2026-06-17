@@ -13,8 +13,8 @@ export class AuthController extends BaseController {
         const isProduction = process.env.NODE_ENV === 'production';
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: 'lax', // Now same-site due to proxy
+            secure: true, // Must be true for cross-origin
+            sameSite: 'none', // Allows localhost dashboard to talk to live backend
             maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
     }
@@ -57,8 +57,8 @@ export class AuthController extends BaseController {
         const isProduction = process.env.NODE_ENV === 'production';
         res.clearCookie('token', {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: 'lax',
+            secure: true,
+            sameSite: 'none',
         });
         
         return this.sendResponse(req, res, 'Logged out successfully');
