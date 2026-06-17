@@ -28,32 +28,38 @@ export class PlanService extends BaseService<Plan> {
         currency?: string;
         interval?: 'month' | 'year';
         features?: string[];
+        targetAudience?: string;
     }): Promise<Plan> {
         try {
-            AppLogger.info(`Creating plan in Stripe: ${data.name}`);
+            AppLogger.info(`Creating plan: ${data.name}`);
 
-            // 1. Create Product in Stripe
-            const product = await this.stripe.products.create({
-                name: data.name,
-                description: data.description,
-                metadata: {
-                    features: JSON.stringify(data.features || []),
-                },
-            });
+            let stripeProductId: string | undefined;
+            let stripePriceId: string | undefined;
 
-            // 2. Create Price in Stripe
-            const price = await this.stripe.prices.create({
-                product: product.id,
-                unit_amount: Math.round(data.price * 100),
-                currency: data.currency || config.stripe.currency || 'eur',
-                recurring: {
-                    interval: data.interval || 'month',
-                },
-            });
+            // 1. If price > 0, create Stripe Product and Price
+            if (data.price > 0 && config.stripe.secretKey) {
+                const product = await this.stripe.products.create({
+                    name: data.name,
+                    description: data.description,
+                    metadata: {
+                        features: JSON.stringify(data.features || []),
+                    },
+                });
+                stripeProductId = product.id;
 
-            AppLogger.info(`Stripe Product/Price created: ${product.id} / ${price.id}`);
+                const price = await this.stripe.prices.create({
+                    product: product.id,
+                    unit_amount: Math.round(data.price * 100),
+                    currency: data.currency || config.stripe.currency || 'eur',
+                    recurring: {
+                        interval: data.interval || 'month',
+                    },
+                });
+                stripePriceId = price.id;
+                AppLogger.info(`Stripe Product/Price created: ${product.id} / ${price.id}`);
+            }
 
-            // 3. Save to Database
+            // 2. Save to Database
             return await this.create({
                 name: data.name,
                 description: data.description,
@@ -61,8 +67,9 @@ export class PlanService extends BaseService<Plan> {
                 currency: data.currency || config.stripe.currency || 'eur',
                 interval: data.interval || 'month',
                 features: data.features || [],
-                stripeProductId: product.id,
-                stripePriceId: price.id,
+                targetAudience: data.targetAudience || 'INVESTOR',
+                stripeProductId: stripeProductId,
+                stripePriceId: stripePriceId,
                 isActive: true,
             });
         } catch (error) {
@@ -78,6 +85,7 @@ export class PlanService extends BaseService<Plan> {
         name: string;
         description: string;
         features: string[];
+        targetAudience: string;
         isActive: boolean;
     }>): Promise<Plan> {
         const plan = await this.findById(id);

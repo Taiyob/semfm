@@ -253,6 +253,7 @@ model Plan {
   price       Float    // e.g., 30.00
   currency    String   @default("eur")
   interval    String   @default("month") // month or year
+  targetAudience String @default("INVESTOR") // INVESTOR or AGENT
   
   // Frontend Features (JSON array)
   features    Json     @default("[]") 

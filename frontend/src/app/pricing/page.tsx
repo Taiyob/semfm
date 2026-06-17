@@ -69,11 +69,11 @@ export default function PricingPage() {
   const allPlans = plansData?.data || [];
   
   const investorPlans = allPlans.filter((p: any) => 
-    p.name.toLowerCase().includes('investor') || p.name === 'Free' || p.name === 'Core' || p.name === 'Pro'
+    p.targetAudience === 'INVESTOR'
   ).sort((a: any, b: any) => a.price - b.price);
 
   const agentPlans = allPlans.filter((p: any) => 
-    p.name.toLowerCase().includes('agent') || p.name.toLowerCase().includes('listing')
+    p.targetAudience === 'AGENT'
   ).sort((a: any, b: any) => a.price - b.price);
 
   const activePlans = effectiveUserType === 'investor' ? investorPlans : agentPlans;

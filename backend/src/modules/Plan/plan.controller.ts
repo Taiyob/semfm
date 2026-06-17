@@ -9,7 +9,11 @@ export class PlanController extends BaseController {
     }
 
     public getAllPlans = catchAsync(async (req: Request, res: Response) => {
-        const plans = await this.planService.findMany({ isActive: true });
+        const filter: any = {};
+        if (req.query.includeInactive !== 'true') {
+            filter.isActive = true;
+        }
+        const plans = await this.planService.findMany(filter);
         return this.sendResponse(req, res, 'Plans retrieved successfully', undefined, plans.data);
     });
 
