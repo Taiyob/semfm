@@ -54,19 +54,7 @@ import Swal from 'sweetalert2';
 type Step = 'rent_estimate' | 'gross_yield' | 'net_profit' | 'roi' | 'projection';
 type Mode = 'simple' | 'advanced';
 
-const portugalRegions = [
-    { name: 'Lisbon', avgRent: 22, color: 'bg-stone-500' },
-    { name: 'Porto', avgRent: 18, color: 'bg-stone-600' },
-    { name: 'Braga', avgRent: 12, color: 'bg-[#34495E]' },
-    { name: 'Faro', avgRent: 20, color: 'bg-[#D4A373]' },
-];
 
-const spainRegions = [
-    { name: 'Valencia', avgRent: 18, color: 'bg-stone-500' },
-    { name: 'Alicante', avgRent: 15, color: 'bg-stone-600' },
-    { name: 'Málaga', avgRent: 17, color: 'bg-[#34495E]' },
-    { name: 'Las Palmas (Gran Canaria)', avgRent: 14, color: 'bg-[#D4A373]' },
-];
 
 const TOOLTIP_CONTENT = {
     grossYield: "Gross yield is the annual rental income divided by the total acquisition cost (purchase price + taxes + fees).",
@@ -96,8 +84,40 @@ function CalculatorContent() {
     const [step, setStep] = useState<Step>('rent_estimate');
     const rentFromPropertyRef = useRef(false);
 
+    const [regionsList, setRegionsList] = useState<any[]>([]);
+    const [multipliers, setMultipliers] = useState<any>(null);
+
     useEffect(() => {
         setMounted(true);
+        // Fetch dynamic global calculator settings and regions from backend
+        const fetchSettings = async () => {
+            try {
+                const [settingsRes, regionsRes] = await Promise.all([
+                    fetch('http://localhost:5000/api/v1/settings/calculator'),
+                    fetch('http://localhost:5000/api/v1/regions')
+                ]);
+                const settingsData = await settingsRes.json();
+                const regionsData = await regionsRes.json();
+
+                if (settingsData.success && settingsData.data) {
+                    setMultipliers(settingsData.data.rentMultipliers || null);
+                    setFormData(prev => ({
+                        ...prev,
+                        vacancyRate: settingsData.data.vacancyRate,
+                        maintenanceRate: settingsData.data.maintenancePercentage,
+                        propertyTaxRate: settingsData.data.taxPercentage,
+                        managementFeeRate: settingsData.data.managementFeePercentage,
+                        appreciationRate: settingsData.data.appreciationRate,
+                    }));
+                }
+                if (regionsData.success && regionsData.data) {
+                    setRegionsList(regionsData.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch calculator settings', err);
+            }
+        };
+        fetchSettings();
     }, []);
     const [mode, setMode] = useState<Mode>('simple');
     const [showBreakdown, setShowBreakdown] = useState(false);
@@ -184,98 +204,128 @@ function CalculatorContent() {
     };
 
     useEffect(() => {
-        // Base rent per sqm by city (region)
-        const baseRentByCity: Record<string, number> = {
-            // Portugal
-            Braga: 9.5,
-            Porto: 13.0,
-            Lisbon: 18.0,
-            Faro: 15.0,
-            // Spain
-            Valencia: 13.5,
-            Alicante: 11.0,
-            'Málaga': 13.0,
-            'Las Palmas (Gran Canaria)': 10.5,
-        };
-        const baseRent = baseRentByCity[formData.region] ?? 0;
+        // Base rent per sqm by city (region) from fetched regions
+        let baseRent = 0;
+        if (regionsList && regionsList.length > 0) {
+            const foundRegion = regionsList.find(r => r.name === formData.region);
+            if (foundRegion) {
+                baseRent = foundRegion.baseRent;
+            }
+        }
+        // Fallback to hardcoded if regions not loaded yet or region not found
+        if (baseRent === 0) {
+            const baseRentByCity: Record<string, number> = {
+                Braga: 9.5, Porto: 13.0, Lisbon: 18.0, Faro: 15.0,
+                Valencia: 13.5, Alicante: 11.0, 'Málaga': 13.0, 'Las Palmas (Gran Canaria)': 10.5,
+            };
+            baseRent = baseRentByCity[formData.region] ?? 0;
+        }
 
         const size = Number(formData.size) || 0;
-        // Size Factor
         let sizeFactor = 1.0;
-        if (size < 45) sizeFactor = 1.25;
-        else if (size < 60) sizeFactor = 1.10;
-        else if (size < 90) sizeFactor = 1.00;
-        else if (size < 120) sizeFactor = 0.90;
-        else sizeFactor = 0.70;
+        if (multipliers?.size) {
+            if (size < 45) sizeFactor = multipliers.size['<45'];
+            else if (size < 60) sizeFactor = multipliers.size['<60'];
+            else if (size < 90) sizeFactor = multipliers.size['<90'];
+            else if (size < 120) sizeFactor = multipliers.size['<120'];
+            else sizeFactor = multipliers.size['>=120'];
+        } else {
+            if (size < 45) sizeFactor = 1.25;
+            else if (size < 60) sizeFactor = 1.10;
+            else if (size < 90) sizeFactor = 1.00;
+            else if (size < 120) sizeFactor = 0.90;
+            else sizeFactor = 0.70;
+        }
 
-        // Bedroom Factor
         const bedrooms = Number(formData.bedrooms) || 0;
-        let bedroomFactor = 0.90; // default
-        if (bedrooms === 0) bedroomFactor = 1.10; // studio
-        else if (bedrooms === 1) bedroomFactor = 1.00;
-        else if (bedrooms === 2) bedroomFactor = 0.95;
-        else if (bedrooms >= 3) bedroomFactor = 0.90;
+        let bedroomFactor = 0.90;
+        if (multipliers?.bedroom) {
+            if (bedrooms === 0) bedroomFactor = multipliers.bedroom['Studio'];
+            else if (bedrooms === 1) bedroomFactor = multipliers.bedroom['1 Bedroom'];
+            else if (bedrooms === 2) bedroomFactor = multipliers.bedroom['2 Bedrooms'];
+            else if (bedrooms >= 3) bedroomFactor = multipliers.bedroom['3+ Bedrooms'];
+        } else {
+            if (bedrooms === 0) bedroomFactor = 1.10;
+            else if (bedrooms === 1) bedroomFactor = 1.00;
+            else if (bedrooms === 2) bedroomFactor = 0.95;
+            else if (bedrooms >= 3) bedroomFactor = 0.90;
+        }
 
         // Location Factor (area type)
-        const locationFactorMap: Record<string, number> = {
-            Centre: 1.25,
-            'Semi-Centre': 1.05,
-            'Outside Centre': 0.85,
-        };
-        const locationFactor = locationFactorMap[formData.areaType] ?? 1.0;
+        let locationFactor = 1.0;
+        if (multipliers?.location) {
+            locationFactor = multipliers.location[formData.areaType] ?? 1.0;
+        } else {
+            const locationFactorMap: Record<string, number> = { Centre: 1.25, 'Semi-Centre': 1.05, 'Outside Centre': 0.85 };
+            locationFactor = locationFactorMap[formData.areaType] ?? 1.0;
+        }
 
         // Year Built Factor
         const year = Number(formData.yearBuilt) || 0;
         let yearBuiltFactor = 0.95; // default "Other / >30y"
         const age = new Date().getFullYear() - year;
-        if (age <= 2) yearBuiltFactor = 1.07;
-        else if (age > 2 && age <= 5) yearBuiltFactor = 1.03;
-        else if (age > 5 && age <= 15) yearBuiltFactor = 1.00;
-        else if (age > 15 && age <= 30) yearBuiltFactor = 0.90;
-        else yearBuiltFactor = 0.95;
+        if (multipliers?.yearBuilt) {
+            if (age <= 2) yearBuiltFactor = multipliers.yearBuilt['<=2'];
+            else if (age > 2 && age <= 5) yearBuiltFactor = multipliers.yearBuilt['3-5'];
+            else if (age > 5 && age <= 15) yearBuiltFactor = multipliers.yearBuilt['6-15'];
+            else if (age > 15 && age <= 30) yearBuiltFactor = multipliers.yearBuilt['16-30'];
+            else yearBuiltFactor = multipliers.yearBuilt['>30'];
+        } else {
+            if (age <= 2) yearBuiltFactor = 1.07;
+            else if (age > 2 && age <= 5) yearBuiltFactor = 1.03;
+            else if (age > 5 && age <= 15) yearBuiltFactor = 1.00;
+            else if (age > 15 && age <= 30) yearBuiltFactor = 0.90;
+            else yearBuiltFactor = 0.95;
+        }
 
         // Outside Area Factor
-        const outsideAreaFactorMap: Record<string, number> = {
-            None: 1.00,
-            Balcony: 1.05,
-            Garden: 1.05,
-        };
-        const outsideAreaFactor = outsideAreaFactorMap[formData.outdoorSpace] ?? 1.00;
+        let outsideAreaFactor = 1.00;
+        if (multipliers?.outsideArea) {
+            outsideAreaFactor = multipliers.outsideArea[formData.outdoorSpace] ?? 1.00;
+        } else {
+            const outsideAreaFactorMap: Record<string, number> = { None: 1.00, Balcony: 1.05, Garden: 1.05 };
+            outsideAreaFactor = outsideAreaFactorMap[formData.outdoorSpace] ?? 1.00;
+        }
 
         // Parking Factor
-        let parkingFactor = 1.00; // not applicable default
-        if (formData.hasParking === true) parkingFactor = 1.05;
-        else if (formData.hasParking === false) parkingFactor = 0.95;
+        let parkingFactor = 1.00;
+        if (multipliers?.parking) {
+            if (formData.hasParking === true) parkingFactor = multipliers.parking['Yes'];
+            else if (formData.hasParking === false) parkingFactor = multipliers.parking['No'];
+        } else {
+            if (formData.hasParking === true) parkingFactor = 1.05;
+            else if (formData.hasParking === false) parkingFactor = 0.95;
+        }
 
         // Energy Label Factor
-        const energyFactorMap: Record<string, number> = {
-            A: 1.10,
-            B: 1.00,
-            C: 0.95,
-            D: 0.90,
-            E: 0.85,
-            F: 0.80,
-            G: 0.80,
-        };
-        const energyFactor = energyFactorMap[formData.energyLabel] ?? 0.95;
+        let energyFactor = 0.95;
+        if (multipliers?.energy) {
+            energyFactor = multipliers.energy[formData.energyLabel] ?? 0.95;
+        } else {
+            const energyFactorMap: Record<string, number> = { A: 1.10, B: 1.00, C: 0.95, D: 0.90, E: 0.85, F: 0.80, G: 0.80 };
+            energyFactor = energyFactorMap[formData.energyLabel] ?? 0.95;
+        }
 
         // Elevator Factor
-        let elevatorFactor = 1.00; // not applicable default
-        if (formData.hasElevator === 'yes') elevatorFactor = 1.00;
-        else if (formData.hasElevator === 'no') elevatorFactor = 0.95;
-        else elevatorFactor = 1.00;
+        let elevatorFactor = 1.00;
+        if (multipliers?.elevator) {
+            if (formData.hasElevator === 'yes') elevatorFactor = multipliers.elevator['Yes'];
+            else if (formData.hasElevator === 'no') elevatorFactor = multipliers.elevator['No'];
+        } else {
+            if (formData.hasElevator === 'yes') elevatorFactor = 1.00;
+            else if (formData.hasElevator === 'no') elevatorFactor = 0.95;
+        }
 
         // Finish Factor (property condition)
-        const finishFactorMap: Record<string, number> = {
-            'High-End': 1.15,
-            Premium: 1.10,
-            Good: 1.05,
-            Standard: 1.00,
-            Outdated: 0.95,
-            'In need of renovation': 0.90,
-            // default handled below
-        };
-        const finishFactor = finishFactorMap[formData.propertyCondition] ?? 0.90;
+        let finishFactor = 0.90;
+        if (multipliers?.finish) {
+            finishFactor = multipliers.finish[formData.propertyCondition] ?? 0.90;
+        } else {
+            const finishFactorMap: Record<string, number> = {
+                'High-End': 1.15, Premium: 1.10, Good: 1.05, Standard: 1.00, Outdated: 0.95, 'In need of renovation': 0.90
+            };
+            finishFactor = finishFactorMap[formData.propertyCondition] ?? 0.90;
+        }
 
         const finalRent = Math.round(
             baseRent *
@@ -306,6 +356,8 @@ function CalculatorContent() {
         formData.hasParking,
         formData.energyLabel,
         formData.hasElevator,
+        regionsList,
+        multipliers
     ]);
 
     useEffect(() => {
@@ -788,12 +840,13 @@ function CalculatorContent() {
                                                     <label className="text-xs font-bold text-stone-400 ml-2">Country</label>
                                                     <select value={formData.country} onChange={(e) => {
                                                         const newCountry = e.target.value;
-                                                        const firstRegion = newCountry === 'Spain' ? spainRegions[0].name : portugalRegions[0].name;
+                                                        const filteredRegions = regionsList.filter(r => r.country.name === newCountry);
+                                                        const firstRegion = filteredRegions.length > 0 ? filteredRegions[0].name : '';
                                                         setFormData({ ...formData, country: newCountry, region: firstRegion });
                                                     }} className="w-full bg-stone-50 rounded-2xl p-4 font-black outline-none border-2 border-transparent focus:border-[#34495E]">
-                                                        <option value="Portugal">Portugal</option>
-                                                        <option value="Spain">Spain</option>
-                                                        <option value="Greece">Greece</option>
+                                                        {Array.from(new Set(regionsList.map(r => r.country.name))).map(cName => (
+                                                            <option key={cName as string} value={cName as string}>{cName as string}</option>
+                                                        ))}
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">
@@ -803,7 +856,7 @@ function CalculatorContent() {
                                                         onChange={(e) => setFormData({ ...formData, region: e.target.value })}
                                                         className="w-full bg-stone-50 rounded-2xl p-4 font-black outline-none border-2 border-transparent focus:border-[#34495E]"
                                                     >
-                                                        {(formData.country === 'Spain' ? spainRegions : portugalRegions).map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
+                                                        {regionsList.filter(r => r.country.name === formData.country).map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">

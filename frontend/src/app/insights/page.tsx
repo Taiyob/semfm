@@ -1,33 +1,24 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   BookOpen, 
-  Clock, 
-  User, 
   ArrowRight, 
   TrendingUp, 
-  Globe, 
-  ShieldCheck, 
-  ChevronRight,
-  Bookmark,
-  Share2,
-  Calendar,
   CheckCircle2,
-  Lock,
-  Search,
-  Filter,
+  Calendar,
   Sparkles,
   Mail
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
-const articles = [
+const DUMMY_ARTICLES = [
   {
     id: 1,
+    slug: 'lisbon-real-estate-forecast-2026',
     title: 'Lisbon Real Estate Forecast 2026: Trends & Pricing',
     excerpt: 'Deep dive into why prices in Arroios and Beato continue to outpace the national average despite interest rate fluctuations.',
     author: 'Elena Rossi',
@@ -40,6 +31,7 @@ const articles = [
   },
   {
     id: 2,
+    slug: 'new-tax-laws-imt',
     title: 'New Tax Laws (IMT) and Their Impact on Investors',
     excerpt: 'Detailed breakdown of the recent changes to the Portuguese property transfer tax and stamp duty exemptions for first-time investors.',
     author: 'Legal Desk',
@@ -51,6 +43,7 @@ const articles = [
   },
   {
     id: 3,
+    slug: 'post-nhr-era',
     title: 'Post-NHR Era: Why Portugal Still Wins',
     excerpt: 'Exploring the new tax regimes and why the destination remains the #1 choice for European remote workers.',
     author: 'Hofman Horizon Team',
@@ -62,6 +55,7 @@ const articles = [
   },
   {
     id: 4,
+    slug: 'spain-rental-law-updates-2026',
     title: 'Spain Rental Law Updates 2026',
     excerpt: 'How the new nationwide rent controls are affecting prime markets in Madrid and Barcelona.',
     author: 'Carlos Ruiz',
@@ -80,6 +74,45 @@ export default function InsightsPage() {
   const [selectedCountry, setSelectedCountry] = useState('All Countries');
   const [selectedCategory, setSelectedCategory] = useState('All Insights');
   const [showSubscribe, setShowSubscribe] = useState(false);
+  const [articles, setArticles] = useState<any[]>(DUMMY_ARTICLES);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/v1/blog');
+        const data = await res.json();
+        
+        if (data.success && data.data && data.data.length > 0) {
+          // Map backend data to frontend structure
+          const formattedBlogs = data.data.map((blog: any) => ({
+            id: blog.id,
+            slug: blog.slug,
+            title: blog.title,
+            excerpt: blog.excerpt || blog.content.substring(0, 100) + '...',
+            author: blog.author,
+            date: format(new Date(blog.createdAt), 'MMMM d, yyyy'),
+            readTime: blog.readTime || '5 min read',
+            category: blog.category,
+            country: blog.country || 'Global',
+            image: blog.imageUrl || '/assets/portugal_market_insights_thumbnail_1775343038691.png',
+            featured: blog.isFeatured || false,
+          }));
+          setArticles(formattedBlogs);
+        } else {
+          // Fallback to dummy data
+          setArticles(DUMMY_ARTICLES);
+        }
+      } catch (error) {
+        console.error('Failed to fetch blogs:', error);
+        setArticles(DUMMY_ARTICLES);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
 
   const filteredArticles = useMemo(() => {
     return articles.filter(a => {
@@ -87,7 +120,7 @@ export default function InsightsPage() {
         const matchesCategory = selectedCategory === 'All Insights' || a.category === selectedCategory;
         return matchesCountry && matchesCategory;
     });
-  }, [selectedCountry, selectedCategory]);
+  }, [selectedCountry, selectedCategory, articles]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-montserrat hero-gradient min-h-screen">
@@ -141,60 +174,63 @@ export default function InsightsPage() {
                 </div>
             </div>
 
-            <div className="grid md:grid-cols-1 gap-12">
-                {filteredArticles.length > 0 ? filteredArticles.map((article, idx) => (
-                    <Link 
-                        href={`/insights/${article.id}`} 
-                        key={article.id}
-                        className="block group relative transition-all duration-700"
-                    >
-                        <motion.div 
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            className="bg-white rounded-[48px] overflow-hidden border border-stone-100 hover:border-[#D4A373]/30 transition-all shadow-xl shadow-stone-200/30 flex flex-col md:flex-row h-full md:h-80"
+            {isLoading ? (
+                <div className="py-20 text-center font-black text-[#D4A373] uppercase tracking-widest animate-pulse">Loading Intelligence Signals...</div>
+            ) : (
+                <div className="grid md:grid-cols-1 gap-12">
+                    {filteredArticles.length > 0 ? filteredArticles.map((article, idx) => (
+                        <Link 
+                            href={`/insights/${article.slug}`} 
+                            key={article.id}
+                            className="block group relative transition-all duration-700"
                         >
-                            <div className="relative w-full md:w-80 h-64 md:h-auto shrink-0 overflow-hidden">
-                                <Image 
-                                    src={article.image} 
-                                    alt={article.title}
-                                    fill
-                                    sizes="400px"
-                                    className="object-cover group-hover:scale-105 transition-transform duration-1000"
-                                />
-                                {idx === 0 && (
-                                    <div className="absolute inset-0 bg-[#2C3E50]/40 flex items-center justify-center">
-                                        <Sparkles className="size-12 text-[#D4A373] animate-pulse" />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="p-10 flex flex-col justify-between flex-grow">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3 text-[9px] font-black text-[#D4A373] uppercase tracking-[0.2em]">
-                                        <span className="px-2 py-1 bg-[#D4A373]/10 rounded-lg">{article.country}</span>
-                                        <span className="text-stone-300">•</span>
-                                        <span>{article.category}</span>
-                                    </div>
-                                    <h2 className="text-2xl md:text-3xl font-black text-[#2C3E50] leading-tight tracking-tighter group-hover:text-[#D4A373] transition-colors">{article.title}</h2>
-                                    <p className="text-stone-500 font-bold leading-relaxed line-clamp-2 italic">{article.excerpt}</p>
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                className="bg-white rounded-[48px] overflow-hidden border border-stone-100 hover:border-[#D4A373]/30 transition-all shadow-xl shadow-stone-200/30 flex flex-col md:flex-row h-full md:h-80"
+                            >
+                                <div className="relative w-full md:w-80 h-64 md:h-auto shrink-0 overflow-hidden">
+                                    <Image 
+                                        src={article.image} 
+                                        alt={article.title}
+                                        fill
+                                        sizes="400px"
+                                        className="object-cover group-hover:scale-105 transition-transform duration-1000"
+                                    />
+                                    {idx === 0 && (
+                                        <div className="absolute inset-0 bg-[#2C3E50]/40 flex items-center justify-center">
+                                            <Sparkles className="size-12 text-[#D4A373] animate-pulse" />
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex items-center justify-between pt-6 border-t border-stone-50">
-                                    <div className="flex items-center gap-3 text-[10px] font-black text-stone-400 uppercase tracking-widest">
-                                        <Calendar className="size-4" />
-                                        <span>{article.date}</span>
+                                <div className="p-10 flex flex-col justify-between flex-grow">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3 text-[9px] font-black text-[#D4A373] uppercase tracking-[0.2em]">
+                                            <span className="px-2 py-1 bg-[#D4A373]/10 rounded-lg">{article.country}</span>
+                                            <span className="text-stone-300">•</span>
+                                            <span>{article.category}</span>
+                                        </div>
+                                        <h2 className="text-2xl md:text-3xl font-black text-[#2C3E50] leading-tight tracking-tighter group-hover:text-[#D4A373] transition-colors">{article.title}</h2>
+                                        <p className="text-stone-500 font-bold leading-relaxed line-clamp-2 italic">{article.excerpt}</p>
                                     </div>
-                                    <div className="text-[10px] font-black text-[#2C3E50] uppercase tracking-[0.2em] flex items-center gap-2 group-hover:gap-3 transition-all">
-                                        Read Analysis <ArrowRight className="size-4 text-[#D4A373]" />
+                                    <div className="flex items-center justify-between pt-6 border-t border-stone-50">
+                                        <div className="flex items-center gap-3 text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                                            <Calendar className="size-4" />
+                                            <span>{article.date}</span>
+                                        </div>
+                                        <div className="text-[10px] font-black text-[#2C3E50] uppercase tracking-[0.2em] flex items-center gap-2 group-hover:gap-3 transition-all">
+                                            Read Analysis <ArrowRight className="size-4 text-[#D4A373]" />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    </Link>
-                )) : (
-                    <div className="py-20 text-center font-black text-stone-300 uppercase tracking-widest">No Intelligence signals found for this segment</div>
-                )}
-            </div>
-
+                            </motion.div>
+                        </Link>
+                    )) : (
+                        <div className="py-20 text-center font-black text-stone-300 uppercase tracking-widest">No Intelligence signals found for this segment</div>
+                    )}
+                </div>
+            )}
         </div>
 
         {/* Sidebar */}

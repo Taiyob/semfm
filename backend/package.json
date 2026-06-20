@@ -28,6 +28,7 @@
         "add:module": "bun scripts/generate-module.ts"
     },
     "dependencies": {
+        "@aws-sdk/client-s3": "^3.1073.0",
         "@prisma/adapter-pg": "^7.8.0",
         "@prisma/client": "^7.8.0",
         "axios": "^1.12.2",
@@ -47,8 +48,9 @@
         "multer": "^2.0.2",
         "pg": "^8.16.3",
         "prisma": "^7.8.0",
+        "slugify": "^1.6.9",
         "stripe": "^22.1.1",
-        "uuid": "^11.1.0",
+        "uuid": "^14.0.0",
         "winston": "^3.17.0",
         "winston-daily-rotate-file": "^5.0.0",
         "zod": "^4.1.1"

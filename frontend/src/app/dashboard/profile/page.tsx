@@ -11,10 +11,13 @@ import {
   Save,
   Loader2,
   CheckCircle2,
-  Type
+  Type,
+  Camera
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
+import { useUploadImageMutation } from '@/lib/store/features/property/propertyApi';
 
 export default function ProfilePage() {
   const { data, isLoading, error } = useGetMeQuery();
@@ -25,8 +28,11 @@ export default function ProfilePage() {
     lastName: '',
     email: '',
     displayName: '',
-    role: ''
+    role: '',
+    avatarUrl: ''
   });
+
+  const [uploadImage, { isLoading: isUploadingImage }] = useUploadImageMutation();
 
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
@@ -38,7 +44,8 @@ export default function ProfilePage() {
         lastName: u.lastName || '',
         email: u.email || '',
         displayName: u.displayName || '',
-        role: u.role?.name || 'Investor'
+        role: u.role?.name || 'Investor',
+        avatarUrl: u.avatarUrl || ''
       });
     }
   }, [data]);
@@ -52,6 +59,7 @@ export default function ProfilePage() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         displayName: formData.displayName,
+        avatarUrl: formData.avatarUrl
       }).unwrap();
       
       setStatus('success');
@@ -59,6 +67,33 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Update failed:', err);
       setStatus('error');
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const form = new FormData();
+      form.append('image', file);
+      const res = await uploadImage(form).unwrap();
+      if (res.data?.imageUrl) {
+        setFormData({ ...formData, avatarUrl: res.data.imageUrl });
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Profile photo uploaded successfully',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: 'Failed to upload profile photo'
+      });
     }
   };
   
@@ -83,8 +118,23 @@ export default function ProfilePage() {
     <div className="max-w-4xl space-y-8">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-           <div className="size-16 bg-[#34495E] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-[#34495E]/20">
-              <UserCircle2 className="size-8" />
+           <div className="relative group size-16 bg-[#34495E] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-[#34495E]/20 overflow-hidden">
+              {formData.avatarUrl ? (
+                <img src={formData.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <UserCircle2 className="size-8" />
+              )}
+              
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={isUploadingImage}
+                  className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                />
+                {isUploadingImage ? <Loader2 className="size-5 animate-spin" /> : <Camera className="size-5" />}
+              </div>
            </div>
            <div>
               <h2 className="text-xl font-black text-[#2C3E50]">Account Settings</h2>

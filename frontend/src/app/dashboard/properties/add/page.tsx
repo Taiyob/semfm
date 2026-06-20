@@ -11,12 +11,14 @@ import {
   Image as ImageIcon,
   Plus,
   Calculator,
-  Wallet
+  Wallet,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
+import { useUploadImageMutation } from '@/lib/store/features/property/propertyApi';
 
 const GOLD_COLOR = '#D4AF37';
 
@@ -29,8 +31,38 @@ export default function AddPropertyPage() {
     currentValue: '',
     monthlyRent: '',
     monthlyExpenses: '',
-    description: ''
+    description: '',
+    image: ''
   });
+
+  const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const form = new FormData();
+      form.append('image', file);
+      const res = await uploadImage(form).unwrap();
+      if (res.data?.imageUrl) {
+        setFormData({ ...formData, image: res.data.imageUrl });
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Image uploaded successfully',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: 'Failed to upload image'
+      });
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,18 +217,35 @@ export default function AddPropertyPage() {
 
         <div className="lg:col-span-4 space-y-8">
           <div className="bg-[#2C3E50] p-8 rounded-[40px] text-white space-y-6">
-            <div className="size-16 rounded-2xl flex items-center justify-center bg-white/10 border border-white/10">
-              <ImageIcon className="size-8 text-white/40" />
+            <div className="size-16 rounded-2xl flex items-center justify-center bg-white/10 border border-white/10 overflow-hidden">
+              {formData.image ? (
+                <img src={formData.image} alt="Property" className="size-full object-cover" />
+              ) : (
+                <ImageIcon className="size-8 text-white/40" />
+              )}
             </div>
             <div>
               <h4 className="text-lg font-black mb-2">Property Photo</h4>
               <p className="text-white/40 text-xs font-bold leading-relaxed mb-6">
                 Upload a cover photo for your property to easily identify it in your dashboard.
               </p>
-              <button className="w-full py-4 bg-white/10 border border-dashed border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-2">
-                <Plus className="size-4" />
-                Upload Image
-              </button>
+              <div className="relative">
+                <input 
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={isUploading}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                />
+                <button 
+                  type="button" 
+                  disabled={isUploading}
+                  className="w-full py-4 bg-white/10 border border-dashed border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isUploading ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                  {isUploading ? 'Uploading...' : 'Upload Image'}
+                </button>
+              </div>
             </div>
           </div>
 

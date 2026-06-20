@@ -28,7 +28,10 @@ export class PropertyController extends BaseController {
             });
         }
 
-        const result = await this.propertyService.createProperty(user.id, req.body);
+        // If admin provides an agentId, use it. Otherwise use their own id.
+        const targetAgentId = (roleName === 'admin' && req.body.agentId) ? req.body.agentId : user.id;
+
+        const result = await this.propertyService.createProperty(targetAgentId, req.body);
         return this.sendCreatedResponse(req, res, result, 'Property listed successfully');
     });
 
@@ -113,7 +116,8 @@ export class PropertyController extends BaseController {
      */
     public update = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params;
-        const result = await this.propertyService.updateProperty(id as string, req.user.id, req.body);
+        const isAdmin = req.user.role?.name?.toLowerCase() === 'admin';
+        const result = await this.propertyService.updateProperty(id as string, req.user.id, req.body, isAdmin);
         
         if (!result) {
             throw new AppError({
@@ -150,7 +154,8 @@ export class PropertyController extends BaseController {
      */
     public delete = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params;
-        const result = await this.propertyService.deleteProperty(id as string, req.user.id);
+        const isAdmin = req.user.role?.name?.toLowerCase() === 'admin';
+        const result = await this.propertyService.deleteProperty(id as string, req.user.id, isAdmin);
         
         if (!result) {
             throw new AppError({

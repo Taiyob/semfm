@@ -129,21 +129,41 @@ export class PropertyService extends BaseService<Property> {
      * Get all properties (public)
      */
     async getAllProperties(query: any, userId?: string) {
-        const { page = 1, limit = 10, ...filters } = query;
+        const { page = 1, limit = 10, search, sortBy, sortOrder, ...filters } = query;
         const skip = (Number(page) - 1) * Number(limit);
 
         const where: any = {
             ...filters,
         };
 
+        if (search) {
+            where.OR = [
+                { title: { contains: search as string, mode: 'insensitive' } },
+                { location: { contains: search as string, mode: 'insensitive' } }
+            ];
+        }
+
+        let orderBy: any = { createdAt: 'desc' };
+        if (sortBy && sortOrder) {
+            orderBy = { [sortBy as string]: sortOrder };
+        }
+
         const [data, total] = await Promise.all([
             this.prisma.property.findMany({
                 where,
                 skip,
                 take: Number(limit),
-                orderBy: { createdAt: 'desc' },
+                orderBy,
                 include: {
                     country: true,
+                    agent: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        }
+                    }
                 }
             }),
             this.prisma.property.count({ where }),
@@ -213,16 +233,17 @@ export class PropertyService extends BaseService<Property> {
     /**
      * Update a property listing
      */
-    async updateProperty(id: string, agentId: string, updateData: any) {
+    async updateProperty(id: string, agentId: string, updateData: any, isAdmin: boolean = false) {
         // Log for debugging
-        console.log(`Updating property ${id} for agent ${agentId} with data:`, updateData);
+        console.log(`Updating property ${id} for user ${agentId} (Admin: ${isAdmin}) with data:`, updateData);
 
-        // Ensure property belongs to agent
+        // Ensure property belongs to agent or user is admin
+        const whereClause = isAdmin ? { id } : { id, agentId };
         const property = await this.prisma.property.findFirst({ 
-            where: { id, agentId } 
+            where: whereClause 
         });
         if (!property) {
-            console.warn(`Property ${id} not found for agent ${agentId}`);
+            console.warn(`Property ${id} not found or permission denied for user ${agentId}`);
             return null;
         }
 
@@ -243,10 +264,11 @@ export class PropertyService extends BaseService<Property> {
     /**
      * Delete a property listing
      */
-    async deleteProperty(id: string, agentId: string) {
-        // Ensure property belongs to agent
+    async deleteProperty(id: string, agentId: string, isAdmin: boolean = false) {
+        // Ensure property belongs to agent or user is admin
+        const whereClause = isAdmin ? { id } : { id, agentId };
         const property = await this.prisma.property.findFirst({ 
-            where: { id, agentId } 
+            where: whereClause 
         });
         if (!property) return null;
 

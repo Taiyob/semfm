@@ -20,6 +20,11 @@ import { AlertModule } from "./modules/Alert/AlertModule";
 import { DashboardModule } from "./modules/Dashboard/DashboardModule";
 import { ClubModule } from "./modules/Club/ClubModule";
 import { CountryModule } from "./modules/Country/CountryModule";
+import { MarketInsightModule } from "./modules/MarketInsight/MarketInsightModule";
+import { BlogModule } from "./modules/Blog/BlogModule";
+import { SystemSettingModule } from "./modules/SystemSetting/SystemSettingModule";
+import { RegionModule } from "./modules/Region/RegionModule";
+import { UploadModule } from "./modules/Upload/UploadModule";
 
 // Initialize the Ignitor Engine
 const ignitor = new IgnitorApp();
@@ -50,6 +55,11 @@ async function bootstrap() {
     ignitor.registerModule(new DashboardModule());
     ignitor.registerModule(new ClubModule());
     ignitor.registerModule(new CountryModule());
+    ignitor.registerModule(new MarketInsightModule());
+    ignitor.registerModule(new BlogModule());
+    ignitor.registerModule(new SystemSettingModule());
+    ignitor.registerModule(new RegionModule());
+    ignitor.registerModule(new UploadModule());
     // ignitor.registerModule(new ProductModule());
     AppLogger.info("✔ All modules registered successfully");
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCreatePropertyMutation } from '@/lib/store/features/property/propertyApi';
+import { useCreatePropertyMutation, useUploadImageMutation } from '@/lib/store/features/property/propertyApi';
 import { 
   Building2, 
   Euro, 
@@ -24,6 +24,7 @@ export default function AddPropertyPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [createProperty, { isLoading }] = useCreatePropertyMutation();
+  const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -67,6 +68,29 @@ export default function AddPropertyPage() {
         photos: [...prev.photos, photoUrlInput]
       }));
       setPhotoUrlInput('');
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const form = new FormData();
+      form.append('image', file);
+      const res = await uploadImage(form).unwrap();
+      if (res.data?.imageUrl) {
+        setFormData(prev => ({
+          ...prev,
+          photos: [...prev.photos, res.data.imageUrl]
+        }));
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: 'Failed to upload image'
+      });
     }
   };
 
@@ -413,6 +437,24 @@ export default function AddPropertyPage() {
                     >
                       Add URL
                     </button>
+                    
+                    <div className="relative">
+                      <input 
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        disabled={isUploading}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                      <button 
+                        type="button"
+                        disabled={isUploading}
+                        className="px-8 py-4 bg-stone-200 text-stone-600 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-stone-300 transition-all flex items-center justify-center gap-2 h-full disabled:opacity-50"
+                      >
+                        {isUploading ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+                        Upload
+                      </button>
+                    </div>
                   </div>
 
                   {formData.photos.length > 0 ? (

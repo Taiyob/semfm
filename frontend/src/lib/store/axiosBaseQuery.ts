@@ -15,7 +15,12 @@ const axiosInstance = axios.create({
 // We no longer manually attach the token because we are using HTTP-Only Cookies.
 // The browser will automatically send the cookie with every request.
 axiosInstance.interceptors.request.use(
-  (config) => config,
+  (config) => {
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+    return config;
+  },
   (error) => Promise.reject(error)
 );
 

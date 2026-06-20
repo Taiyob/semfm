@@ -141,6 +141,13 @@ export const propertyApi = createApi({
         'SavedProperties'
       ],
     }),
+    uploadImage: builder.mutation({
+      query: (formData: FormData) => ({
+        url: '/upload/image',
+        method: 'POST',
+        data: formData,
+      }),
+    }),
   }),
 });
 
@@ -154,5 +161,6 @@ export const {
   useUpdatePropertyMutation,
   useDeletePropertyMutation,
   useGetSavedPropertiesQuery,
-  useToggleSavePropertyMutation
+  useToggleSavePropertyMutation,
+  useUploadImageMutation
 } = propertyApi;
