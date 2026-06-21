@@ -132,9 +132,17 @@ export default function GlobalHomePage() {
                 Connecting the dots in <br />
                 <span className="text-[#34495E]">real estate investing</span>
               </h2>
-              <p className="text-lg text-stone-500 font-bold leading-relaxed max-w-xl">
-                Real estate data is fragmented across platforms, tax systems, and local markets. We unify it into one clear, reliable source of truth.
-              </p>
+              <div className="space-y-6">
+                <p className="text-lg text-stone-500 font-bold leading-relaxed max-w-xl">
+                  Real estate data is fragmented across platforms, tax systems, and local markets. We unify it into one clear, reliable source of truth.
+                </p>
+                <Link href="/our-mission" className="inline-flex items-center gap-3 text-[#D4A373] font-bold hover:opacity-80 transition-opacity group">
+                  <span className="border-b-2 border-[#D4A373] pb-0.5 text-lg">Learn why we built it</span>
+                  <div className="size-6 rounded-full bg-[#D4A373] flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <ArrowRight className="size-3 text-white" />
+                  </div>
+                </Link>
+              </div>
             </div>
 
             <div className="grid gap-6">

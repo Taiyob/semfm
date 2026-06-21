@@ -143,7 +143,7 @@ export const propertyApi = createApi({
     }),
     uploadImage: builder.mutation({
       query: (formData: FormData) => ({
-        url: '/upload/image',
+        url: '/upload',
         method: 'POST',
         data: formData,
       }),
