@@ -9,6 +9,7 @@ import { planApi } from './features/plan/planApi';
 import { subscriptionApi } from './features/subscription/subscriptionApi';
 import { alertsApi } from './features/alerts/alertsApi';
 import { dashboardApi } from './features/dashboard/dashboardApi';
+import { countryApi } from './features/country/countryApi';
 import {
   persistReducer,
   persistStore,
@@ -57,6 +58,7 @@ export const store = configureStore({
     [subscriptionApi.reducerPath]: subscriptionApi.reducer,
     [alertsApi.reducerPath]: alertsApi.reducer,
     [dashboardApi.reducerPath]: dashboardApi.reducer,
+    [countryApi.reducerPath]: countryApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -72,7 +74,8 @@ export const store = configureStore({
       planApi.middleware,
       subscriptionApi.middleware,
       alertsApi.middleware,
-      dashboardApi.middleware
+      dashboardApi.middleware,
+      countryApi.middleware
     ]),
 });
 

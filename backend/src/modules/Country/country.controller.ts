@@ -22,6 +22,12 @@ export class CountryController extends BaseController {
             { name: 'asc' }
         );
 
+        const mappedData = result.data.map((country: any) => ({
+            ...country,
+            availableProperties: country._count?.properties || 0,
+            _count: undefined
+        }));
+
         return this.sendPaginatedResponse(
             req,
             res,
@@ -34,17 +40,40 @@ export class CountryController extends BaseController {
                 hasPrevious: result.hasPrevious
             },
             'Countries retrieved successfully',
-            result.data
+            mappedData
         );
     });
 
     public getCountryById = catchAsync(async (req: Request, res: Response) => {
         const { id } = req.params as { id: string };
-        const country = await this.countryService.findById(id);
+        const country: any = await this.countryService.findById(id);
         if (!country) {
             return res.status(404).json({ success: false, message: 'Country not found' });
         }
-        return this.sendResponse(req, res, 'Country retrieved successfully', undefined, country);
+        
+        const mappedCountry = {
+            ...country,
+            availableProperties: country._count?.properties || 0,
+            _count: undefined
+        };
+
+        return this.sendResponse(req, res, 'Country retrieved successfully', undefined, mappedCountry);
+    });
+
+    public getCountryBySlug = catchAsync(async (req: Request, res: Response) => {
+        const { slug } = req.params as { slug: string };
+        const country: any = await this.countryService.findBySlug(slug);
+        if (!country) {
+            return res.status(404).json({ success: false, message: 'Country not found' });
+        }
+        
+        const mappedCountry = {
+            ...country,
+            availableProperties: country._count?.properties || 0,
+            _count: undefined
+        };
+
+        return this.sendResponse(req, res, 'Country retrieved successfully', undefined, mappedCountry);
     });
 
     public createCountry = catchAsync(async (req: Request, res: Response) => {

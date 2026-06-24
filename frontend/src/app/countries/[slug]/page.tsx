@@ -19,16 +19,26 @@ import {
   Building2
 } from 'lucide-react';
 import { DynamicCountryMap } from '@/components/country-map';
-import { MARKET_REGISTRY } from '@/lib/market-data';
+import { useGetCountryBySlugQuery } from '@/lib/store/features/country/countryApi';
 
 export default function CountryMarketPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
 
-  // Lookup data for the specific country
-  const data = useMemo(() => MARKET_REGISTRY[slug.toLowerCase()], [slug]);
+  const { data: country, isLoading } = useGetCountryBySlugQuery(slug);
 
-  // If country doesn't exist in registry, show "Coming Soon" or fallback
-  if (!data) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-montserrat hero-gradient px-6">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#D4A373] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-stone-500 font-bold">Loading market data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If country doesn't exist, isn't active, or has no insights, show "Coming Soon"
+  if (!country || !country.isActive || !country.insights || country.insights.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center font-montserrat hero-gradient px-6">
         <div className="text-center max-w-2xl space-y-10">
@@ -40,6 +50,12 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
       </div>
     );
   }
+
+  const stats = [
+    { label: 'Avg yield', value: country.grossYield || '0.0%' },
+    { label: 'Avg appreciation', value: country.yield || '+0.0%' },
+    { label: 'Available properties', value: country.availableProperties?.toString() || '0' },
+  ];
 
   return (
     <div className="flex flex-col gap-32 pb-32 font-montserrat hero-gradient min-h-screen">
@@ -53,7 +69,7 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-5xl md:text-7xl font-black text-[#2C3E50] leading-[0.95] tracking-tight mb-10">
-              Discover <br /><span className="gradient-text">{data.name}</span>
+              Discover <br /><span className="gradient-text">{country.name}</span>
             </h1>
             <p className="text-xl md:text-2xl text-stone-500 leading-relaxed mb-12 max-w-3xl mx-auto font-bold italic">
               “Explore regional non-biased market insights, transparent return calculations, and verified property data”
@@ -69,7 +85,7 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
             </div>
 
             <div className="mt-20 grid grid-cols-2 md:grid-cols-3 gap-12">
-              {data.stats.map((stat) => (
+              {stats.map((stat) => (
                 <div key={stat.label}>
                   <div className="text-4xl font-black text-[#2C3E50] mb-2">{stat.value}</div>
                   <div className="text-xs font-bold text-stone-400 tracking-tight uppercase tracking-widest">{stat.label}</div>
@@ -94,9 +110,9 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
         </div>
 
         <div className="space-y-12">
-          {data.regions.map((region, idx) => (
+          {country.insights.map((region, idx) => (
             <motion.div
-              key={region.name}
+              key={region.id}
               initial={{ opacity: 0, x: idx % 2 === 0 ? -20 : 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -104,8 +120,8 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
             >
               <div className="w-full lg:w-2/5 aspect-[4/3] relative rounded-[32px] overflow-hidden shadow-2xl">
                 <Image
-                  src={region.image}
-                  alt={region.name}
+                  src={region.image || '/assets/placeholder-region.png'}
+                  alt={region.regionName}
                   fill
                   priority={idx === 0}
                   loading={idx === 0 ? "eager" : "lazy"}
@@ -117,16 +133,18 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
 
               <div className="w-full lg:w-3/5 space-y-8">
                 <div className="space-y-6 pb-8 border-b border-stone-100 text-left">
-                  <h3 className="text-3xl md:text-5xl font-black text-[#2C3E50] tracking-tight leading-[0.95]">{region.name}</h3>
-                  <p className="text-stone-500 font-bold leading-relaxed max-w-2xl text-lg italic">“{region.description}”</p>
+                  <h3 className="text-3xl md:text-5xl font-black text-[#2C3E50] tracking-tight leading-[0.95]">{region.regionName}</h3>
+                  {region.description && (
+                    <p className="text-stone-500 font-bold leading-relaxed max-w-2xl text-lg italic">“{region.description}”</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
                   {[
-                    { label: 'Avg yield', value: region.yield },
-                    { label: 'Avg appreciation', value: region.appreciation },
-                    { label: 'Available properties', value: region.availableProperties },
-                    { label: 'Avg Vacancy Rate', value: region.vacancy }
+                    { label: 'Avg yield', value: `${region.averageYield}%` },
+                    { label: 'Avg appreciation', value: `${region.averageAppreciation}%` },
+                    { label: 'Available properties', value: region.availableProperties.toString() },
+                    { label: 'Avg Vacancy Rate', value: region.vacancyRate ? `${region.vacancyRate}%` : '-' }
                   ].map((stat) => {
                     const parts = stat.value.split(' ');
                     const mainVal = parts[0];
@@ -164,16 +182,18 @@ export default function CountryMarketPage({ params }: { params: Promise<{ slug: 
                   </div>
 
                   {/* Key Performance Indicators */}
-                  <div className="space-y-4">
-                    <h4 className="text-[10px] font-black tracking-tight text-stone-400 italic text-left uppercase">Key performance indicators</h4>
-                    <ul className="space-y-2">
-                      {region.indicators.map(ind => (
-                        <li key={ind} className="flex items-center gap-2 text-xs font-bold text-stone-500">
-                          <CheckCircle2 className="size-3 text-[#D4A373]" /> {ind}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {region.indicators && region.indicators.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-[10px] font-black tracking-tight text-stone-400 italic text-left uppercase">Key performance indicators</h4>
+                      <ul className="space-y-2">
+                        {region.indicators.map(ind => (
+                          <li key={ind} className="flex items-center gap-2 text-xs font-bold text-stone-500">
+                            <CheckCircle2 className="size-3 text-[#D4A373]" /> {ind}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

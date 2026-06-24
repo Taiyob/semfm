@@ -44,8 +44,10 @@ import { calculateResidentialIMT, calculateAcquisitionBreakdown } from '@/lib/ca
 import {
     useSaveCalculationMutation,
     useGetMyCalculationsQuery,
-    useDeleteCalculationMutation
+    useDeleteCalculationMutation,
+    useGetCalculatorSettingsQuery
 } from '@/lib/store/features/calculations/calculationApi';
+import { useGetRegionsQuery } from '@/lib/store/features/country/countryApi';
 import { useCreateLeadMutation } from '@/lib/store/features/leads/leadsApi';
 import { useGetPropertiesQuery } from '@/lib/store/features/property/propertyApi';
 import { Loader2, Save } from 'lucide-react';
@@ -87,38 +89,32 @@ function CalculatorContent() {
     const [regionsList, setRegionsList] = useState<any[]>([]);
     const [multipliers, setMultipliers] = useState<any>(null);
 
+    const { data: regionsResponse } = useGetRegionsQuery();
+    const { data: settingsResponse } = useGetCalculatorSettingsQuery();
+
     useEffect(() => {
         setMounted(true);
-        // Fetch dynamic global calculator settings and regions from backend
-        const fetchSettings = async () => {
-            try {
-                const [settingsRes, regionsRes] = await Promise.all([
-                    fetch('http://localhost:5000/api/v1/settings/calculator'),
-                    fetch('http://localhost:5000/api/v1/regions')
-                ]);
-                const settingsData = await settingsRes.json();
-                const regionsData = await regionsRes.json();
-
-                if (settingsData.success && settingsData.data) {
-                    setMultipliers(settingsData.data.rentMultipliers || null);
-                    setFormData(prev => ({
-                        ...prev,
-                        vacancyRate: settingsData.data.vacancyRate,
-                        maintenanceRate: settingsData.data.maintenancePercentage,
-                        propertyTaxRate: settingsData.data.taxPercentage,
-                        managementFeeRate: settingsData.data.managementFeePercentage,
-                        appreciationRate: settingsData.data.appreciationRate,
-                    }));
-                }
-                if (regionsData.success && regionsData.data) {
-                    setRegionsList(regionsData.data);
-                }
-            } catch (err) {
-                console.error('Failed to fetch calculator settings', err);
-            }
-        };
-        fetchSettings();
     }, []);
+
+    useEffect(() => {
+        if (settingsResponse?.success && settingsResponse?.data) {
+            setMultipliers(settingsResponse.data.rentMultipliers || null);
+            setFormData(prev => ({
+                ...prev,
+                vacancyRate: settingsResponse.data.vacancyRate,
+                maintenanceRate: settingsResponse.data.maintenancePercentage,
+                propertyTaxRate: settingsResponse.data.taxPercentage,
+                managementFeeRate: settingsResponse.data.managementFeePercentage,
+                appreciationRate: settingsResponse.data.appreciationRate,
+            }));
+        }
+    }, [settingsResponse]);
+
+    useEffect(() => {
+        if (regionsResponse?.success && regionsResponse?.data) {
+            setRegionsList(regionsResponse.data);
+        }
+    }, [regionsResponse]);
     const [mode, setMode] = useState<Mode>('simple');
     const [showBreakdown, setShowBreakdown] = useState(false);
     const [showCalculationDetails, setShowCalculationDetails] = useState(false);

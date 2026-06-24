@@ -381,7 +381,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                           rel="noopener noreferrer"
                           className="w-full py-4 rounded-[32px] text-[10px] font-black uppercase tracking-[0.2em] bg-stone-100 text-stone-600 shadow-sm border border-stone-200 hover:bg-stone-200 transition-all flex items-center justify-center gap-2"
                       >
-                          Original Listing
+                          View Original Listing
                       </a>
                       <p className="text-[9px] font-bold text-stone-400 text-center mt-2 italic">View the listing on the real estate agent's website.</p>
                   </div>

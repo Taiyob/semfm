@@ -45,6 +45,12 @@ export const calculationApi = createApi({
       }),
       invalidatesTags: ['Calculation'],
     }),
+    getCalculatorSettings: builder.query<{ success: boolean; data: any }, void>({
+      query: () => ({
+        url: '/settings/calculator',
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
@@ -52,4 +58,5 @@ export const {
   useGetMyCalculationsQuery,
   useSaveCalculationMutation,
   useDeleteCalculationMutation,
+  useGetCalculatorSettingsQuery,
 } = calculationApi;

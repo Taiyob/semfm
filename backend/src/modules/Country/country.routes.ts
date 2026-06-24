@@ -11,6 +11,7 @@ export class CountryRoutes {
 
     private initializeRoutes() {
         this.router.get('/', this.countryController.getAllCountries);
+        this.router.get('/slug/:slug', this.countryController.getCountryBySlug);
         this.router.get('/:id', this.countryController.getCountryById);
         this.router.post('/', this.countryController.createCountry);
         this.router.patch('/:id', this.countryController.updateCountry);

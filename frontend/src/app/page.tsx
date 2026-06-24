@@ -20,51 +20,28 @@ import {
   Home,
   MapPin
 } from 'lucide-react';
+import { useGetCountriesQuery } from '@/lib/store/features/country/countryApi';
 
-const countries = [
-  {
-    name: 'Portugal',
-    slug: 'portugal',
-    description: 'Premium yields in Lisbon and Porto. Strategic golden visa opportunities.',
-    yield: '+5.2%',
-    grossYield: '6.4%',
-    availableProperties: 184,
-    region: 'Western Europe',
-    investors: '12k+',
-    image: '/assets/portugal_real_estate_hero_1775342926518.png',
-    status: 'Active',
-    color: 'border-zinc-200'
-  },
-  {
-    name: 'Spain',
-    slug: 'spain',
-    description: 'Market analysis for Valencia, Alicante, Málaga, and Las Palmas. Beta access.',
-    yield: '+5.9%',
-    grossYield: '7.2%',
-    availableProperties: 142,
-    region: 'Western Europe',
-    investors: '8.5k+',
-    image: '/assets/spain_market_hero.png',
-    status: 'Active',
-    color: 'border-zinc-200'
-  },
-  {
-    name: 'Greece',
-    slug: 'greece',
-    description: 'High-growth potential in Athens and the Islands. EU residency pathway.',
-    yield: '+6.1%',
-    grossYield: '7.2%',
-    availableProperties: 96,
-    region: 'Southern Europe',
-    investors: '5k+',
-    image: '/assets/greece_market_hero.png',
-    status: 'Coming Soon',
-    color: 'border-zinc-200'
-  },
-];
+
 
 
 export default function GlobalHomePage() {
+  const { data: apiCountries = [], isLoading } = useGetCountriesQuery();
+
+  const countries = apiCountries.map(c => ({
+    name: c.name,
+    slug: c.slug,
+    description: c.description || 'Premium yields and investment opportunities.',
+    yield: c.yield || '+0.0%',
+    grossYield: c.grossYield || '0.0%',
+    availableProperties: c.availableProperties || 0,
+    region: c.region || 'Western Europe',
+    investors: c.investors || '0+',
+    image: c.imageUrl || '/assets/placeholder-country.png',
+    status: c.isActive ? 'Active' : 'Coming Soon',
+    color: 'border-zinc-200'
+  }));
+
   const [selectedRegion, setSelectedRegion] = React.useState('All Markets');
   const [newsletterCountry, setNewsletterCountry] = React.useState('All Countries');
 

@@ -63,6 +63,12 @@ async function bootstrap() {
     // ignitor.registerModule(new ProductModule());
     AppLogger.info("✔ All modules registered successfully");
 
+    // Initialize Cron Jobs
+    const { PropertySyncService } = await import('./modules/Property/PropertySyncService');
+    const propertySyncService = new PropertySyncService();
+    propertySyncService.initializeCron();
+    AppLogger.info("✔ Cron jobs initialized");
+
     // 3. Spark the server!
     await ignitor.spark(config.server.port);
 

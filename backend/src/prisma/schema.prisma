@@ -142,6 +142,13 @@ model Country {
   continent String?
   imageUrl  String?
   isActive  Boolean @default(true)
+  
+  // Marketing fields for frontend
+  description String? @default("")
+  yield       String? @default("+0.0%")
+  grossYield  String? @default("0.0%")
+  investors   String? @default("0+")
+  region      String? @default("Western Europe")
 
   properties Property[]
   insights   MarketInsight[]

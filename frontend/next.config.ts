@@ -15,6 +15,24 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'flagcdn.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'semfm-images-bucket.s3.us-east-1.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.amazonaws.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '',
+      },
     ],
   },
 
