@@ -225,7 +225,13 @@ export default function GlobalHomePage() {
                 <div className="absolute bottom-6 left-8 flex items-center gap-3">
                   <div className="size-10 rounded-full border-2 border-white/30 backdrop-blur-md flex items-center justify-center p-2 overflow-hidden">
                     <Image
-                      src={`https://flagcdn.com/w80/${country.slug === 'portugal' ? 'pt' : country.slug === 'spain' ? 'es' : 'gr'}.png`}
+                      src={`https://flagcdn.com/w80/${
+                        country.slug.toLowerCase() === 'portugal' ? 'pt' 
+                        : country.slug.toLowerCase() === 'spain' ? 'es' 
+                        : country.slug.toLowerCase() === 'italy' ? 'it'
+                        : country.slug.toLowerCase() === 'greece' ? 'gr'
+                        : 'eu' // fallback to a generic or default flag if not matched
+                      }.png`}
                       alt={country.name}
                       width={40}
                       height={30}

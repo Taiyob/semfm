@@ -48,7 +48,7 @@ export const countryApi = createApi({
   endpoints: (builder) => ({
     getCountries: builder.query<Country[], void>({
       query: () => ({
-        url: '/countries?limit=100',
+        url: '/countries?limit=100&includeInactive=true',
         method: 'GET',
       }),
       transformResponse: (response: CountriesResponse) => response.data,

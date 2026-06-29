@@ -115,12 +115,6 @@ export default function AddPropertyPage() {
     setFormData(prev => {
       const newData = { ...prev, [name]: value };
       
-      // Auto-calculate rent if price changes and rent hasn't been overridden
-      if (name === 'price' && !isRentOverride) {
-        const autoRent = Math.round(Number(value) * 0.005); // 0.5% rule of thumb
-        newData.estimatedRent = autoRent.toString();
-      }
-
       // Auto-calculate yield if price or rent changes and yield hasn't been overridden
       if ((name === 'price' || name === 'estimatedRent') && !isYieldOverride) {
         const { yieldValue } = calculateMetrics(Number(newData.price), Number(newData.estimatedRent));

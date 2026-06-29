@@ -305,7 +305,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 </div>
                 <div className="p-8 bg-white rounded-[40px] border border-stone-100 shadow-xl shadow-stone-200/40 space-y-2">
                     <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Gross Yield</span>
-                    <div className="text-4xl font-black text-[#2C3E50]">{property.yield}%</div>
+                    <div className="text-4xl font-black text-[#2C3E50]">{costs ? ((property.yield * property.price) / costs.totalPrice).toFixed(1) : property.yield}%</div>
                 </div>
                 <div className="p-8 bg-[#2C3E50] rounded-[40px] space-y-2">
                     <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block text-stone-400">Rental Estimate</span>
