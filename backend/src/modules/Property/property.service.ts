@@ -129,12 +129,64 @@ export class PropertyService extends BaseService<Property> {
      * Get all properties (public)
      */
     async getAllProperties(query: any, userId?: string) {
-        const { page = 1, limit = 10, search, sortBy, sortOrder, ...filters } = query;
+        const { 
+            page = 1, limit = 10, search, sortBy, sortOrder,
+            country, city, type, condition, energyLabel, outdoorSpace,
+            minPrice, maxPrice, minYear, maxYear, bathrooms, amenities
+        } = query;
         const skip = (Number(page) - 1) * Number(limit);
 
-        const where: any = {
-            ...filters,
-        };
+        const where: any = {};
+
+        // 1. Basic Exact Matches
+        if (country && country !== 'All') {
+            where.location = { contains: country, mode: 'insensitive' };
+        }
+        if (city && city !== 'All') {
+            where.location = { ...where.location, contains: city, mode: 'insensitive' };
+        }
+        if (type && type !== 'All') where.type = type;
+        if (condition && condition !== 'All') where.condition = condition;
+        if (energyLabel && energyLabel !== 'All') where.energyLabel = energyLabel;
+        if (outdoorSpace && outdoorSpace !== 'All') {
+            where.outdoorSpace = { not: 'NONE' };
+        }
+
+        // 2. Numeric Matches & Ranges
+        if (bathrooms && bathrooms !== 'All') {
+            if (bathrooms === '5+') {
+                where.bedrooms = { gte: 5 };
+            } else {
+                where.bedrooms = Number(bathrooms);
+            }
+        }
+
+        if (minPrice !== undefined && minPrice !== '') {
+            where.price = { ...where.price, gte: Number(minPrice) };
+        }
+        if (maxPrice !== undefined && maxPrice !== '') {
+            where.price = { ...where.price, lte: Number(maxPrice) };
+        }
+
+        if (minYear !== undefined && minYear !== '') {
+            where.yearBuilt = { ...where.yearBuilt, gte: Number(minYear) };
+        }
+        if (maxYear !== undefined && maxYear !== '') {
+            where.yearBuilt = { ...where.yearBuilt, lte: Number(maxYear) };
+        }
+
+        // 3. Arrays (Amenities)
+        if (amenities) {
+            let amenitiesArr = [];
+            if (typeof amenities === 'string') {
+                amenitiesArr = amenities.split(',');
+            } else if (Array.isArray(amenities)) {
+                amenitiesArr = amenities;
+            }
+            if (amenitiesArr.length > 0) {
+                where.features = { hasEvery: amenitiesArr };
+            }
+        }
 
         if (search) {
             where.OR = [
