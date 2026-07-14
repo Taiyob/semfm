@@ -45,10 +45,24 @@ type Scenario = 'investor' | 'resident' | 'exemption';
 
 // Simple Tooltip Component
 function Tooltip({ text, active }: { text: string; active?: boolean }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="group relative inline-block ml-1">
+    <div 
+        className="group relative inline-block ml-1"
+        onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+        }}
+        onMouseEnter={() => setIsOpen(true)}
+        onMouseLeave={() => setIsOpen(false)}
+    >
       <HelpCircle className={cn("size-3 cursor-help transition-colors", active ? "text-white/80" : "text-stone-400")} />
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-stone-900 text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl font-medium leading-relaxed">
+      <div className={cn(
+          "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-stone-900 text-white text-[10px] rounded-xl transition-opacity pointer-events-none z-50 shadow-2xl font-medium leading-relaxed",
+          isOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+      )}>
         {text}
         <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-stone-900" />
       </div>
@@ -87,16 +101,16 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     // Check if user is logged in
     if (!currentUser) {
       Swal.fire({
-        title: 'Login Required',
-        text: 'Please sign in to contact the agent about this property.',
+        title: 'Account Required',
+        text: 'Please create an account to contact the agent about this property.',
         icon: 'info',
         showCancelButton: true,
         confirmButtonColor: '#34495E',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sign In Now'
+        confirmButtonText: 'Create Account'
       }).then((result) => {
         if (result.isConfirmed) {
-          router.push('/login');
+          router.push('/register');
         }
       });
       return;
@@ -132,6 +146,30 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         icon: 'error',
         confirmButtonColor: '#E74C3C'
       });
+    }
+  };
+
+  const handleViewOriginalListing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!currentUser) {
+      Swal.fire({
+        title: 'Account Required',
+        text: 'Please create an account to view the original listing.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#34495E',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Create Account'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push('/register');
+        }
+      });
+      return;
+    }
+    
+    if (property?.externalListingUrl) {
+      window.open(property.externalListingUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -375,14 +413,12 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               
               {property.externalListingUrl && (
                   <div className="pt-2">
-                      <a 
-                          href={property.externalListingUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
+                      <button 
+                          onClick={handleViewOriginalListing}
                           className="w-full py-4 rounded-[32px] text-[10px] font-black uppercase tracking-[0.2em] bg-stone-100 text-stone-600 shadow-sm border border-stone-200 hover:bg-stone-200 transition-all flex items-center justify-center gap-2"
                       >
                           View Original Listing
-                      </a>
+                      </button>
                       <p className="text-[9px] font-bold text-stone-400 text-center mt-2 italic">View the listing on the real estate agent's website.</p>
                   </div>
               )}

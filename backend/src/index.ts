@@ -25,6 +25,7 @@ import { BlogModule } from "./modules/Blog/BlogModule";
 import { SystemSettingModule } from "./modules/SystemSetting/SystemSettingModule";
 import { RegionModule } from "./modules/Region/RegionModule";
 import { UploadModule } from "./modules/Upload/UploadModule";
+import { NewsletterModule } from "./modules/Newsletter/NewsletterModule";
 
 // Initialize the Ignitor Engine
 const ignitor = new IgnitorApp();
@@ -60,6 +61,7 @@ async function bootstrap() {
     ignitor.registerModule(new SystemSettingModule());
     ignitor.registerModule(new RegionModule());
     ignitor.registerModule(new UploadModule());
+    ignitor.registerModule(new NewsletterModule());
     // ignitor.registerModule(new ProductModule());
     AppLogger.info("✔ All modules registered successfully");
 

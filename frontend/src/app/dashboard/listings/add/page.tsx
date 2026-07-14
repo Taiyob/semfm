@@ -33,7 +33,7 @@ export default function AddPropertyPage() {
     description: '',
     price: '',
     estimatedRent: '', // New
-    yield: '0', // Calculated
+    yield: '6', // Calculated
     appreciation: '4.5', // System-controlled
     location: '',
     streetName: '', // New
@@ -115,10 +115,38 @@ export default function AddPropertyPage() {
     setFormData(prev => {
       const newData = { ...prev, [name]: value };
       
-      // Auto-calculate yield if price or rent changes and yield hasn't been overridden
-      if ((name === 'price' || name === 'estimatedRent') && !isYieldOverride) {
-        const { yieldValue } = calculateMetrics(Number(newData.price), Number(newData.estimatedRent));
-        newData.yield = yieldValue.toString();
+      const priceVal = Number(newData.price) || 0;
+      let rentVal = Number(newData.estimatedRent) || 0;
+      let yieldVal = Number(newData.yield) || 0;
+
+      if (name === 'price' || name === 'estimatedRent' || name === 'yield') {
+        if (!isRentOverride && !isYieldOverride) {
+          // Both auto: default to 6% yield
+          yieldVal = 6;
+          newData.yield = '6';
+          if (priceVal > 0) {
+            rentVal = Math.round((priceVal * 0.06) / 12);
+            newData.estimatedRent = rentVal.toString();
+          } else {
+            newData.estimatedRent = '';
+          }
+        } else if (!isYieldOverride && isRentOverride) {
+          // Rent manual, Yield auto
+          if (priceVal > 0 && rentVal > 0) {
+            yieldVal = ((rentVal * 12) / priceVal) * 100;
+            newData.yield = yieldVal.toFixed(2).replace(/\.00$/, '');
+          } else {
+            newData.yield = '0';
+          }
+        } else if (isYieldOverride && !isRentOverride) {
+          // Yield manual, Rent auto
+          if (priceVal > 0 && yieldVal > 0) {
+            rentVal = Math.round((priceVal * (yieldVal / 100)) / 12);
+            newData.estimatedRent = rentVal.toString();
+          } else {
+            newData.estimatedRent = '';
+          }
+        }
       }
 
       return newData;

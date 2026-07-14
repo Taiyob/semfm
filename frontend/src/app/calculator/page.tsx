@@ -1946,9 +1946,9 @@ function CalculatorContent() {
                                         <div className="space-y-6">
                                             <div className="flex justify-between items-end">
                                                 <h5 className="text-[10px] font-black uppercase tracking-widest text-stone-400">Projected Equity & Value Over Time</h5>
-                                                <div className="flex items-center gap-2 text-[#D4A373] cursor-pointer group/breakdown">
-                                                    <span className="text-[9px] font-black uppercase tracking-widest group-hover/breakdown:underline">Show breakdown</span>
-                                                    <ChevronDown className="size-3" />
+                                                <div onClick={() => setShowBreakdown(!showBreakdown)} className="flex items-center gap-2 text-[#D4A373] cursor-pointer group/breakdown">
+                                                    <span className="text-[9px] font-black uppercase tracking-widest group-hover/breakdown:underline">{showBreakdown ? 'Hide breakdown' : 'Show breakdown'}</span>
+                                                    <ChevronDown className={cn("size-3 transition-transform", showBreakdown && "rotate-180")} />
                                                 </div>
                                             </div>
                                             <div className="relative h-[340px] bg-white rounded-[40px] border border-stone-100 p-10 pr-6 overflow-hidden shadow-sm flex flex-col">
@@ -2031,8 +2031,13 @@ function CalculatorContent() {
                                                                     <span className="absolute top-full mt-4 text-[8px] font-black text-stone-300 uppercase whitespace-nowrap">
                                                                         {i === 0 ? "Year 0" : `Year ${i}`}
                                                                     </span>
-                                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-stone-900 text-white text-[9px] font-black px-3 py-1.5 rounded-xl opacity-0 group-hover/bar:opacity-100 transition-all scale-90 group-hover/bar:scale-100 whitespace-nowrap z-50 shadow-xl">
-                                                                        Total: €{Math.round(cashInvested + (formData.includeCashFlowROI ? p.cumulativeCashFlow : 0) + (formData.includeAppreciationROI ? p.cumulativeAppreciation : 0) + (formData.includePrincipalROI ? p.cumulativePrincipal : 0)).toLocaleString()}
+                                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-stone-900 text-white text-[9px] font-black p-3 rounded-xl opacity-0 group-hover/bar:opacity-100 transition-all scale-90 group-hover/bar:scale-100 whitespace-nowrap z-[100] shadow-xl space-y-1 text-left min-w-[140px]">
+                                                                        <div className="text-stone-400 border-b border-white/10 pb-1 mb-1">Year {i}</div>
+                                                                        {!formData.includePrincipalROI && <div className="text-[#D4A373]/80">Invested: €{Math.round(cashInvested).toLocaleString()}</div>}
+                                                                        {formData.includePrincipalROI && <div className="text-[#D4A373]/80">Principal: €{Math.round(cashInvested + p.cumulativePrincipal).toLocaleString()}</div>}
+                                                                        {formData.includeAppreciationROI && <div className="text-[#D4A373]">Appreciation: €{Math.round(p.cumulativeAppreciation).toLocaleString()}</div>}
+                                                                        {formData.includeCashFlowROI && <div className="text-emerald-400">Cash Flow: €{Math.round(p.cumulativeCashFlow).toLocaleString()}</div>}
+                                                                        <div className="pt-1 mt-1 border-t border-white/10 text-white">Total: €{Math.round(cashInvested + (formData.includeCashFlowROI ? p.cumulativeCashFlow : 0) + (formData.includeAppreciationROI ? p.cumulativeAppreciation : 0) + (formData.includePrincipalROI ? p.cumulativePrincipal : 0)).toLocaleString()}</div>
                                                                     </div>
                                                                 </div>
                                                             );
@@ -2040,6 +2045,40 @@ function CalculatorContent() {
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {showBreakdown && (
+                                                <div className="mt-4 p-6 bg-white rounded-[32px] border border-stone-100 shadow-sm overflow-x-auto">
+                                                    <table className="w-full text-left border-collapse min-w-[500px]">
+                                                        <thead>
+                                                            <tr className="border-b border-stone-100">
+                                                                <th className="py-3 px-4 text-[9px] font-black text-stone-400 uppercase tracking-widest">Year</th>
+                                                                <th className="py-3 px-4 text-[9px] font-black text-stone-400 uppercase tracking-widest">Principal / Invested</th>
+                                                                <th className="py-3 px-4 text-[9px] font-black text-stone-400 uppercase tracking-widest">Appreciation</th>
+                                                                <th className="py-3 px-4 text-[9px] font-black text-stone-400 uppercase tracking-widest">Cash Flow</th>
+                                                                <th className="py-3 px-4 text-[9px] font-black text-[#D4A373] uppercase tracking-widest">Total Equity</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="text-xs font-bold text-[#2C3E50]">
+                                                            {results.projection.map((p, i) => {
+                                                                const cashInvested = results.cashInvested || 0;
+                                                                const pVal = formData.includePrincipalROI ? p.cumulativePrincipal : 0;
+                                                                const aVal = formData.includeAppreciationROI ? Math.max(0, p.cumulativeAppreciation) : 0;
+                                                                const cVal = formData.includeCashFlowROI ? Math.max(0, p.cumulativeCashFlow) : 0;
+                                                                const total = cashInvested + pVal + aVal + cVal;
+                                                                return (
+                                                                    <tr key={i} className="border-b border-stone-50 hover:bg-stone-50/50">
+                                                                        <td className="py-3 px-4">{i}</td>
+                                                                        <td className="py-3 px-4 text-[#D4A373]/80">€{Math.round(cashInvested + pVal).toLocaleString()}</td>
+                                                                        <td className="py-3 px-4 text-[#D4A373]">€{Math.round(aVal).toLocaleString()}</td>
+                                                                        <td className="py-3 px-4 text-[#2C3E50]">€{Math.round(cVal).toLocaleString()}</td>
+                                                                        <td className="py-3 px-4 font-black">€{Math.round(total).toLocaleString()}</td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Bottom: Metrics */}
@@ -2121,7 +2160,7 @@ function CalculatorContent() {
                                                 "text-4xl font-black tracking-tighter",
                                                 getStatusColor(Number(formData.estimatedRent) || 0, true)
                                             )}>
-                                                €{(Number(formData.estimatedRent) || 0).toLocaleString()}<span className="text-lg text-stone-300 ml-2">/mo</span>
+                                                €{(Number(formData.estimatedRent) || 0).toLocaleString()}<span className="text-lg ml-2">/mo</span>
                                             </div>
                                         </div>
 
@@ -2146,7 +2185,7 @@ function CalculatorContent() {
                                                     "text-3xl font-black tracking-tighter",
                                                     getStatusColor(results.grossYield, (step === 'gross_yield' || step === 'net_profit' || step === 'roi' || step === 'projection'))
                                                 )}>
-                                                    {results.grossYield.toFixed(1)}<span className="text-lg text-stone-200 ml-2">%</span>
+                                                    {results.grossYield.toFixed(1)}<span className="text-lg ml-2">%</span>
                                                 </div>
                                                 <div className={cn(
                                                     "text-sm font-bold tracking-tight",

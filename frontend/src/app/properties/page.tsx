@@ -514,7 +514,7 @@ export default function PropertiesPage() {
                                         )}
                                         <div className="absolute top-3 left-3">
                                             <span className="px-3 py-1.5 bg-[#D4A373] text-white rounded-lg text-[10px] font-black shadow-sm uppercase tracking-wider">
-                                                {property.yield}% Gross Yield
+                                                {Number(property.yield).toFixed(1)}% Gross Yield
                                             </span>
                                         </div>
 

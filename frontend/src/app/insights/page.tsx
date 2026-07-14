@@ -69,13 +69,54 @@ const DUMMY_ARTICLES = [
 
 const countries = ['All Countries', 'Portugal', 'Spain', 'Greece'];
 const categories = ['All Insights', 'Tax & Regulation', 'Market Trends', 'Investment Strategy', 'Regional Guide'];
+const sortOptions = ['Newest to Oldest', 'Oldest to Newest'];
 
 export default function InsightsPage() {
   const [selectedCountry, setSelectedCountry] = useState('All Countries');
   const [selectedCategory, setSelectedCategory] = useState('All Insights');
+  const [sortOrder, setSortOrder] = useState('Newest to Oldest');
   const [showSubscribe, setShowSubscribe] = useState(false);
   const [articles, setArticles] = useState<any[]>(DUMMY_ARTICLES);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [subEmail, setSubEmail] = useState('');
+  const [subMarkets, setSubMarkets] = useState<string[]>([]);
+  const [subTopics, setSubTopics] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const toggleMarket = (market: string) => {
+      setSubMarkets(prev => prev.includes(market) ? prev.filter(m => m !== market) : [...prev, market]);
+  };
+
+  const toggleTopic = (topic: string) => {
+      setSubTopics(prev => prev.includes(topic) ? prev.filter(t => t !== topic) : [...prev, topic]);
+  };
+
+  const handleSubscribe = async () => {
+      if (!subEmail) return alert('Please enter your email');
+      setIsSubmitting(true);
+      try {
+          const res = await fetch('http://localhost:5000/api/v1/newsletter/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: subEmail, markets: subMarkets, topics: subTopics })
+          });
+          const data = await res.json();
+          if (data.success) {
+              alert('Thanks for subscribing to Horizon Intelligence!');
+              setShowSubscribe(false);
+              setSubEmail('');
+              setSubMarkets([]);
+              setSubTopics([]);
+          } else {
+              alert(data.message || 'Failed to subscribe');
+          }
+      } catch (error) {
+          alert('An error occurred. Please try again later.');
+      } finally {
+          setIsSubmitting(false);
+      }
+  };
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -115,12 +156,24 @@ export default function InsightsPage() {
   }, []);
 
   const filteredArticles = useMemo(() => {
-    return articles.filter(a => {
+    let result = articles.filter(a => {
         const matchesCountry = selectedCountry === 'All Countries' || a.country === selectedCountry;
         const matchesCategory = selectedCategory === 'All Insights' || a.category === selectedCategory;
         return matchesCountry && matchesCategory;
     });
-  }, [selectedCountry, selectedCategory, articles]);
+
+    result.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        if (sortOrder === 'Newest to Oldest') {
+            return dateB - dateA;
+        } else {
+            return dateA - dateB;
+        }
+    });
+
+    return result;
+  }, [selectedCountry, selectedCategory, sortOrder, articles]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 font-montserrat hero-gradient min-h-screen">
@@ -150,7 +203,7 @@ export default function InsightsPage() {
       <div className="grid lg:grid-cols-12 gap-16">
         
         {/* Main Content */}
-        <div className="lg:col-span-8 space-y-12">
+        <div className="lg:col-span-12 space-y-12">
             
             {/* Filter Bar */}
             <div className="flex flex-wrap gap-4 p-4 bg-white rounded-[32px] border border-stone-100 shadow-xl shadow-stone-200/40">
@@ -170,6 +223,15 @@ export default function InsightsPage() {
                         className="w-full bg-stone-50 rounded-2xl px-6 py-4 text-[10px] font-black tracking-widest text-[#2C3E50] outline-none cursor-pointer"
                     >
                         {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                    <select 
+                        value={sortOrder}
+                        onChange={(e) => setSortOrder(e.target.value)}
+                        className="w-full bg-stone-50 rounded-2xl px-6 py-4 text-[10px] font-black tracking-widest text-[#2C3E50] outline-none cursor-pointer"
+                    >
+                        {sortOptions.map(o => <option key={o} value={o}>{o}</option>)}
                     </select>
                 </div>
             </div>
@@ -233,45 +295,7 @@ export default function InsightsPage() {
             )}
         </div>
 
-        {/* Sidebar */}
-        <aside className="lg:col-span-4 space-y-10">
-            {/* Structured Insights Info */}
-            <div className="bg-[#2C3E50] p-10 rounded-[40px] text-white space-y-8">
-                <div className="size-14 bg-white/5 rounded-2xl flex items-center justify-center">
-                    <TrendingUp className="size-7 text-[#D4A373]" />
-                </div>
-                <h4 className="text-3xl font-black leading-tight tracking-tighter">Research <br /><span className="text-[#D4A373]">Archives</span></h4>
-                <p className="text-stone-400 text-xs font-bold leading-relaxed italic">
-                    Filtering and softening systems are designed to foster exploration of the full data archive and verified market benchmarks.
-                </p>
-                <div className="space-y-4">
-                    <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest">
-                        <CheckCircle2 className="size-4 text-[#D4A373]" /> 
-                        <span>Legal Compliance</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest">
-                        <CheckCircle2 className="size-4 text-[#D4A373]" /> 
-                        <span>Market Alpha</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest">
-                        <CheckCircle2 className="size-4 text-[#D4A373]" /> 
-                        <span>Regional Signal</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Newsletter CTA */}
-            <div className="bg-white border border-stone-100 p-10 rounded-[48px] shadow-2xl shadow-stone-200/50 space-y-8">
-                <div className="space-y-2">
-                    <h3 className="text-xl font-black text-[#2C3E50]">Signal Alerts</h3>
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Get notified 48h before public release.</p>
-                </div>
-                <div className="space-y-4">
-                    <input type="email" placeholder="Work Email..." className="w-full bg-stone-50 border-stone-100 rounded-2xl p-5 text-sm font-bold outline-none focus:ring-2 focus:ring-[#D4A373] transition-all" />
-                    <button className="w-full py-5 bg-[#2C3E50] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-[#D4A373] transition-all">Enable My Signal</button>
-                </div>
-            </div>
-        </aside>
+        {/* Sidebar removed as per client request */}
       </div>
 
       {/* Subscription Preference Popup */}
@@ -291,7 +315,13 @@ export default function InsightsPage() {
                                 <label className="text-[10px] font-black uppercase tracking-widest text-[#D4A373]">Monitor Country</label>
                                 <div className="grid grid-cols-2 gap-3">
                                     {countries.slice(1).map(c => (
-                                        <button key={c} className="py-4 border-2 border-stone-100 rounded-2xl text-[10px] font-black uppercase text-stone-400 hover:border-[#2C3E50] hover:text-[#2C3E50] transition-all">{c}</button>
+                                        <button 
+                                            key={c} 
+                                            onClick={() => toggleMarket(c)}
+                                            className={`py-4 border-2 rounded-2xl text-[10px] font-black uppercase transition-all ${subMarkets.includes(c) ? 'border-[#2C3E50] text-white bg-[#2C3E50]' : 'border-stone-100 text-stone-400 hover:border-[#2C3E50] hover:text-[#2C3E50]'}`}
+                                        >
+                                            {c}
+                                        </button>
                                     ))}
                                 </div>
                             </div>
@@ -299,13 +329,31 @@ export default function InsightsPage() {
                                 <label className="text-[10px] font-black uppercase tracking-widest text-[#D4A373]">Signal Category</label>
                                 <div className="grid grid-cols-2 gap-3">
                                     {categories.slice(1).map(c => (
-                                        <button key={c} className="py-4 border-2 border-stone-100 rounded-2xl text-[10px] font-black uppercase text-stone-400 hover:border-[#2C3E50] hover:text-[#2C3E50] transition-all">{c}</button>
+                                        <button 
+                                            key={c} 
+                                            onClick={() => toggleTopic(c)}
+                                            className={`py-4 border-2 rounded-2xl text-[10px] font-black uppercase transition-all ${subTopics.includes(c) ? 'border-[#2C3E50] text-white bg-[#2C3E50]' : 'border-stone-100 text-stone-400 hover:border-[#2C3E50] hover:text-[#2C3E50]'}`}
+                                        >
+                                            {c}
+                                        </button>
                                     ))}
                                 </div>
                             </div>
                             <div className="space-y-4 pt-4">
-                                <input type="email" placeholder="Enter your email address" className="w-full bg-stone-50 rounded-2xl p-5 text-sm font-bold outline-none border-2 border-transparent focus:border-[#D4A373] transition-all" />
-                                <button className="w-full py-6 bg-[#2C3E50] text-white rounded-[24px] font-black uppercase text-[11px] tracking-[0.2em] hover:bg-[#D4A373] transition-all shadow-xl shadow-[#2C3E50]/20">Activate My Intelligence</button>
+                                <input 
+                                    type="email" 
+                                    value={subEmail}
+                                    onChange={(e) => setSubEmail(e.target.value)}
+                                    placeholder="Enter your email address" 
+                                    className="w-full bg-stone-50 rounded-2xl p-5 text-sm font-bold outline-none border-2 border-transparent focus:border-[#D4A373] transition-all" 
+                                />
+                                <button 
+                                    onClick={handleSubscribe}
+                                    disabled={isSubmitting}
+                                    className="w-full py-6 bg-[#2C3E50] text-white rounded-[24px] font-black uppercase text-[11px] tracking-[0.2em] hover:bg-[#D4A373] transition-all shadow-xl shadow-[#2C3E50]/20 disabled:opacity-50"
+                                >
+                                    {isSubmitting ? 'Activating...' : 'Activate My Intelligence'}
+                                </button>
                             </div>
                         </div>
                     </div>
