@@ -10,6 +10,9 @@ import { subscriptionApi } from './features/subscription/subscriptionApi';
 import { alertsApi } from './features/alerts/alertsApi';
 import { dashboardApi } from './features/dashboard/dashboardApi';
 import { countryApi } from './features/country/countryApi';
+import { newsletterApi } from './features/newsletter/newsletterApi';
+import { blogApi } from './features/blog/blogApi';
+import { clubApi } from './features/club/clubApi';
 import {
   persistReducer,
   persistStore,
@@ -59,6 +62,9 @@ export const store = configureStore({
     [alertsApi.reducerPath]: alertsApi.reducer,
     [dashboardApi.reducerPath]: dashboardApi.reducer,
     [countryApi.reducerPath]: countryApi.reducer,
+    [newsletterApi.reducerPath]: newsletterApi.reducer,
+    [blogApi.reducerPath]: blogApi.reducer,
+    [clubApi.reducerPath]: clubApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -75,7 +81,10 @@ export const store = configureStore({
       subscriptionApi.middleware,
       alertsApi.middleware,
       dashboardApi.middleware,
-      countryApi.middleware
+      countryApi.middleware,
+      newsletterApi.middleware,
+      blogApi.middleware,
+      clubApi.middleware
     ]),
 });
 

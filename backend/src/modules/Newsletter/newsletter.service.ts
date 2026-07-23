@@ -29,4 +29,10 @@ export class NewsletterService {
             }
         });
     }
+
+    async getAllSubscribers() {
+        return await this.prisma.newsletterSubscriber.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+    }
 }

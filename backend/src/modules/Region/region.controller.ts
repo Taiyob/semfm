@@ -45,9 +45,31 @@ const deleteRegion = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const createNeighborhood = catchAsync(async (req: Request, res: Response) => {
+    const result = await regionService.createNeighborhood(req.body);
+    sendResponse(res, {
+        statusCode: 201,
+        success: true,
+        message: 'Neighborhood created successfully',
+        data: result,
+    });
+});
+
+const deleteNeighborhood = catchAsync(async (req: Request, res: Response) => {
+    const result = await regionService.deleteNeighborhood(req.params.id);
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: 'Neighborhood deleted successfully',
+        data: result,
+    });
+});
+
 export const RegionController = {
     getAllRegions,
     createRegion,
     updateRegion,
     deleteRegion,
+    createNeighborhood,
+    deleteNeighborhood,
 };

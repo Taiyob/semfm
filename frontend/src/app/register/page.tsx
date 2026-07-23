@@ -60,40 +60,8 @@ export default function RegisterPage() {
         <div className="bg-white p-8 md:p-16 rounded-[64px] shadow-2xl shadow-slate-200/50 border border-slate-100 grid md:grid-cols-2 gap-20">
           
           {/* Left Column: Info */}
-          <div className="space-y-12 hidden md:block border-r border-slate-100 pr-20">
+          <div className="hidden md:flex items-center justify-center border-r border-slate-100 pr-20">
             <Logo />
-            <div className="space-y-10">
-              <div className="flex gap-6">
-                 <div className="size-14 rounded-[20px] bg-stone-50 flex items-center justify-center shrink-0 border-2 border-stone-100">
-                    <TrendingUp className="size-7 text-[#34495E]" />
-                 </div>
-                 <div className="space-y-2">
-                    <h4 className="font-extrabold text-[#2C3E50] tracking-tight">Strategic intelligence</h4>
-                    <p className="text-stone-500 text-sm leading-relaxed font-bold">Access real-time yield analysis for Western Europe's top cities.</p>
-                 </div>
-              </div>
-              <div className="flex gap-6">
-                 <div className="size-14 rounded-[20px] bg-stone-50 flex items-center justify-center shrink-0 border-2 border-stone-100">
-                    <ShieldCheck className="size-7 text-stone-400" />
-                 </div>
-                 <div className="space-y-2">
-                    <h4 className="font-extrabold text-[#2C3E50] tracking-tight">Verified listings</h4>
-                    <p className="text-stone-500 text-sm leading-relaxed font-bold">Every property is vetted for legal compliance and yield accuracy.</p>
-                 </div>
-              </div>
-            </div>
-            
-            <div className="bg-slate-50 p-8 rounded-[32px] border-2 border-slate-100 mt-12 relative overflow-hidden">
-                <p className="text-base font-black text-slate-400 italic mb-6 leading-relaxed relative z-10">"The most transparent data-driven platform I've used for my European portfolio."</p>
-                <div className="flex items-center gap-4 relative z-10">
-                    <div className="size-10 rounded-full bg-slate-200" />
-                    <div>
-                        <div className="text-sm font-black text-[#2C3E50]">Elena Rossi</div>
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Investor</div>
-                    </div>
-                </div>
-                <div className="absolute top-0 right-0 size-32 bg-blue-500/5 rounded-full blur-2xl" />
-            </div>
           </div>
 
           {/* Right Column: Form */}

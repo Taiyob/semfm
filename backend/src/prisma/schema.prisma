@@ -406,8 +406,21 @@ model Region {
   country   Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
   baseRent  Float
   isActive  Boolean  @default(true)
+  neighborhoods Neighborhood[]
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Neighborhood {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  regionId  String   @db.Uuid
+  region    Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([name, regionId])
 }
 
 

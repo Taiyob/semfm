@@ -15,6 +15,9 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useGetBlogBySlugQuery } from '@/lib/store/features/blog/blogApi';
+import { useSubscribeNewsletterMutation } from '@/lib/store/features/newsletter/newsletterApi';
+import Swal from 'sweetalert2';
 
 const MOCK_ARTICLES: Record<string, any> = {
   'lisbon-real-estate-forecast-2026': {
@@ -70,44 +73,61 @@ const MOCK_ARTICLES: Record<string, any> = {
 };
 
 export default function ArticlePage() {
-  const { slug } = useParams();
+  const params = useParams();
+  const [email, setEmail] = useState('');
+  const [subscribeNewsletter, { isLoading: isSubscribing }] = useSubscribeNewsletterMutation();
+  const slug = typeof params.slug === 'string' ? params.slug : Array.isArray(params.slug) ? params.slug[0] : '';
+  
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    try {
+      await subscribeNewsletter({ email, markets: ['Insights'], topics: ['Yield Report'] }).unwrap();
+      Swal.fire({
+        icon: 'success',
+        title: 'Subscribed!',
+        text: 'You will receive our market analysis soon.',
+        confirmButtonColor: '#34495E',
+      });
+      setEmail('');
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Subscription Failed',
+        text: 'There was an error subscribing. Please try again.',
+        confirmButtonColor: '#34495E',
+      });
+    }
+  };
+
   const [article, setArticle] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchArticle = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/api/v1/blog/post/${slug}`);
-        if (!res.ok) throw new Error('Not found');
-        const data = await res.json();
-        
-        if (data.success && data.data) {
-          setArticle({
-            title: data.data.title,
-            category: data.data.category,
-            author: data.data.author,
-            role: 'Author',
-            date: format(new Date(data.data.createdAt), 'MMMM d, yyyy'),
-            readTime: data.data.readTime || '5 min read',
-            image: data.data.imageUrl || '/assets/portugal_market_insights_thumbnail_1775343038691.png',
-            body: data.data.content,
-          });
-        } else {
-          // Fallback to dummy
-          setArticle(MOCK_ARTICLES[slug as string] || null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch article:', error);
-        setArticle(MOCK_ARTICLES[slug as string] || null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const { data: blogResponse, isLoading: isBlogLoading, isSuccess, isError } = useGetBlogBySlugQuery(slug as string, { skip: !slug });
 
-    if (slug) {
-      fetchArticle();
+  useEffect(() => {
+    if (isBlogLoading) {
+      setIsLoading(true);
+      return;
     }
-  }, [slug]);
+    
+    if (isSuccess && blogResponse?.data) {
+      setArticle({
+        title: blogResponse.data.title,
+        category: blogResponse.data.category,
+        author: blogResponse.data.author,
+        role: 'Author',
+        date: format(new Date(blogResponse.data.createdAt), 'MMMM d, yyyy'),
+        readTime: blogResponse.data.readTime || '5 min read',
+        image: blogResponse.data.imageUrl || '/assets/portugal_market_insights_thumbnail_1775343038691.png',
+        body: blogResponse.data.content,
+      });
+    } else {
+      setArticle(MOCK_ARTICLES[slug as string] || null);
+    }
+    setIsLoading(false);
+  }, [blogResponse, isBlogLoading, isSuccess, isError, slug]);
 
   if (isLoading) {
     return (
@@ -186,12 +206,26 @@ export default function ArticlePage() {
                 <div className="section-tag !bg-white/10 !text-white !border-white/20">Market Insider</div>
                 <h2 className="text-3xl font-black leading-tight">Get the full 2026 <span className="text-[#34495E]">Yield Report</span> PDF.</h2>
                 <p className="text-slate-500 text-sm font-bold leading-relaxed">Join 12,000+ investors receiving our proprietary market analysis and off-market deals.</p>
-                <form className="flex flex-col sm:flex-row gap-4">
+                <form className="flex flex-col sm:flex-row gap-4" onSubmit={handleSubscribe}>
                     <div className="relative flex-grow">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-slate-500" />
-                        <input type="email" placeholder="name@company.com" className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[#34495E] outline-none transition-all font-bold" required />
+                        <input 
+                          type="email" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="name@company.com" 
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[#34495E] outline-none transition-all font-bold" 
+                          required 
+                          disabled={isSubscribing}
+                        />
                     </div>
-                    <button className="px-8 py-4 bg-[#34495E] text-white font-black rounded-2xl hover:bg-[#2C3E50] shadow-xl shadow-[#34495E]/20 text-xs uppercase tracking-widest">Send Report</button>
+                    <button 
+                      type="submit" 
+                      disabled={isSubscribing}
+                      className="px-8 py-4 bg-[#34495E] text-white font-black rounded-2xl hover:bg-[#2C3E50] shadow-xl shadow-[#34495E]/20 text-xs uppercase tracking-widest disabled:opacity-50"
+                    >
+                      {isSubscribing ? 'Sending...' : 'Send Report'}
+                    </button>
                 </form>
                 <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                     <CheckCircle2 className="size-4 text-emerald-500" /> Free market guide included.

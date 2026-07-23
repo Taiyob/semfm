@@ -4,6 +4,7 @@ import {
   useGetPropertyByIdQuery, 
   useUpdatePropertyMutation 
 } from '@/lib/store/features/property/propertyApi';
+import { useGetRegionsQuery } from '@/lib/store/features/country/countryApi';
 import { 
   Building2, 
   Euro, 
@@ -22,6 +23,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'motion/react';
 import Swal from 'sweetalert2';
+import { calculateEstimatedRent } from '@/lib/calculations';
 
 export default function EditPropertyPage() {
   const router = useRouter();
@@ -30,6 +32,8 @@ export default function EditPropertyPage() {
   
   const { data: propertyResponse, isLoading: isFetching } = useGetPropertyByIdQuery(id as string);
   const [updateProperty, { isLoading: isUpdating }] = useUpdatePropertyMutation();
+  const { data: regionsRes } = useGetRegionsQuery();
+  const regionsList = regionsRes?.data || [];
   
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -38,8 +42,10 @@ export default function EditPropertyPage() {
     title: '',
     description: '',
     price: '',
+    estimatedRent: '',
     yield: '',
     appreciation: '4.5',
+    country: '',
     location: '',
     type: 'Apartment',
     sqm: '',
@@ -50,18 +56,38 @@ export default function EditPropertyPage() {
     outdoorSpace: 'NONE',
     energyLabel: 'C',
     externalListingUrl: '',
+    streetName: '',
+    bathrooms: '1',
+    exteriorSize: '',
+    plotSize: '',
+    yearBuilt: new Date().getFullYear().toString(),
+    countryId: undefined,
+    features: [] as string[],
+    photos: [] as string[],
   });
 
   // Populate form data when property data is fetched
   useEffect(() => {
-    if (propertyResponse?.data) {
+    if (propertyResponse?.data && regionsList.length > 0) {
         const p = propertyResponse.data;
+        
+        // Find the country based on the property's location (city) if the backend didn't provide country name directly
+        let foundCountry = p.country?.name || '';
+        if (!foundCountry && p.location) {
+          const matchedRegion = regionsList.find(r => r.name === p.location);
+          if (matchedRegion && matchedRegion.country) {
+            foundCountry = matchedRegion.country.name;
+          }
+        }
+
         setFormData({
             title: p.title || '',
             description: p.description || '',
             price: p.price !== undefined && p.price !== null ? String(p.price) : '',
+            estimatedRent: p.estimatedRent !== undefined && p.estimatedRent !== null ? String(p.estimatedRent) : '',
             yield: p.yield !== undefined && p.yield !== null ? String(p.yield) : '',
             appreciation: p.appreciation !== undefined && p.appreciation !== null ? String(p.appreciation) : '4.5',
+            country: foundCountry,
             location: p.location || '',
             type: p.type || 'Apartment',
             sqm: p.sqm !== undefined && p.sqm !== null ? String(p.sqm) : '',
@@ -72,14 +98,90 @@ export default function EditPropertyPage() {
             outdoorSpace: p.outdoorSpace || 'NONE',
             energyLabel: p.energyLabel || 'C',
             externalListingUrl: p.externalListingUrl || '',
+            streetName: p.streetName || '',
+            bathrooms: p.bathrooms !== undefined && p.bathrooms !== null ? String(p.bathrooms) : '1',
+            exteriorSize: p.exteriorSize !== undefined && p.exteriorSize !== null ? String(p.exteriorSize) : '',
+            plotSize: p.plotSize !== undefined && p.plotSize !== null ? String(p.plotSize) : '',
+            yearBuilt: p.yearBuilt !== undefined && p.yearBuilt !== null ? String(p.yearBuilt) : new Date().getFullYear().toString(),
+            countryId: p.countryId || undefined,
+            features: p.features || [],
+            photos: p.photos || [],
         });
     }
-  }, [propertyResponse]);
+  }, [propertyResponse, regionsList]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      
+      const priceVal = Number(newData.price) || 0;
+
+      if (name === 'country') {
+        newData.location = '';
+        newData.region = '';
+      }
+      if (name === 'location') {
+        newData.region = '';
+      }
+
+      return newData;
+    });
   };
+
+  useEffect(() => {
+    let baseRent = 0;
+    if (formData.location && regionsList.length > 0) {
+      const foundCity = regionsList.find((r: any) => r.name === formData.location);
+      if (foundCity) {
+        baseRent = foundCity.baseRent;
+      }
+    }
+
+    if (baseRent > 0 && formData.sqm && formData.price) {
+      // In edit form, we might not have all fields yet, but we provide sensible defaults mapping
+      const finalRent = calculateEstimatedRent({
+        baseRent,
+        size: Number(formData.sqm) || 0,
+        bedrooms: Number(formData.bedrooms) || 0,
+        areaType: formData.locationType === 'CENTRE' ? 'Centre' : formData.locationType === 'SEMI_CENTRE' ? 'Semi-Centre' : 'Outside Centre',
+        yearBuilt: Number(formData.yearBuilt) || 0,
+        // Using sensible defaults for edit form fields that aren't fully featured here if missing
+        outdoorSpace: formData.outdoorSpace === 'NONE' ? 'None' : formData.outdoorSpace === 'BALCONY' ? 'Balcony' : formData.outdoorSpace === 'GARDEN' ? 'Garden' : 'Terrace',
+        hasParking: false, // Or map if we add features array
+        energyLabel: formData.energyLabel || 'C',
+        hasElevator: false, 
+        propertyCondition: formData.condition || 'Standard',
+        multipliers: null
+      });
+
+      const calculatedYield = ((finalRent * 12) / Number(formData.price)) * 100;
+      const calculatedYieldStr = calculatedYield.toFixed(2).replace(/\.00$/, '');
+      
+      setFormData(prev => {
+        if (prev.estimatedRent !== String(finalRent) || prev.yield !== calculatedYieldStr) {
+          return {
+            ...prev,
+            estimatedRent: String(finalRent),
+            yield: calculatedYieldStr
+          };
+        }
+        return prev;
+      });
+    }
+  }, [
+    formData.location, 
+    formData.sqm, 
+    formData.bedrooms, 
+    formData.locationType, 
+    formData.yearBuilt, 
+    formData.outdoorSpace, 
+    formData.energyLabel, 
+    formData.condition, 
+    formData.price,
+    regionsList
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +197,7 @@ export default function EditPropertyPage() {
         title: formData.title,
         description: formData.description,
         price: parseFloat(formData.price) || 0,
+        estimatedRent: parseFloat(formData.estimatedRent) || undefined,
         yield: parseFloat(formData.yield) || 0,
         appreciation: parseFloat(formData.appreciation) || 0,
         location: formData.location,
@@ -211,8 +314,8 @@ export default function EditPropertyPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Net Yield (%)</label>
-                  <input required type="number" step="0.1" name="yield" value={formData.yield} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="5.4" />
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Gross Yield (%)</label>
+                  <input readOnly type="number" name="yield" value={formData.yield} className="w-full px-6 py-4 bg-stone-100/50 border border-transparent rounded-2xl text-sm font-bold text-[#2C3E50] outline-none cursor-not-allowed opacity-80" placeholder="Auto Calculated" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Appreciation (%)</label>
@@ -237,13 +340,32 @@ export default function EditPropertyPage() {
                  <h3 className="text-lg font-black text-[#2C3E50]">Location & Specs</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Country</label>
+                  <select required name="country" value={formData.country} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] outline-none appearance-none cursor-pointer focus:bg-white focus:border-[#34495E] transition-all">
+                    <option value="" disabled>Select a country</option>
+                    {Array.from(new Set(regionsList.map((r: any) => r.country.name))).map((cName: any) => (
+                      <option key={cName} value={cName}>{cName}</option>
+                    ))}
+                  </select>
+                </div>
                  <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">City</label>
-                  <input required type="text" name="location" value={formData.location} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="Lisbon, Portugal" />
+                  <select required name="location" value={formData.location} onChange={handleChange} disabled={!formData.country} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] outline-none appearance-none cursor-pointer focus:bg-white focus:border-[#34495E] transition-all disabled:opacity-50">
+                    <option value="" disabled>Select a city</option>
+                    {regionsList.filter((r: any) => r.country.name === formData.country).map((r: any) => (
+                      <option key={r.name} value={r.name}>{r.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Neighborhood</label>
-                  <input type="text" name="region" value={formData.region} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="Alcantara" />
+                  <select required name="region" value={formData.region} onChange={handleChange} disabled={!formData.location} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] outline-none appearance-none cursor-pointer focus:bg-white focus:border-[#34495E] transition-all disabled:opacity-50">
+                    <option value="" disabled>Select a neighborhood</option>
+                    {regionsList.find((r: any) => r.name === formData.location)?.neighborhoods?.map((n: any) => (
+                      <option key={n.name} value={n.name}>{n.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Net Area (sqm)</label>
@@ -326,7 +448,7 @@ export default function EditPropertyPage() {
                     </div>
                     <div>
                       <p className="text-[9px] font-black text-stone-400 uppercase tracking-tighter">Yield</p>
-                      <p className="text-sm font-black text-[#2C3E50]">{formData.yield}%</p>
+                      <p className="text-sm font-black text-[#2C3E50]">{formData.yield || '0'}%</p>
                     </div>
                     <div>
                       <p className="text-[9px] font-black text-stone-400 uppercase tracking-tighter">Appreciation</p>

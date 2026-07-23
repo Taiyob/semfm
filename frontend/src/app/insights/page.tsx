@@ -14,6 +14,9 @@ import {
   Mail
 } from 'lucide-react';
 import { format } from 'date-fns';
+import Swal from 'sweetalert2';
+import { useSubscribeNewsletterMutation } from '@/lib/store/features/newsletter/newsletterApi';
+import { useGetBlogsQuery } from '@/lib/store/features/blog/blogApi';
 
 const DUMMY_ARTICLES = [
   {
@@ -79,6 +82,9 @@ export default function InsightsPage() {
   const [articles, setArticles] = useState<any[]>(DUMMY_ARTICLES);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { data: blogsResponse, isLoading: isBlogsLoading, isSuccess } = useGetBlogsQuery({});
+  const [subscribeNewsletter] = useSubscribeNewsletterMutation();
+
   const [subEmail, setSubEmail] = useState('');
   const [subMarkets, setSubMarkets] = useState<string[]>([]);
   const [subTopics, setSubTopics] = useState<string[]>([]);
@@ -93,67 +99,52 @@ export default function InsightsPage() {
   };
 
   const handleSubscribe = async () => {
-      if (!subEmail) return alert('Please enter your email');
+      if (!subEmail) return Swal.fire({ title: 'Error', text: 'Please enter your email', icon: 'error', confirmButtonColor: '#2C3E50' });
       setIsSubmitting(true);
       try {
-          const res = await fetch('http://localhost:5000/api/v1/newsletter/subscribe', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: subEmail, markets: subMarkets, topics: subTopics })
-          });
-          const data = await res.json();
-          if (data.success) {
-              alert('Thanks for subscribing to Horizon Intelligence!');
+          const res = await subscribeNewsletter({ email: subEmail, markets: subMarkets, topics: subTopics }).unwrap();
+          if (res.success) {
+              Swal.fire({ title: 'Success!', text: 'Thanks for subscribing to Horizon Intelligence!', icon: 'success', confirmButtonColor: '#2C3E50' });
               setShowSubscribe(false);
               setSubEmail('');
               setSubMarkets([]);
               setSubTopics([]);
           } else {
-              alert(data.message || 'Failed to subscribe');
+              Swal.fire({ title: 'Error', text: res.message || 'Failed to subscribe', icon: 'error', confirmButtonColor: '#2C3E50' });
           }
-      } catch (error) {
-          alert('An error occurred. Please try again later.');
+      } catch (error: any) {
+          Swal.fire({ title: 'Error', text: error?.data?.message || 'An error occurred. Please try again later.', icon: 'error', confirmButtonColor: '#2C3E50' });
       } finally {
           setIsSubmitting(false);
       }
   };
 
   useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/api/v1/blog');
-        const data = await res.json();
-        
-        if (data.success && data.data && data.data.length > 0) {
-          // Map backend data to frontend structure
-          const formattedBlogs = data.data.map((blog: any) => ({
-            id: blog.id,
-            slug: blog.slug,
-            title: blog.title,
-            excerpt: blog.excerpt || blog.content.substring(0, 100) + '...',
-            author: blog.author,
-            date: format(new Date(blog.createdAt), 'MMMM d, yyyy'),
-            readTime: blog.readTime || '5 min read',
-            category: blog.category,
-            country: blog.country || 'Global',
-            image: blog.imageUrl || '/assets/portugal_market_insights_thumbnail_1775343038691.png',
-            featured: blog.isFeatured || false,
-          }));
-          setArticles(formattedBlogs);
-        } else {
-          // Fallback to dummy data
-          setArticles(DUMMY_ARTICLES);
-        }
-      } catch (error) {
-        console.error('Failed to fetch blogs:', error);
-        setArticles(DUMMY_ARTICLES);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBlogs();
-  }, []);
+    if (isBlogsLoading) {
+      setIsLoading(true);
+      return;
+    }
+    
+    if (isSuccess && blogsResponse?.data && blogsResponse.data.length > 0) {
+      const formattedBlogs = blogsResponse.data.map((blog: any) => ({
+        id: blog.id,
+        slug: blog.slug,
+        title: blog.title,
+        excerpt: blog.excerpt || blog.content.substring(0, 100) + '...',
+        author: blog.author,
+        date: format(new Date(blog.createdAt), 'MMMM d, yyyy'),
+        readTime: blog.readTime || '5 min read',
+        category: blog.category,
+        country: blog.country || 'Global',
+        image: blog.imageUrl || '/assets/portugal_market_insights_thumbnail_1775343038691.png',
+        featured: blog.isFeatured || false,
+      }));
+      setArticles(formattedBlogs);
+    } else {
+      setArticles(DUMMY_ARTICLES);
+    }
+    setIsLoading(false);
+  }, [blogsResponse, isBlogsLoading, isSuccess]);
 
   const filteredArticles = useMemo(() => {
     let result = articles.filter(a => {

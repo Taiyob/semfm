@@ -40,7 +40,7 @@ import {
     X
 } from 'lucide-react';
 import { GatedData } from '@/components/gated-data';
-import { calculateResidentialIMT, calculateAcquisitionBreakdown } from '@/lib/calculations';
+import { calculateResidentialIMT, calculateAcquisitionBreakdown, calculateEstimatedRent } from '@/lib/calculations';
 import {
     useSaveCalculationMutation,
     useGetMyCalculationsQuery,
@@ -217,125 +217,19 @@ function CalculatorContent() {
             baseRent = baseRentByCity[formData.region] ?? 0;
         }
 
-        const size = Number(formData.size) || 0;
-        let sizeFactor = 1.0;
-        if (multipliers?.size) {
-            if (size < 45) sizeFactor = multipliers.size['<45'];
-            else if (size < 60) sizeFactor = multipliers.size['<60'];
-            else if (size < 90) sizeFactor = multipliers.size['<90'];
-            else if (size < 120) sizeFactor = multipliers.size['<120'];
-            else sizeFactor = multipliers.size['>=120'];
-        } else {
-            if (size < 45) sizeFactor = 1.25;
-            else if (size < 60) sizeFactor = 1.10;
-            else if (size < 90) sizeFactor = 1.00;
-            else if (size < 120) sizeFactor = 0.90;
-            else sizeFactor = 0.70;
-        }
-
-        const bedrooms = Number(formData.bedrooms) || 0;
-        let bedroomFactor = 0.90;
-        if (multipliers?.bedroom) {
-            if (bedrooms === 0) bedroomFactor = multipliers.bedroom['Studio'];
-            else if (bedrooms === 1) bedroomFactor = multipliers.bedroom['1 Bedroom'];
-            else if (bedrooms === 2) bedroomFactor = multipliers.bedroom['2 Bedrooms'];
-            else if (bedrooms >= 3) bedroomFactor = multipliers.bedroom['3+ Bedrooms'];
-        } else {
-            if (bedrooms === 0) bedroomFactor = 1.10;
-            else if (bedrooms === 1) bedroomFactor = 1.00;
-            else if (bedrooms === 2) bedroomFactor = 0.95;
-            else if (bedrooms >= 3) bedroomFactor = 0.90;
-        }
-
-        // Location Factor (area type)
-        let locationFactor = 1.0;
-        if (multipliers?.location) {
-            locationFactor = multipliers.location[formData.areaType] ?? 1.0;
-        } else {
-            const locationFactorMap: Record<string, number> = { Centre: 1.25, 'Semi-Centre': 1.05, 'Outside Centre': 0.85 };
-            locationFactor = locationFactorMap[formData.areaType] ?? 1.0;
-        }
-
-        // Year Built Factor
-        const year = Number(formData.yearBuilt) || 0;
-        let yearBuiltFactor = 0.95; // default "Other / >30y"
-        const age = new Date().getFullYear() - year;
-        if (multipliers?.yearBuilt) {
-            if (age <= 2) yearBuiltFactor = multipliers.yearBuilt['<=2'];
-            else if (age > 2 && age <= 5) yearBuiltFactor = multipliers.yearBuilt['3-5'];
-            else if (age > 5 && age <= 15) yearBuiltFactor = multipliers.yearBuilt['6-15'];
-            else if (age > 15 && age <= 30) yearBuiltFactor = multipliers.yearBuilt['16-30'];
-            else yearBuiltFactor = multipliers.yearBuilt['>30'];
-        } else {
-            if (age <= 2) yearBuiltFactor = 1.07;
-            else if (age > 2 && age <= 5) yearBuiltFactor = 1.03;
-            else if (age > 5 && age <= 15) yearBuiltFactor = 1.00;
-            else if (age > 15 && age <= 30) yearBuiltFactor = 0.90;
-            else yearBuiltFactor = 0.95;
-        }
-
-        // Outside Area Factor
-        let outsideAreaFactor = 1.00;
-        if (multipliers?.outsideArea) {
-            outsideAreaFactor = multipliers.outsideArea[formData.outdoorSpace] ?? 1.00;
-        } else {
-            const outsideAreaFactorMap: Record<string, number> = { None: 1.00, Balcony: 1.05, Garden: 1.05 };
-            outsideAreaFactor = outsideAreaFactorMap[formData.outdoorSpace] ?? 1.00;
-        }
-
-        // Parking Factor
-        let parkingFactor = 1.00;
-        if (multipliers?.parking) {
-            if (formData.hasParking === true) parkingFactor = multipliers.parking['Yes'];
-            else if (formData.hasParking === false) parkingFactor = multipliers.parking['No'];
-        } else {
-            if (formData.hasParking === true) parkingFactor = 1.05;
-            else if (formData.hasParking === false) parkingFactor = 0.95;
-        }
-
-        // Energy Label Factor
-        let energyFactor = 0.95;
-        if (multipliers?.energy) {
-            energyFactor = multipliers.energy[formData.energyLabel] ?? 0.95;
-        } else {
-            const energyFactorMap: Record<string, number> = { A: 1.10, B: 1.00, C: 0.95, D: 0.90, E: 0.85, F: 0.80, G: 0.80 };
-            energyFactor = energyFactorMap[formData.energyLabel] ?? 0.95;
-        }
-
-        // Elevator Factor
-        let elevatorFactor = 1.00;
-        if (multipliers?.elevator) {
-            if (formData.hasElevator === 'yes') elevatorFactor = multipliers.elevator['Yes'];
-            else if (formData.hasElevator === 'no') elevatorFactor = multipliers.elevator['No'];
-        } else {
-            if (formData.hasElevator === 'yes') elevatorFactor = 1.00;
-            else if (formData.hasElevator === 'no') elevatorFactor = 0.95;
-        }
-
-        // Finish Factor (property condition)
-        let finishFactor = 0.90;
-        if (multipliers?.finish) {
-            finishFactor = multipliers.finish[formData.propertyCondition] ?? 0.90;
-        } else {
-            const finishFactorMap: Record<string, number> = {
-                'High-End': 1.15, Premium: 1.10, Good: 1.05, Standard: 1.00, Outdated: 0.95, 'In need of renovation': 0.90
-            };
-            finishFactor = finishFactorMap[formData.propertyCondition] ?? 0.90;
-        }
-
-        const finalRent = Math.round(
-            baseRent *
-            size *
-            sizeFactor *
-            bedroomFactor *
-            locationFactor *
-            yearBuiltFactor *
-            outsideAreaFactor *
-            parkingFactor *
-            energyFactor *
-            elevatorFactor *
-            finishFactor
-        );
+        const finalRent = calculateEstimatedRent({
+            baseRent,
+            size: Number(formData.size) || 0,
+            bedrooms: Number(formData.bedrooms) || 0,
+            areaType: formData.areaType,
+            yearBuilt: Number(formData.yearBuilt) || 0,
+            outdoorSpace: formData.outdoorSpace,
+            hasParking: formData.hasParking,
+            energyLabel: formData.energyLabel,
+            hasElevator: formData.hasElevator,
+            propertyCondition: formData.propertyCondition,
+            multipliers
+        });
 
         if (finalRent > 0 && finalRent !== formData.estimatedRent && !rentFromPropertyRef.current) {
             setFormData((prev) => ({ ...prev, estimatedRent: finalRent }));
@@ -1951,7 +1845,7 @@ function CalculatorContent() {
                                                     <ChevronDown className={cn("size-3 transition-transform", showBreakdown && "rotate-180")} />
                                                 </div>
                                             </div>
-                                            <div className="relative h-[340px] bg-white rounded-[40px] border border-stone-100 p-10 pr-6 overflow-hidden shadow-sm flex flex-col">
+                                            <div className="relative h-[340px] bg-white rounded-[40px] border border-stone-100 p-10 pr-6 shadow-sm flex flex-col">
                                                 <div className="flex-grow flex relative">
                                                     {/* Y-Axis Labels */}
                                                     <div className="absolute inset-y-0 left-0 flex flex-col justify-between text-[8px] font-black text-stone-300 uppercase h-full py-0.5">
@@ -2010,21 +1904,21 @@ function CalculatorContent() {
                                                             const hPrincipal = formData.includePrincipalROI ? ((cashInvested + p.cumulativePrincipal) / maxVal) * 100 : (cashInvested / maxVal) * 100;
 
                                                             return (
-                                                                <div key={i} className="flex-grow flex flex-col justify-end group/bar relative h-full items-center">
+                                                                <div key={i} className="flex-grow flex flex-col justify-end group/bar relative h-full items-center pointer-events-none">
                                                                     <div className="w-full flex flex-col justify-end h-full gap-0.5 max-w-[32px]">
                                                                         {/* Top: Principal & Initial Equity (Tan) */}
                                                                         <div
-                                                                            className="w-full bg-[#D4A373]/40 rounded-t-[2px] transition-all hover:brightness-95"
+                                                                            className="w-full bg-[#D4A373]/40 rounded-t-[2px] transition-all hover:brightness-95 pointer-events-auto"
                                                                             style={{ height: `${hPrincipal}%`, minHeight: hPrincipal > 0 ? '2px' : '0' }}
                                                                         />
                                                                         {/* Middle: Appreciation (Orange) */}
                                                                         <div
-                                                                            className="w-full bg-[#D4A373] transition-all hover:brightness-95"
+                                                                            className="w-full bg-[#D4A373] transition-all hover:brightness-95 pointer-events-auto"
                                                                             style={{ height: `${hAppreciation}%`, minHeight: hAppreciation > 0 ? '2px' : '0' }}
                                                                         />
                                                                         {/* Bottom: Cash Flow (Navy) */}
                                                                         <div
-                                                                            className="w-full bg-[#2C3E50] rounded-b-[2px] transition-all hover:brightness-95"
+                                                                            className="w-full bg-[#2C3E50] rounded-b-[2px] transition-all hover:brightness-95 pointer-events-auto"
                                                                             style={{ height: `${hCashFlow}%`, minHeight: hCashFlow > 0 ? '2px' : '0' }}
                                                                         />
                                                                     </div>

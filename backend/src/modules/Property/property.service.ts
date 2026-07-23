@@ -140,10 +140,10 @@ export class PropertyService extends BaseService<Property> {
 
         // 1. Basic Exact Matches
         if (country && country !== 'All') {
-            where.location = { contains: country, mode: 'insensitive' };
+            where.country = { name: { equals: country, mode: 'insensitive' } };
         }
         if (city && city !== 'All') {
-            where.location = { ...where.location, contains: city, mode: 'insensitive' };
+            where.location = { contains: city, mode: 'insensitive' };
         }
         if (type && type !== 'All') where.type = type;
         if (condition && condition !== 'All') where.condition = condition;

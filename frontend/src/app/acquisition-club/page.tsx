@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, Lock, Globe, Users, Target, Building2, Briefcase, ArrowRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useApplyForClubMutation } from '@/lib/store/features/club/clubApi';
 
 export default function AcquisitionClubPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,29 +15,21 @@ export default function AcquisitionClubPage() {
         reason: ''
     });
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+    const [applyForClub] = useApplyForClubMutation();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus('submitting');
         
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3030';
-            const response = await fetch(`${apiUrl}/api/v1/club/apply`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
+            await applyForClub(formData).unwrap();
             
-            if (response.ok) {
-                setStatus('success');
-                setTimeout(() => {
-                    setIsModalOpen(false);
-                    setStatus('idle');
-                    setFormData({ name: '', email: '', country: '', reason: '' });
-                }, 3000);
-            } else {
-                setStatus('error');
-            }
+            setStatus('success');
+            setTimeout(() => {
+                setIsModalOpen(false);
+                setStatus('idle');
+                setFormData({ name: '', email: '', country: '', reason: '' });
+            }, 3000);
         } catch (error) {
             setStatus('error');
         }

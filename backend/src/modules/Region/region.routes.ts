@@ -6,8 +6,11 @@ import { requireRole } from '@/middleware/roleMiddleware';
 const router = express.Router();
 
 router.get('/', RegionController.getAllRegions);
-router.post('/', authMiddleware, requireRole(['admin']), RegionController.createRegion);
-router.patch('/:id', authMiddleware, requireRole(['admin']), RegionController.updateRegion);
-router.delete('/:id', authMiddleware, requireRole(['admin']), RegionController.deleteRegion);
+router.post('/', authMiddleware, RegionController.createRegion);
+router.patch('/:id', authMiddleware, RegionController.updateRegion);
+router.delete('/:id', authMiddleware, RegionController.deleteRegion);
+
+router.post('/neighborhoods', authMiddleware, RegionController.createNeighborhood);
+router.delete('/neighborhoods/:id', authMiddleware, RegionController.deleteNeighborhood);
 
 export const RegionRoutes = router;

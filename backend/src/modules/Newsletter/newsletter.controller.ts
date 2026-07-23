@@ -33,4 +33,20 @@ export class NewsletterController {
             });
         }
     }
+
+    public getAllSubscribers = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const subscribers = await this.newsletterService.getAllSubscribers();
+            res.status(HTTPStatusCode.OK).json({
+                success: true,
+                data: subscribers
+            });
+        } catch (error) {
+            AppLogger.error('Error fetching subscribers:', { error });
+            res.status(HTTPStatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }
 }

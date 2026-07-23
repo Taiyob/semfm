@@ -1,6 +1,7 @@
 'use client';
 
 import { useCreatePropertyMutation, useUploadImageMutation } from '@/lib/store/features/property/propertyApi';
+import { useGetRegionsQuery } from '@/lib/store/features/country/countryApi';
 import { 
   Building2, 
   Euro, 
@@ -15,16 +16,19 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import Swal from 'sweetalert2';
+import { calculateEstimatedRent } from '@/lib/calculations';
 
 export default function AddPropertyPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [createProperty, { isLoading }] = useCreatePropertyMutation();
   const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
+  const { data: regionsRes } = useGetRegionsQuery();
+  const regionsList = regionsRes?.data || [];
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -32,8 +36,8 @@ export default function AddPropertyPage() {
     title: '',
     description: '',
     price: '',
-    estimatedRent: '', // New
-    yield: '6', // Calculated
+    estimatedRent: '',
+    yield: '', 
     appreciation: '4.5', // System-controlled
     location: '',
     streetName: '', // New
@@ -44,6 +48,7 @@ export default function AddPropertyPage() {
     exteriorSize: '', // New
     plotSize: '', // New
     yearBuilt: new Date().getFullYear().toString(), // New
+    country: '',
     region: '',
     countryId: undefined,
     condition: 'Standard',
@@ -55,8 +60,6 @@ export default function AddPropertyPage() {
     externalListingUrl: '', // New
   });
 
-  const [isYieldOverride, setIsYieldOverride] = useState(false);
-  const [isRentOverride, setIsRentOverride] = useState(false);
   const [photoUrlInput, setPhotoUrlInput] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -116,37 +119,13 @@ export default function AddPropertyPage() {
       const newData = { ...prev, [name]: value };
       
       const priceVal = Number(newData.price) || 0;
-      let rentVal = Number(newData.estimatedRent) || 0;
-      let yieldVal = Number(newData.yield) || 0;
 
-      if (name === 'price' || name === 'estimatedRent' || name === 'yield') {
-        if (!isRentOverride && !isYieldOverride) {
-          // Both auto: default to 6% yield
-          yieldVal = 6;
-          newData.yield = '6';
-          if (priceVal > 0) {
-            rentVal = Math.round((priceVal * 0.06) / 12);
-            newData.estimatedRent = rentVal.toString();
-          } else {
-            newData.estimatedRent = '';
-          }
-        } else if (!isYieldOverride && isRentOverride) {
-          // Rent manual, Yield auto
-          if (priceVal > 0 && rentVal > 0) {
-            yieldVal = ((rentVal * 12) / priceVal) * 100;
-            newData.yield = yieldVal.toFixed(2).replace(/\.00$/, '');
-          } else {
-            newData.yield = '0';
-          }
-        } else if (isYieldOverride && !isRentOverride) {
-          // Yield manual, Rent auto
-          if (priceVal > 0 && yieldVal > 0) {
-            rentVal = Math.round((priceVal * (yieldVal / 100)) / 12);
-            newData.estimatedRent = rentVal.toString();
-          } else {
-            newData.estimatedRent = '';
-          }
-        }
+      if (name === 'country') {
+        newData.location = '';
+        newData.region = '';
+      }
+      if (name === 'location') {
+        newData.region = '';
       }
 
       return newData;
@@ -189,6 +168,58 @@ export default function AddPropertyPage() {
     }
   };
 
+  useEffect(() => {
+    let baseRent = 0;
+    if (formData.location && regionsList.length > 0) {
+      const foundCity = regionsList.find((r: any) => r.name === formData.location);
+      if (foundCity) {
+        baseRent = foundCity.baseRent;
+      }
+    }
+
+    if (baseRent > 0 && formData.sqm && formData.price) {
+      const finalRent = calculateEstimatedRent({
+        baseRent,
+        size: Number(formData.sqm) || 0,
+        bedrooms: Number(formData.bedrooms) || 0,
+        areaType: formData.locationType === 'CENTRE' ? 'Centre' : formData.locationType === 'SEMI_CENTRE' ? 'Semi-Centre' : 'Outside Centre',
+        yearBuilt: Number(formData.yearBuilt) || 0,
+        outdoorSpace: formData.outdoorSpace === 'NONE' ? 'None' : formData.outdoorSpace === 'BALCONY' ? 'Balcony' : formData.outdoorSpace === 'GARDEN' ? 'Garden' : 'Terrace',
+        hasParking: formData.features.includes('Garage') || formData.features.includes('Parking'),
+        energyLabel: formData.energyLabel,
+        hasElevator: formData.features.includes('Elevator'),
+        propertyCondition: formData.condition,
+        multipliers: null
+      });
+
+      const calculatedYield = ((finalRent * 12) / Number(formData.price)) * 100;
+      const calculatedYieldStr = calculatedYield.toFixed(2).replace(/\.00$/, '');
+      
+      setFormData(prev => {
+        if (prev.estimatedRent !== String(finalRent) || prev.yield !== calculatedYieldStr) {
+          return {
+            ...prev,
+            estimatedRent: String(finalRent),
+            yield: calculatedYieldStr
+          };
+        }
+        return prev;
+      });
+    }
+  }, [
+    formData.location, 
+    formData.sqm, 
+    formData.bedrooms, 
+    formData.locationType, 
+    formData.yearBuilt, 
+    formData.outdoorSpace, 
+    formData.features, 
+    formData.energyLabel, 
+    formData.condition, 
+    formData.price,
+    regionsList
+  ]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 4) {
@@ -213,7 +244,6 @@ export default function AddPropertyPage() {
         estimatedRent: Number(formData.estimatedRent),
         yield: Number(formData.yield),
         appreciation: Number(formData.appreciation),
-        location: formData.location,
         streetName: formData.streetName,
         type: formData.type,
         sqm: Number(formData.sqm),
@@ -222,7 +252,8 @@ export default function AddPropertyPage() {
         exteriorSize: Number(formData.exteriorSize),
         plotSize: Number(formData.plotSize),
         yearBuilt: Number(formData.yearBuilt),
-        region: formData.region,
+        location: formData.location, // Note: location is the city
+        region: formData.region, // Note: region is the neighborhood
         condition: formData.condition,
         locationType: formData.locationType,
         outdoorSpace: formData.outdoorSpace,
@@ -305,6 +336,10 @@ export default function AddPropertyPage() {
                   <input required type="number" name="price" value={formData.price} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="320000" />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Gross Yield (%)</label>
+                  <input readOnly type="number" name="yield" value={formData.yield} className="w-full px-6 py-4 bg-stone-100/50 border border-transparent rounded-2xl text-sm font-bold text-[#2C3E50] outline-none cursor-not-allowed opacity-80" placeholder="Auto Calculated" />
+                </div>
+                <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Property Type</label>
                   <select name="type" value={formData.type} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] outline-none appearance-none cursor-pointer">
                     <option value="Apartment">Apartment</option>
@@ -333,13 +368,32 @@ export default function AddPropertyPage() {
                  <h3 className="text-lg font-black text-[#2C3E50]">Physical Specs</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Country</label>
+                  <select required name="country" value={formData.country} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] outline-none appearance-none cursor-pointer focus:bg-white focus:border-[#34495E] transition-all">
+                    <option value="" disabled>Select a country</option>
+                    {Array.from(new Set(regionsList.map(r => r.country.name))).map(cName => (
+                      <option key={cName} value={cName}>{cName}</option>
+                    ))}
+                  </select>
+                </div>
                  <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">City</label>
-                  <input required type="text" name="location" value={formData.location} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="Lisbon, Portugal" />
+                  <select required name="location" value={formData.location} onChange={handleChange} disabled={!formData.country} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] outline-none appearance-none cursor-pointer focus:bg-white focus:border-[#34495E] transition-all disabled:opacity-50">
+                    <option value="" disabled>Select a city</option>
+                    {regionsList.filter(r => r.country.name === formData.country).map(r => (
+                      <option key={r.name} value={r.name}>{r.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Neighborhood</label>
-                  <input type="text" name="region" value={formData.region} onChange={handleChange} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] focus:bg-white focus:border-[#34495E] outline-none transition-all" placeholder="Alcantara" />
+                  <select required name="region" value={formData.region} onChange={handleChange} disabled={!formData.location} className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl text-sm font-bold text-[#2C3E50] outline-none appearance-none cursor-pointer focus:bg-white focus:border-[#34495E] transition-all disabled:opacity-50">
+                    <option value="" disabled>Select a neighborhood</option>
+                    {regionsList.find(r => r.name === formData.location)?.neighborhoods?.map(n => (
+                      <option key={n.name} value={n.name}>{n.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">Street Name</label>
@@ -525,50 +579,36 @@ export default function AddPropertyPage() {
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="p-6 bg-stone-50 rounded-[32px] border border-stone-100 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Est. Monthly Rent</label>
-                      <button 
-                        type="button"
-                        onClick={() => setIsRentOverride(!isRentOverride)}
-                        className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${isRentOverride ? 'bg-amber-100 text-amber-600' : 'bg-stone-200 text-stone-500'}`}
-                      >
-                        {isRentOverride ? 'Override On' : 'Override'}
-                      </button>
-                    </div>
+                    <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block mb-2">Est. Monthly Rent</label>
                     <div className="relative">
                       <Euro className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-stone-300" />
                       <input 
                         type="number" 
                         name="estimatedRent"
-                        readOnly={!isRentOverride}
                         value={formData.estimatedRent} 
                         onChange={handleChange}
-                        className={`w-full pl-10 pr-6 py-4 bg-white border border-stone-200 rounded-2xl text-lg font-black text-[#2C3E50] focus:outline-none focus:border-[#34495E] transition-all ${!isRentOverride && 'opacity-60 cursor-not-allowed'}`}
+                        className="w-full pl-10 pr-6 py-4 bg-white border border-stone-200 rounded-2xl text-lg font-black text-[#2C3E50] focus:outline-none focus:border-[#34495E] transition-all"
+                        placeholder="e.g. 1500"
                       />
                     </div>
                   </div>
 
-                  <div className="p-6 bg-stone-50 rounded-[32px] border border-stone-100 space-y-4">
+                  <div className="p-6 bg-[#34495E]/5 rounded-[32px] border border-[#34495E]/10 space-y-4">
                     <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Gross Yield (%)</label>
-                      <button 
-                        type="button"
-                        onClick={() => setIsYieldOverride(!isYieldOverride)}
-                        className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${isYieldOverride ? 'bg-amber-100 text-amber-600' : 'bg-stone-200 text-stone-500'}`}
-                      >
-                        {isYieldOverride ? 'Override On' : 'Override'}
-                      </button>
+                      <label className="text-[10px] font-black text-[#34495E] uppercase tracking-widest">Gross Yield (%)</label>
+                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-[#34495E]/10 text-[#34495E]">
+                        Calculated
+                      </span>
                     </div>
                     <div className="relative">
-                      <TrendingUp className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-stone-300" />
+                      <TrendingUp className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-[#34495E]/50" />
                       <input 
                         type="number" 
                         name="yield"
-                        step="0.01"
-                        readOnly={!isYieldOverride}
+                        readOnly
                         value={formData.yield} 
-                        onChange={handleChange}
-                        className={`w-full pl-10 pr-6 py-4 bg-white border border-stone-200 rounded-2xl text-lg font-black text-[#2C3E50] focus:outline-none focus:border-[#34495E] transition-all ${!isYieldOverride && 'opacity-60 cursor-not-allowed'}`}
+                        className="w-full pl-10 pr-6 py-4 bg-white/50 border border-transparent rounded-2xl text-lg font-black text-[#2C3E50] focus:outline-none opacity-80 cursor-not-allowed"
+                        placeholder="0.00"
                       />
                     </div>
                   </div>
@@ -605,7 +645,7 @@ export default function AddPropertyPage() {
                     </div>
                     <div>
                       <p className="text-[9px] font-black text-stone-400 uppercase tracking-tighter">Yield / Rent</p>
-                      <p className="text-base font-black text-[#2C3E50]">{formData.yield}% / €{formData.estimatedRent}</p>
+                      <p className="text-base font-black text-[#2C3E50]">{formData.yield || '0'}% / €{formData.estimatedRent || '0'}</p>
                     </div>
                     <div>
                       <p className="text-[9px] font-black text-stone-400 uppercase tracking-tighter">Appreciation</p>
@@ -719,6 +759,10 @@ export default function AddPropertyPage() {
               {/* Location */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
+                  <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Country</p>
+                  <p className="text-sm font-black text-[#2C3E50]">{formData.country || '—'}</p>
+                </div>
+                <div>
                   <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">City</p>
                   <p className="text-sm font-black text-[#2C3E50]">{formData.location || '—'}</p>
                 </div>
@@ -726,7 +770,7 @@ export default function AddPropertyPage() {
                   <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Neighborhood</p>
                   <p className="text-sm font-black text-[#2C3E50]">{formData.region || '—'}</p>
                 </div>
-                <div>
+                <div className="col-span-3">
                   <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Street</p>
                   <p className="text-sm font-black text-[#2C3E50]">{formData.streetName || '—'}</p>
                 </div>
@@ -757,11 +801,11 @@ export default function AddPropertyPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Est. Rent / mo</p>
-                  <p className="text-sm font-black text-[#2C3E50]">€{formData.estimatedRent}</p>
+                  <p className="text-sm font-black text-[#2C3E50]">€{formData.estimatedRent || '0'}</p>
                 </div>
                 <div>
                   <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Gross Yield</p>
-                  <p className="text-sm font-black text-emerald-600">{formData.yield}%</p>
+                  <p className="text-sm font-black text-emerald-600">{formData.yield || '0'}%</p>
                 </div>
                 <div>
                   <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">Appreciation</p>

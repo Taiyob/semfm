@@ -41,10 +41,27 @@ interface CountryResponse {
   data: Country;
 }
 
+export interface Neighborhood {
+  id: string;
+  name: string;
+  regionId: string;
+  isActive: boolean;
+}
+
+export interface Region {
+  id: string;
+  name: string;
+  countryId: string;
+  country: Country;
+  baseRent: number;
+  isActive: boolean;
+  neighborhoods: Neighborhood[];
+}
+
 export const countryApi = createApi({
   reducerPath: 'countryApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Country'],
+  tagTypes: ['Country', 'Region'],
   endpoints: (builder) => ({
     getCountries: builder.query<Country[], void>({
       query: () => ({
@@ -62,13 +79,69 @@ export const countryApi = createApi({
       transformResponse: (response: CountryResponse) => response.data,
       providesTags: (result, error, slug) => [{ type: 'Country', id: slug }],
     }),
-    getRegions: builder.query<{ success: boolean; data: any[] }, void>({
+    getRegions: builder.query<{ success: boolean; data: Region[] }, void>({
       query: () => ({
         url: '/regions',
         method: 'GET',
       }),
+      providesTags: ['Region'],
+    }),
+    createCountry: builder.mutation<{ success: boolean; data: Country }, Partial<Country>>({
+      query: (body) => ({
+        url: '/countries',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Country'],
+    }),
+    deleteCountry: builder.mutation<{ success: boolean }, string>({
+      query: (id) => ({
+        url: `/countries/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Country'],
+    }),
+    createRegion: builder.mutation<{ success: boolean; data: Region }, Partial<Region>>({
+      query: (body) => ({
+        url: '/regions',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Region'],
+    }),
+    deleteRegion: builder.mutation<{ success: boolean }, string>({
+      query: (id) => ({
+        url: `/regions/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Region'],
+    }),
+    createNeighborhood: builder.mutation<{ success: boolean; data: Neighborhood }, Partial<Neighborhood>>({
+      query: (body) => ({
+        url: '/regions/neighborhoods',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Region'],
+    }),
+    deleteNeighborhood: builder.mutation<{ success: boolean }, string>({
+      query: (id) => ({
+        url: `/regions/neighborhoods/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Region'],
     }),
   }),
 });
 
-export const { useGetCountriesQuery, useGetCountryBySlugQuery, useGetRegionsQuery } = countryApi;
+export const { 
+  useGetCountriesQuery, 
+  useGetCountryBySlugQuery, 
+  useGetRegionsQuery,
+  useCreateCountryMutation,
+  useDeleteCountryMutation,
+  useCreateRegionMutation,
+  useDeleteRegionMutation,
+  useCreateNeighborhoodMutation,
+  useDeleteNeighborhoodMutation
+} = countryApi;
