@@ -254,6 +254,7 @@ export default function AddPropertyPage() {
         yearBuilt: Number(formData.yearBuilt),
         location: formData.location, // Note: location is the city
         region: formData.region, // Note: region is the neighborhood
+        countryId: regionsList.find((r: any) => r.country.name === formData.country)?.countryId,
         condition: formData.condition,
         locationType: formData.locationType,
         outdoorSpace: formData.outdoorSpace,

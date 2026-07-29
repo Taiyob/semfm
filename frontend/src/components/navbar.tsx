@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from './logo';
-import { 
-  Menu, 
-  X, 
-  Globe, 
-  ChevronDown, 
+import {
+  Menu,
+  X,
+  Globe,
+  ChevronDown,
   Search,
   UserCircle2,
   TrendingUp,
@@ -29,7 +29,7 @@ const navLinks = [
   { name: 'Properties', href: '/properties', icon: Search },
   { name: 'Pricing', href: '/pricing', icon: Tag },
   { name: 'Insights', href: '/insights', icon: MapPin },
-  { name: 'Acquisition Club', href: '/acquisition-club', icon: Globe },
+  // { name: 'Acquisition Club', href: '/acquisition-club', icon: Globe },
   { name: 'Our Mission', href: '/our-mission', icon: ShieldCheck },
 ];
 
@@ -58,9 +58,8 @@ export function Navbar() {
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      scrolled ? 'bg-white/80 backdrop-blur-lg border-b border-stone-200 py-0.5 shadow-sm' : 'bg-transparent py-1'
-    }`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-lg border-b border-stone-200 py-0.5 shadow-sm' : 'bg-transparent py-1'
+      }`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Logo />
@@ -73,11 +72,10 @@ export function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`px-4 py-2 text-sm font-bold transition-all rounded-xl flex items-center gap-2 ${
-                  pathname === link.href 
-                    ? 'text-[#34495E] bg-[#34495E]/5' 
-                    : 'text-stone-600 hover:text-[#2C3E50] hover:bg-stone-50'
-                }`}
+                className={`px-4 py-2 text-sm font-bold transition-all rounded-xl flex items-center gap-2 ${pathname === link.href
+                  ? 'text-[#34495E] bg-[#34495E]/5'
+                  : 'text-stone-600 hover:text-[#2C3E50] hover:bg-stone-50'
+                  }`}
               >
                 {link.name}
               </Link>
@@ -85,11 +83,10 @@ export function Navbar() {
             {isAuthenticated && (
               <Link
                 href="/dashboard"
-                className={`px-4 py-2 text-sm font-bold transition-all rounded-xl flex items-center gap-2 ${
-                  pathname?.startsWith('/dashboard')
-                    ? 'text-[#34495E] bg-[#34495E]/5'
-                    : 'text-stone-600 hover:text-[#2C3E50] hover:bg-stone-50'
-                }`}
+                className={`px-4 py-2 text-sm font-bold transition-all rounded-xl flex items-center gap-2 ${pathname?.startsWith('/dashboard')
+                  ? 'text-[#34495E] bg-[#34495E]/5'
+                  : 'text-stone-600 hover:text-[#2C3E50] hover:bg-stone-50'
+                  }`}
               >
                 <LayoutDashboard className="size-4" />
                 Dashboard
@@ -102,7 +99,7 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-stone-50 transition-all border border-transparent hover:border-stone-100"
                 >
@@ -119,7 +116,7 @@ export function Navbar() {
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl shadow-stone-200/50 border border-stone-100 overflow-hidden py-2"
                     >
-                      <Link 
+                      <Link
                         href="/dashboard/profile"
                         onClick={() => setIsDropdownOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-stone-600 hover:text-[#2C3E50] hover:bg-stone-50 transition-colors"
@@ -128,7 +125,7 @@ export function Navbar() {
                         Dashboard
                       </Link>
                       <div className="h-px bg-stone-100 my-1"></div>
-                      <button 
+                      <button
                         onClick={() => {
                           handleLogout();
                           setIsDropdownOpen(false);
@@ -145,10 +142,10 @@ export function Navbar() {
             ) : (
               <>
                 <Link href="/login" className="px-4 py-2 text-sm font-bold text-stone-600 hover:text-[#2C3E50]">
-                    Sign In
+                  Sign In
                 </Link>
                 <Link href="/register" className="px-6 py-2.5 bg-[#34495E] text-white font-bold rounded-xl text-sm hover:bg-[#34495E] transition-all shadow-lg shadow-stone-950/10">
-                    Get Started
+                  Get Started
                 </Link>
               </>
             )}
@@ -156,7 +153,7 @@ export function Navbar() {
         </div>
 
         {/* Mobile Menu Toggle */}
-        <button 
+        <button
           className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl"
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -190,7 +187,7 @@ export function Navbar() {
               <div className="pt-6 border-t border-slate-100 grid grid-cols-2 gap-4">
                 {isAuthenticated ? (
                   <>
-                    <Link 
+                    <Link
                       href="/dashboard/profile"
                       onClick={() => setIsOpen(false)}
                       className="col-span-2 w-full py-4 text-center font-bold text-stone-600 bg-stone-50 rounded-2xl flex items-center justify-center gap-2"
@@ -198,7 +195,7 @@ export function Navbar() {
                       <LayoutDashboard className="size-5" />
                       Dashboard
                     </Link>
-                    <button 
+                    <button
                       onClick={() => { handleLogout(); setIsOpen(false); }}
                       className="col-span-2 w-full py-4 text-center font-bold text-red-600 bg-red-50 rounded-2xl flex items-center justify-center gap-2"
                     >
@@ -209,10 +206,10 @@ export function Navbar() {
                 ) : (
                   <>
                     <Link href="/login" onClick={() => setIsOpen(false)} className="w-full py-4 text-center font-bold text-slate-600 bg-slate-50 rounded-2xl">
-                        Sign In
+                      Sign In
                     </Link>
                     <Link href="/register" onClick={() => setIsOpen(false)} className="w-full py-4 text-center font-bold text-white bg-[#34495E] rounded-2xl">
-                        Register
+                      Register
                     </Link>
                   </>
                 )}

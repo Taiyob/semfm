@@ -205,6 +205,7 @@ export default function EditPropertyPage() {
         sqm: parseFloat(formData.sqm) || 0,
         bedrooms: parseInt(formData.bedrooms) || 0,
         region: formData.region,
+        countryId: regionsList.find((r: any) => r.country.name === formData.country)?.countryId,
         condition: formData.condition,
         locationType: formData.locationType,
         outdoorSpace: formData.outdoorSpace,
