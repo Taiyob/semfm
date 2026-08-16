@@ -121,6 +121,11 @@ function CalculatorContent() {
     const [showOpexBreakdown, setShowOpexBreakdown] = useState(false);
     const [editingOpex, setEditingOpex] = useState<string | null>(null);
     const [formData, setFormData] = useState({
+        rentalMode: 'LONG_TERM' as 'LONG_TERM' | 'SHORT_TERM',
+        bathrooms: 1 as number | '',
+        maxGuests: 2 as number | '',
+        listingType: 'Entire place',
+        licenseStatus: 'Unknown',
         country: 'Portugal',
         region: 'Lisbon',
         areaType: 'Centre',
@@ -718,9 +723,15 @@ function CalculatorContent() {
                                                 <h4 className="text-xl font-black text-stone-900 mb-2 tracking-tight">Stage 1: Location & rent estimate</h4>
                                                 <p className="text-stone-500 text-sm font-bold flex items-center gap-2 italic"><Sparkles className="size-4 text-[#D4A373]" /> Estimate your rental income first.</p>
                                             </div>
-                                            <div className="p-1 bg-stone-100 rounded-xl flex gap-1 h-fit">
-                                                <button onClick={() => setMode('simple')} className={`px-3 py-1.5 rounded-lg text-[9px] font-black tracking-tight transition-all ${mode === 'simple' ? 'bg-white text-[#34495E] shadow-sm' : 'text-stone-400'}`}>Simple</button>
-                                                <button onClick={() => setMode('advanced')} className={`px-3 py-1.5 rounded-lg text-[9px] font-black tracking-tight transition-all ${mode === 'advanced' ? 'bg-white text-[#34495E] shadow-sm' : 'text-stone-400'}`}>Advanced</button>
+                                            <div className="flex flex-col gap-3 items-end">
+                                                <div className="p-1.5 bg-stone-100 rounded-xl flex gap-1 h-fit border border-stone-200/50 shadow-inner">
+                                                    <button onClick={() => setFormData({ ...formData, rentalMode: 'LONG_TERM' })} className={`px-4 py-2 rounded-lg text-xs font-black tracking-tight transition-all ${formData.rentalMode === 'LONG_TERM' ? 'bg-[#2C3E50] text-white shadow-md' : 'text-stone-500 hover:text-stone-700'}`}>Long-Term</button>
+                                                    <button onClick={() => setFormData({ ...formData, rentalMode: 'SHORT_TERM' })} className={`px-4 py-2 rounded-lg text-xs font-black tracking-tight transition-all ${formData.rentalMode === 'SHORT_TERM' ? 'bg-[#D4A373] text-white shadow-md' : 'text-stone-500 hover:text-stone-700'}`}>Short-Term</button>
+                                                </div>
+                                                <div className="p-1 bg-stone-100 rounded-xl flex gap-1 h-fit">
+                                                    <button onClick={() => setMode('simple')} className={`px-3 py-1.5 rounded-lg text-[9px] font-black tracking-tight transition-all ${mode === 'simple' ? 'bg-white text-[#34495E] shadow-sm' : 'text-stone-400'}`}>Simple</button>
+                                                    <button onClick={() => setMode('advanced')} className={`px-3 py-1.5 rounded-lg text-[9px] font-black tracking-tight transition-all ${mode === 'advanced' ? 'bg-white text-[#34495E] shadow-sm' : 'text-stone-400'}`}>Advanced</button>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -763,14 +774,41 @@ function CalculatorContent() {
                                                 </div>
                                             </div>
 
-                                            <div className="grid md:grid-cols-2 gap-8">
+                                            <div className="grid md:grid-cols-4 gap-6 pt-4">
                                                 <div className="space-y-3">
                                                     <label className="text-xs font-bold text-stone-400 ml-2">Number of bedrooms</label>
                                                     <input type="number" value={formData.bedrooms} onChange={(e) => handleNumberChange('bedrooms', e.target.value)} onFocus={(e) => e.target.select()} onBlur={() => handleBlur('bedrooms', 1)} className="w-full bg-stone-50 rounded-2xl p-5 font-black text-xl outline-none border-2 border-transparent focus:border-[#34495E]" />
                                                 </div>
                                                 <div className="space-y-3">
+                                                    <label className="text-xs font-bold text-stone-400 ml-2">Number of bathrooms</label>
+                                                    <input type="number" value={formData.bathrooms} onChange={(e) => handleNumberChange('bathrooms', e.target.value)} onFocus={(e) => e.target.select()} onBlur={() => handleBlur('bathrooms', 1)} className="w-full bg-stone-50 rounded-2xl p-5 font-black text-xl outline-none border-2 border-transparent focus:border-[#34495E]" />
+                                                </div>
+                                                <div className="space-y-3">
                                                     <label className="text-xs font-bold text-stone-400 ml-2">Property size (sqm)</label>
                                                     <input type="number" value={formData.size} onChange={(e) => handleNumberChange('size', e.target.value)} onFocus={(e) => e.target.select()} onBlur={() => handleBlur('size', 60)} className="w-full bg-stone-50 rounded-2xl p-5 font-black text-xl outline-none border-2 border-transparent focus:border-[#34495E]" />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-xs font-bold text-stone-400 ml-2">Max guests</label>
+                                                    <input type="number" value={formData.maxGuests} onChange={(e) => handleNumberChange('maxGuests', e.target.value)} onFocus={(e) => e.target.select()} onBlur={() => handleBlur('maxGuests', 2)} className="w-full bg-stone-50 rounded-2xl p-5 font-black text-xl outline-none border-2 border-transparent focus:border-[#34495E]" />
+                                                </div>
+                                            </div>
+                                            <div className="grid md:grid-cols-2 gap-6 pt-2">
+                                                <div className="space-y-3">
+                                                    <label className="text-xs font-bold text-stone-400 ml-2 uppercase tracking-widest">Listing Type</label>
+                                                    <select value={formData.listingType} onChange={(e) => setFormData({ ...formData, listingType: e.target.value })} className="w-full bg-stone-50 rounded-2xl p-4 font-black outline-none border-2 border-stone-100 focus:border-[#D4A373] transition-colors">
+                                                        <option value="Entire place">Entire place</option>
+                                                        <option value="Private room">Private room</option>
+                                                        <option value="Shared room">Shared room</option>
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-xs font-bold text-stone-400 ml-2 uppercase tracking-widest">AL License Status</label>
+                                                    <select value={formData.licenseStatus} onChange={(e) => setFormData({ ...formData, licenseStatus: e.target.value })} className="w-full bg-stone-50 rounded-2xl p-4 font-black outline-none border-2 border-stone-100 focus:border-[#D4A373] transition-colors">
+                                                        <option value="Has License">Has License</option>
+                                                        <option value="Needs License">Needs License</option>
+                                                        <option value="Unavailable in Zone">Unavailable in Zone</option>
+                                                        <option value="Unknown">Unknown — not yet verified</option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </div>

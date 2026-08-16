@@ -202,6 +202,11 @@ model Property {
   features     String[] @default([]) // e.g., ["Pool", "Garage", "Garden"]
   estimatedRent Float? // Stored estimated rent or override
 
+  // Short-Term Rental Fields
+  maxGuests    Int?
+  listingType  String? // e.g., 'Entire place', 'Private room', 'Shared room'
+  licenseStatus String? // e.g., 'Has License', 'Needs License', 'Unavailable in Zone', 'Unknown'
+
   status       PropertyStatus @default(AVAILABLE)
   outdoorSpace OutdoorSpace   @default(NONE)
   energyLabel  EnergyLabel    @default(C)
