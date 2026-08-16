@@ -49,4 +49,20 @@ export class NewsletterController {
             });
         }
     }
+
+    public getCampaigns = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const campaigns = await this.newsletterService.getCampaigns();
+            res.status(HTTPStatusCode.OK).json({
+                success: true,
+                data: campaigns
+            });
+        } catch (error) {
+            AppLogger.error('Error fetching campaigns:', { error });
+            res.status(HTTPStatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }
 }

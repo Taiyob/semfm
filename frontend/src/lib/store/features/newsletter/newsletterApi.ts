@@ -13,7 +13,13 @@ export const newsletterApi = createApi({
         data,
       }),
     }),
+    getCampaigns: builder.query<any, void>({
+      query: () => ({
+        url: '/v1/newsletter/campaigns',
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
-export const { useSubscribeNewsletterMutation } = newsletterApi;
+export const { useSubscribeNewsletterMutation, useGetCampaignsQuery } = newsletterApi;

@@ -56,4 +56,19 @@ export class NewsletterService {
             orderBy: { createdAt: 'desc' }
         });
     }
+
+    async getCampaigns() {
+        try {
+            const response = await mailchimp.campaigns.list({
+                status: 'sent',
+                sort_field: 'send_time',
+                sort_dir: 'DESC',
+                count: 10,
+            });
+            return response.campaigns;
+        } catch (error: any) {
+            console.error('Mailchimp fetch campaigns error:', error?.response?.body || error.message);
+            throw new Error('Failed to fetch campaigns from Mailchimp');
+        }
+    }
 }

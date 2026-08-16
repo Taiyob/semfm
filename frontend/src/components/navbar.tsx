@@ -16,7 +16,8 @@ import {
   Tag,
   LogOut,
   LayoutDashboard,
-  ShieldCheck
+  ShieldCheck,
+  Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSelector } from 'react-redux';
@@ -31,6 +32,7 @@ const navLinks = [
   { name: 'Insights', href: '/insights', icon: MapPin },
   // { name: 'Acquisition Club', href: '/acquisition-club', icon: Globe },
   { name: 'Our Mission', href: '/our-mission', icon: ShieldCheck },
+  { name: 'Newsletters', href: '/newsletters', icon: Mail },
 ];
 
 export function Navbar() {

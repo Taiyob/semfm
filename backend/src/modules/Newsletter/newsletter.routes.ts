@@ -13,6 +13,7 @@ export class NewsletterRoutes {
 
     private setupRoutes(): void {
         this.router.post('/subscribe', this.controller.subscribe);
+        this.router.get('/campaigns', this.controller.getCampaigns);
 
         // Protected Admin Routes
         this.router.use(authMiddleware);
