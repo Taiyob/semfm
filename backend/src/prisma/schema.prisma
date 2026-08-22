@@ -399,6 +399,7 @@ model SystemSetting {
   vacancyRate             Float    @default(5)
   appreciationRate        Float    @default(3)
   rentMultipliers         Json     @default("{}")
+  shortTermSettings       Json     @default("{}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

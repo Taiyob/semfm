@@ -11,7 +11,7 @@ export interface IMTBracket {
   deduction: number;
 }
 
-export const PORTUGAL_RESIDENTIAL_IMT_BRACKETS: IMTBracket[] = [
+export const PORTUGAL_IMT_TABLE_A: IMTBracket[] = [
   { limit: 106346, rate: 0.00, deduction: 0 },
   { limit: 145470, rate: 0.02, deduction: 2126.92 },
   { limit: 198347, rate: 0.05, deduction: 4491.84 },
@@ -19,19 +19,27 @@ export const PORTUGAL_RESIDENTIAL_IMT_BRACKETS: IMTBracket[] = [
   { limit: 660982, rate: 0.08, deduction: 11798.16 },
 ];
 
+export const PORTUGAL_IMT_TABLE_B: IMTBracket[] = [
+  { limit: 106346, rate: 0.01, deduction: 0 },
+  { limit: 145470, rate: 0.02, deduction: 1063.46 },
+  { limit: 198347, rate: 0.05, deduction: 5427.56 },
+  { limit: 330539, rate: 0.07, deduction: 9394.50 },
+  { limit: 660982, rate: 0.08, deduction: 12699.89 },
+];
+
 /**
  * Calculates IMT for a given price based on residential brackets.
- * For values between 660,982 and 1,150,853, a flat 6% rate applies.
- * For values above 1,150,853, a flat 7.5% rate applies.
  */
-export function calculateResidentialIMT(price: number): number {
+export function calculateResidentialIMT(price: number, type: 'primary' | 'secondary' | 'non_resident' = 'secondary'): number {
+  if (type === 'non_resident') return price * 0.075;
   if (price > 1150853) return price * 0.075;
   if (price > 660982) return price * 0.06;
 
-  // Bracket logic
-  for (let i = PORTUGAL_RESIDENTIAL_IMT_BRACKETS.length - 1; i >= 0; i--) {
-    const bracket = PORTUGAL_RESIDENTIAL_IMT_BRACKETS[i];
-    const prevLimit = i > 0 ? PORTUGAL_RESIDENTIAL_IMT_BRACKETS[i-1].limit : 0;
+  const brackets = type === 'primary' ? PORTUGAL_IMT_TABLE_A : PORTUGAL_IMT_TABLE_B;
+
+  for (let i = brackets.length - 1; i >= 0; i--) {
+    const bracket = brackets[i];
+    const prevLimit = i > 0 ? brackets[i-1].limit : 0;
     
     if (price > prevLimit) {
         return (price * bracket.rate) - bracket.deduction;
@@ -77,7 +85,7 @@ export const SPAIN_CITY_TAXES: Record<string, SpainTaxConfig> = {
  */
 export function calculateAcquisitionBreakdown(
   price: number, 
-  scenario: 'investor' | 'resident' | 'exemption',
+  scenario: 'investor' | 'resident' | 'exemption' | 'primary' | 'non_resident',
   country: string = 'Portugal',
   city: string = 'Lisbon',
   propertyType: 'resale' | 'new_build' = 'resale'
@@ -123,12 +131,14 @@ export function calculateAcquisitionBreakdown(
   // Default to Portugal logic
   let imtValue = 0;
   
-  if (scenario === 'investor') {
-    imtValue = price * 0.075; // Standard Investor Baseline
+  if (scenario === 'investor' || scenario === 'non_resident') {
+    imtValue = calculateResidentialIMT(price, 'non_resident'); // Table C
   } else if (scenario === 'exemption') {
     imtValue = 0; // Rental Incentive Path
+  } else if (scenario === 'primary') {
+    imtValue = calculateResidentialIMT(price, 'primary'); // Table A
   } else {
-    imtValue = calculateResidentialIMT(price); // Resident Brackets
+    imtValue = calculateResidentialIMT(price, 'secondary'); // Table B
   }
 
   const stampDuty = price * 0.008;

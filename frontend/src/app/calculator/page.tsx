@@ -140,7 +140,9 @@ function CalculatorContent() {
         interestRate: 3.5 as number | '',
         appreciationRate: 6 as number | '',
         // Phase 2 Logic
+        isTaxResident: true,
         isRental: true,
+        isPrimaryResidence: false,
         propertyType: 'resale' as 'resale' | 'new_build',
         rentConditionsMet: true,
         contractDuration: 36 as number | '',
@@ -297,17 +299,33 @@ function CalculatorContent() {
         const totalPurchase = purchasePrice + renovationCost;
 
         // Determine Scenario
-        let scenario: 'investor' | 'resident' | 'exemption' = 'investor';
-        if (formData.isRental) {
-            const meetsPrice = estimatedRent <= 2300;
-            const meetsDuration = (Number(formData.contractDuration) || 0) >= 36;
-            if (meetsPrice && meetsDuration && formData.listedAfter6Months && formData.rentConditionsMet) {
-                scenario = 'exemption';
+        // Determine Scenario
+        let scenario: 'investor' | 'resident' | 'exemption' | 'primary' | 'non_resident' = 'investor';
+        
+        if (formData.country === 'Portugal') {
+            if (!formData.isTaxResident) {
+                scenario = 'non_resident';
+            } else if (formData.isRental) {
+                if (formData.rentalMode === 'SHORT_TERM') {
+                    if (formData.isPrimaryResidence) {
+                        scenario = 'primary';
+                    } else {
+                        scenario = 'resident'; // Secondary home table
+                    }
+                } else {
+                    const meetsPrice = estimatedRent <= 2300;
+                    const meetsDuration = (Number(formData.contractDuration) || 0) >= 36;
+                    if (meetsPrice && meetsDuration && formData.listedAfter6Months && formData.rentConditionsMet) {
+                        scenario = 'exemption';
+                    } else {
+                        scenario = 'resident';
+                    }
+                }
             } else {
-                scenario = 'investor';
+                scenario = 'primary';
             }
         } else {
-            scenario = 'resident';
+            scenario = 'investor';
         }
 
         const breakdown = calculateAcquisitionBreakdown(
@@ -720,13 +738,20 @@ function CalculatorContent() {
                                     <div className="space-y-10">
                                         <div className="flex justify-between items-start mb-6">
                                             <div>
-                                                <h4 className="text-xl font-black text-stone-900 mb-2 tracking-tight">Stage 1: Location & rent estimate</h4>
+                                                <h4 className="text-xl font-black text-stone-900 mb-2 tracking-tight uppercase">Stage 1: RENT ESTIMATE</h4>
                                                 <p className="text-stone-500 text-sm font-bold flex items-center gap-2 italic"><Sparkles className="size-4 text-[#D4A373]" /> Estimate your rental income first.</p>
                                             </div>
                                             <div className="flex flex-col gap-3 items-end">
-                                                <div className="p-1.5 bg-stone-100 rounded-xl flex gap-1 h-fit border border-stone-200/50 shadow-inner">
-                                                    <button onClick={() => setFormData({ ...formData, rentalMode: 'LONG_TERM' })} className={`px-4 py-2 rounded-lg text-xs font-black tracking-tight transition-all ${formData.rentalMode === 'LONG_TERM' ? 'bg-[#2C3E50] text-white shadow-md' : 'text-stone-500 hover:text-stone-700'}`}>Long-Term</button>
-                                                    <button onClick={() => setFormData({ ...formData, rentalMode: 'SHORT_TERM' })} className={`px-4 py-2 rounded-lg text-xs font-black tracking-tight transition-all ${formData.rentalMode === 'SHORT_TERM' ? 'bg-[#D4A373] text-white shadow-md' : 'text-stone-500 hover:text-stone-700'}`}>Short-Term</button>
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <span className="text-[10px] font-bold text-stone-400 tracking-[0.2em] uppercase">Rental Strategy</span>
+                                                    <div className="p-1.5 bg-stone-100 rounded-xl flex gap-1 h-fit border border-stone-200/50 shadow-inner">
+                                                        <button onClick={() => setFormData({ ...formData, rentalMode: 'LONG_TERM' })} className={`px-4 py-2 rounded-lg text-xs font-black tracking-tight transition-all flex items-center gap-2 ${formData.rentalMode === 'LONG_TERM' ? 'bg-[#2C3E50] text-white shadow-md' : 'text-stone-500 hover:text-stone-700'}`}>
+                                                            <Calendar className="size-3.5" /> Long-Term
+                                                        </button>
+                                                        <button onClick={() => setFormData({ ...formData, rentalMode: 'SHORT_TERM' })} className={`px-4 py-2 rounded-lg text-xs font-black tracking-tight transition-all flex items-center gap-2 ${formData.rentalMode === 'SHORT_TERM' ? 'bg-white text-stone-800 shadow-md border border-stone-200/50' : 'text-stone-500 hover:text-stone-700'}`}>
+                                                            <Sparkles className={`size-3.5 ${formData.rentalMode === 'SHORT_TERM' ? 'text-[#D4A373]' : 'text-stone-400'}`} /> Short-Term
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div className="p-1 bg-stone-100 rounded-xl flex gap-1 h-fit">
                                                     <button onClick={() => setMode('simple')} className={`px-3 py-1.5 rounded-lg text-[9px] font-black tracking-tight transition-all ${mode === 'simple' ? 'bg-white text-[#34495E] shadow-sm' : 'text-stone-400'}`}>Simple</button>
@@ -921,124 +946,158 @@ function CalculatorContent() {
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-stone-400 block mb-4">
                                                     {formData.country === 'Spain' ? 'Property Type Decision' : 'IMT Logic Decision'}
                                                 </span>
-                                                <div className="flex flex-col gap-4">
-                                                    <label className="text-sm font-black text-[#2C3E50]">
-                                                        {formData.country === 'Spain' ? 'Is the property a resale or a new build?' : 'Are you going to rent out the property?'}
-                                                    </label>
-                                                    <div className="flex gap-4">
-                                                        <button
-                                                            onClick={() => formData.country === 'Spain' ? setFormData({ ...formData, propertyType: 'resale' }) : setFormData({ ...formData, isRental: true })}
-                                                            className={cn(
-                                                                "flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all",
-                                                                (formData.country === 'Spain' ? formData.propertyType === 'resale' : formData.isRental) ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100"
-                                                            )}
-                                                        >
-                                                            {formData.country === 'Spain' ? 'Resale' : 'Yes'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => formData.country === 'Spain' ? setFormData({ ...formData, propertyType: 'new_build' }) : setFormData({ ...formData, isRental: false })}
-                                                            className={cn(
-                                                                "flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all",
-                                                                (formData.country === 'Spain' ? formData.propertyType === 'new_build' : !formData.isRental) ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100"
-                                                            )}
-                                                        >
-                                                            {formData.country === 'Spain' ? 'New Build' : 'No'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
                                             {formData.country === 'Spain' ? (
-                                                <div className="space-y-6 pt-6 border-t border-stone-200/50">
-                                                    <h5 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#D4A373]">Spanish Tax Configuration</h5>
-                                                    <div className="space-y-4">
-                                                        {formData.propertyType === 'resale' ? (
-                                                            <div className="flex items-center gap-4 p-4 bg-white border border-[#D4A373]/20 rounded-2xl relative">
-                                                                <CheckCircle2 className="size-5 text-[#D4A373]" />
-                                                                <label className="text-xs font-bold text-stone-900 leading-tight">Property Transfer Tax (ITP) Applied</label>
-                                                                {(formData.region === 'Valencia' || formData.region === 'Alicante') && (
-                                                                    <div className="ml-auto group/warn relative">
-                                                                        <div className="p-1 bg-amber-100 rounded-full animate-pulse">
-                                                                            <Zap className="size-3 text-amber-600" />
+                                                <div>
+                                                    <div className="flex flex-col gap-4">
+                                                        <label className="text-sm font-black text-[#2C3E50]">Is the property a resale or a new build?</label>
+                                                        <div className="flex gap-4">
+                                                            <button onClick={() => setFormData({ ...formData, propertyType: 'resale' })} className={cn("flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all", formData.propertyType === 'resale' ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>Resale</button>
+                                                            <button onClick={() => setFormData({ ...formData, propertyType: 'new_build' })} className={cn("flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all", formData.propertyType === 'new_build' ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>New Build</button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-6 pt-6 mt-6 border-t border-stone-200/50">
+                                                        <h5 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#D4A373]">Spanish Tax Configuration</h5>
+                                                        <div className="space-y-4">
+                                                            {formData.propertyType === 'resale' ? (
+                                                                <div className="flex items-center gap-4 p-4 bg-white border border-[#D4A373]/20 rounded-2xl relative">
+                                                                    <CheckCircle2 className="size-5 text-[#D4A373]" />
+                                                                    <label className="text-xs font-bold text-stone-900 leading-tight">Property Transfer Tax (ITP) Applied</label>
+                                                                    {(formData.region === 'Valencia' || formData.region === 'Alicante') && (
+                                                                        <div className="ml-auto group/warn relative">
+                                                                            <div className="p-1 bg-amber-100 rounded-full animate-pulse">
+                                                                                <Zap className="size-3 text-amber-600" />
+                                                                            </div>
+                                                                            <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[10px] font-bold rounded-xl opacity-0 group-hover/warn:opacity-100 transition-opacity z-50 pointer-events-none">
+                                                                                {formData.region === 'Valencia' ? 'ITP rates will decrease by 1% starting in June.' : 'ITP rate will decrease to 9%.'}
+                                                                            </div>
                                                                         </div>
-                                                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[10px] font-bold rounded-xl opacity-0 group-hover/warn:opacity-100 transition-opacity z-50 pointer-events-none">
-                                                                            {formData.region === 'Valencia' ? 'ITP rates will decrease by 1% starting in June.' : 'ITP rate will decrease to 9%.'}
-                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="flex items-center gap-4 p-4 bg-white border border-[#D4A373]/20 rounded-2xl">
+                                                                        <CheckCircle2 className="size-5 text-[#D4A373]" />
+                                                                        <label className="text-xs font-bold text-stone-900 leading-tight">10% IVA (Value Added Tax)</label>
                                                                     </div>
-                                                                )}
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <div className="flex items-center gap-4 p-4 bg-white border border-[#D4A373]/20 rounded-2xl">
-                                                                    <CheckCircle2 className="size-5 text-[#D4A373]" />
-                                                                    <label className="text-xs font-bold text-stone-900 leading-tight">10% IVA (Value Added Tax)</label>
-                                                                </div>
-                                                                <div className="flex items-center gap-4 p-4 bg-white border border-[#D4A373]/20 rounded-2xl">
-                                                                    <CheckCircle2 className="size-5 text-[#D4A373]" />
-                                                                    <label className="text-xs font-bold text-stone-900 leading-tight">AJD (Stamp Duty) Applied</label>
-                                                                </div>
-                                                            </>
-                                                        )}
+                                                                    <div className="flex items-center gap-4 p-4 bg-white border border-[#D4A373]/20 rounded-2xl">
+                                                                        <CheckCircle2 className="size-5 text-[#D4A373]" />
+                                                                        <label className="text-xs font-bold text-stone-900 leading-tight">AJD (Stamp Duty) Applied</label>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            ) : formData.isRental ? (
-                                                <div className="space-y-6 pt-6 border-t border-stone-200/50">
-                                                    <h5 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#D4A373]">Moderate Rent IMT Exemption</h5>
-                                                    <div className="space-y-4">
-                                                        <div className="flex items-center gap-4 p-4 bg-white border border-[#D4A373]/20 rounded-2xl">
-                                                            <input type="checkbox" checked={(Number(formData.estimatedRent) || 0) <= 2300} readOnly className="size-5 accent-[#D4A373]" />
-                                                            <label className="text-xs font-bold text-stone-900 leading-tight">Rental price ≤ €2,300/month (Auto-calculated)</label>
-                                                        </div>
-                                                        <div className="flex items-center gap-4 p-4 bg-white border border-stone-100 rounded-2xl group cursor-pointer" onClick={() => setFormData({ ...formData, rentConditionsMet: !formData.rentConditionsMet })}>
-                                                            <input type="checkbox" checked={formData.rentConditionsMet} readOnly className="size-5 accent-[#2C3E50]" />
-                                                            <label className="text-xs font-bold text-stone-900 leading-tight cursor-pointer">36-month minimum rental contract (within first 5 years)</label>
-                                                        </div>
-                                                        <div className="flex items-center gap-4 p-4 bg-white border border-stone-100 rounded-2xl group cursor-pointer" onClick={() => setFormData({ ...formData, listedAfter6Months: !formData.listedAfter6Months })}>
-                                                            <input type="checkbox" checked={formData.listedAfter6Months} readOnly className="size-5 accent-[#2C3E50]" />
-                                                            <label className="text-xs font-bold text-stone-900 leading-tight cursor-pointer">Property listed within 6 months of purchase</label>
+                                            ) : (
+                                                <div className="space-y-6">
+                                                    <div className="flex flex-col gap-4">
+                                                        <label className="text-sm font-black text-[#2C3E50]">Are you a Portuguese tax resident?</label>
+                                                        <div className="flex gap-4">
+                                                            <button onClick={() => setFormData({ ...formData, isTaxResident: true })} className={cn("flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all", formData.isTaxResident ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>Yes</button>
+                                                            <button onClick={() => setFormData({ ...formData, isTaxResident: false })} className={cn("flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all", !formData.isTaxResident ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>No</button>
                                                         </div>
                                                     </div>
-                                                    {results.scenario === 'exemption' ? (
-                                                        <div className="p-4 bg-[#D4A373]/10 text-[#D4A373] rounded-xl text-[10px] font-black uppercase tracking-widest text-center">
-                                                            Moderate rent exemption applied: 0% IMT Exemption
+                                                    
+                                                    {formData.isTaxResident && (
+                                                        <div className="flex flex-col gap-4 pt-6 border-t border-stone-200/50">
+                                                            <label className="text-sm font-black text-[#2C3E50]">Are you going to rent out the property?</label>
+                                                            <div className="flex gap-4">
+                                                                <button onClick={() => setFormData({ ...formData, isRental: true })} className={cn("flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all", formData.isRental ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>Yes</button>
+                                                                <button onClick={() => setFormData({ ...formData, isRental: false })} className={cn("flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all", !formData.isRental ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>No</button>
+                                                            </div>
                                                         </div>
-                                                    ) : (
-                                                        <div className="p-4 bg-stone-100 text-stone-400 rounded-xl text-[10px] font-black uppercase tracking-widest text-center">
-                                                            Standard Investor Rate Applied: 7.5% FLAT IMT
+                                                    )}
+
+                                                    {formData.isTaxResident && formData.isRental && formData.rentalMode === 'SHORT_TERM' && (
+                                                        <div className="flex flex-col gap-4 pt-6 border-t border-stone-200/50">
+                                                            <label className="text-sm font-black text-[#2C3E50]">Will this also be your primary residence?</label>
+                                                            <div className="flex gap-4">
+                                                                <button onClick={() => setFormData({ ...formData, isPrimaryResidence: true })} className={cn("flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all", formData.isPrimaryResidence ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>Yes</button>
+                                                                <button onClick={() => setFormData({ ...formData, isPrimaryResidence: false })} className={cn("flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 transition-all", !formData.isPrimaryResidence ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>No</button>
+                                                            </div>
+                                                            {formData.isPrimaryResidence && (
+                                                                <div className="mt-2 p-4 bg-red-50 border border-red-200 rounded-2xl flex gap-3 items-start">
+                                                                    <Zap className="size-5 text-red-500 shrink-0 mt-0.5" />
+                                                                    <p className="text-xs font-bold text-red-700 leading-relaxed">
+                                                                        <span className="block font-black uppercase tracking-widest mb-1 text-[10px]">Clawback Warning</span>
+                                                                        If you claim this as your primary residence to reduce IMT but rent it out via short-term rentals (AL), the tax authority may trigger a clawback and demand the tax difference plus penalties.
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {formData.isTaxResident && formData.isRental && formData.rentalMode === 'LONG_TERM' && (
+                                                        <div className="space-y-6 pt-6 border-t border-stone-200/50">
+                                                            <h5 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#D4A373]">Moderate Rent IMT Exemption</h5>
+                                                            <div className="space-y-4">
+                                                                <div className="flex items-center gap-4 p-4 bg-white border border-[#D4A373]/20 rounded-2xl">
+                                                                    <input type="checkbox" checked={(Number(formData.estimatedRent) || 0) <= 2300} readOnly className="size-5 accent-[#D4A373]" />
+                                                                    <label className="text-xs font-bold text-stone-900 leading-tight">Rental price ≤ €2,300/month (Auto-calculated)</label>
+                                                                </div>
+                                                                <div className="flex items-center gap-4 p-4 bg-white border border-stone-100 rounded-2xl group cursor-pointer" onClick={() => setFormData({ ...formData, rentConditionsMet: !formData.rentConditionsMet })}>
+                                                                    <input type="checkbox" checked={formData.rentConditionsMet} readOnly className="size-5 accent-[#2C3E50]" />
+                                                                    <label className="text-xs font-bold text-stone-900 leading-tight cursor-pointer">36-month minimum rental contract (within first 5 years)</label>
+                                                                </div>
+                                                                <div className="flex items-center gap-4 p-4 bg-white border border-stone-100 rounded-2xl group cursor-pointer" onClick={() => setFormData({ ...formData, listedAfter6Months: !formData.listedAfter6Months })}>
+                                                                    <input type="checkbox" checked={formData.listedAfter6Months} readOnly className="size-5 accent-[#2C3E50]" />
+                                                                    <label className="text-xs font-bold text-stone-900 leading-tight cursor-pointer">Property listed within 6 months of purchase</label>
+                                                                </div>
+                                                            </div>
+                                                            {results.scenario === 'exemption' ? (
+                                                                <div className="p-4 bg-[#D4A373]/10 text-[#D4A373] rounded-xl text-[10px] font-black uppercase tracking-widest text-center">
+                                                                    Moderate rent exemption applied: 0% IMT Exemption
+                                                                </div>
+                                                            ) : (
+                                                                <div className="p-4 bg-stone-100 text-stone-400 rounded-xl text-[10px] font-black uppercase tracking-widest text-center">
+                                                                    Standard Investor Rate Applied: Table B
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {!formData.isTaxResident && (
+                                                        <div className="pt-6 border-t border-stone-200/50">
+                                                            <div className="p-4 bg-stone-100 text-stone-400 rounded-xl text-[10px] font-black uppercase tracking-widest text-center">
+                                                                Non-Resident Tax Applied: 7.5% FLAT IMT
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {formData.isTaxResident && (
+                                                        <div className="space-y-6 pt-6 border-t border-stone-200/50">
+                                                            <h5 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#2C3E50]">Resident Progressive Tax Table</h5>
+                                                            <div className="overflow-hidden rounded-2xl border border-stone-100">
+                                                                <table className="w-full text-[10px] font-bold text-left bg-white">
+                                                                    <thead className="bg-stone-50 border-b border-stone-100 font-black uppercase tracking-widest">
+                                                                        <tr>
+                                                                            <th className="p-3">Bracket (€)</th>
+                                                                            <th className="p-3">Rate</th>
+                                                                            <th className="p-3">Deduction</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody className="divide-y divide-stone-50">
+                                                                        {[
+                                                                            { b: 'Up to 106,346', r: '0% / 1%', d: '€0' },
+                                                                            { b: '106,346 - 145,470', r: '2%', d: '€1,063 - €2,126' },
+                                                                            { b: '145,470 - 198,347', r: '5%', d: '€4,491 - €5,427' },
+                                                                            { b: '198,347 - 330,539', r: '7%', d: '€8,492 - €9,394' },
+                                                                            { b: '330,539 - 660,982', r: '8%', d: '€11,798 - €12,699' },
+                                                                        ].map((row, i) => (
+                                                                            <tr key={i} className="hover:bg-stone-50 transition-colors">
+                                                                                <td className="p-3">{row.b}</td>
+                                                                                <td className="p-3 text-[#D4A373]">{row.r}</td>
+                                                                                <td className="p-3 text-stone-400">{row.d}</td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
-                                            ) : (
-                                                <div className="space-y-6 pt-6 border-t border-stone-200/50">
-                                                    <h5 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#2C3E50]">Resident Progressive Tax Table</h5>
-                                                    <div className="overflow-hidden rounded-2xl border border-stone-100">
-                                                        <table className="w-full text-[10px] font-bold text-left bg-white">
-                                                            <thead className="bg-stone-50 border-b border-stone-100 font-black uppercase tracking-widest">
-                                                                <tr>
-                                                                    <th className="p-3">Bracket (€)</th>
-                                                                    <th className="p-3">Rate</th>
-                                                                    <th className="p-3">Deduction</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody className="divide-y divide-stone-50">
-                                                                {[
-                                                                    { b: 'Up to 106,346', r: '0%', d: '€0' },
-                                                                    { b: '106,346 - 145,470', r: '2%', d: '€2,126' },
-                                                                    { b: '145,470 - 198,347', r: '5%', d: '€4,491' },
-                                                                    { b: '198,347 - 330,539', r: '7%', d: '€8,492' },
-                                                                    { b: '330,539 - 660,982', r: '8%', d: '€11,798' },
-                                                                ].map((row, i) => (
-                                                                    <tr key={i} className="hover:bg-stone-50 transition-colors">
-                                                                        <td className="p-3">{row.b}</td>
-                                                                        <td className="p-3 text-[#D4A373]">{row.r}</td>
-                                                                        <td className="p-3 text-stone-400">{row.d}</td>
-                                                                    </tr>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
                                             )}
+                                            </div>
                                         </div>
 
                                         <div className="flex flex-col gap-6">

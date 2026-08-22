@@ -13,6 +13,8 @@ export class CalculationRoutes {
     }
 
     private initializeRoutes(): void {
+        this.router.post('/short-term-estimate', (req, res) => this.controller.calculateShortTermEstimate(req, res));
+
         this.router.use(authMiddleware);
 
         this.router.get('/my', (req, res) => this.controller.getMyCalculations(req, res));
