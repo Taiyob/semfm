@@ -51,6 +51,13 @@ export const calculationApi = createApi({
         method: 'GET',
       }),
     }),
+    getShortTermEstimate: builder.mutation<any, any>({
+      query: (data) => ({
+        url: '/calculations/short-term-estimate',
+        method: 'POST',
+        data,
+      }),
+    }),
   }),
 });
 
@@ -59,4 +66,5 @@ export const {
   useSaveCalculationMutation,
   useDeleteCalculationMutation,
   useGetCalculatorSettingsQuery,
+  useGetShortTermEstimateMutation,
 } = calculationApi;

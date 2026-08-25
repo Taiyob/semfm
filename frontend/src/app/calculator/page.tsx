@@ -45,7 +45,8 @@ import {
     useSaveCalculationMutation,
     useGetMyCalculationsQuery,
     useDeleteCalculationMutation,
-    useGetCalculatorSettingsQuery
+    useGetCalculatorSettingsQuery,
+    useGetShortTermEstimateMutation
 } from '@/lib/store/features/calculations/calculationApi';
 import { useGetRegionsQuery } from '@/lib/store/features/country/countryApi';
 import { useCreateLeadMutation } from '@/lib/store/features/leads/leadsApi';
@@ -126,6 +127,9 @@ function CalculatorContent() {
         maxGuests: 2 as number | '',
         listingType: 'Entire place',
         licenseStatus: 'Unknown',
+        nightlyRate: 0,
+        occupancyRate: 0,
+        managementType: 'self' as 'self' | 'professional',
         country: 'Portugal',
         region: 'Lisbon',
         areaType: 'Centre',
@@ -152,7 +156,7 @@ function CalculatorContent() {
         maintenanceRate: 10 as number | '',
         capexRate: 3 as number | '',
         insuranceRate: 1.5 as number | '',
-        propertyTaxRate: 8 as number | '',
+        propertyTaxRate: 0.3 as number | '',
         condoFeeRate: 7 as number | '',
         managementFeeRate: 10 as number | '',
         adminRate: 1 as number | '',
@@ -180,6 +184,7 @@ function CalculatorContent() {
     });
 
     const [saveCalculation, { isLoading: isSaving }] = useSaveCalculationMutation();
+    const [getShortTermEstimate] = useGetShortTermEstimateMutation();
     const [createLead, { isLoading: isCreatingLead }] = useCreateLeadMutation();
     const [deleteCalculation] = useDeleteCalculationMutation();
     const { data: historyData, isLoading: isLoadingHistory } = useGetMyCalculationsQuery(undefined, { skip: !isAuthenticated });
@@ -207,45 +212,82 @@ function CalculatorContent() {
     };
 
     useEffect(() => {
-        // Base rent per sqm by city (region) from fetched regions
-        let baseRent = 0;
-        if (regionsList && regionsList.length > 0) {
-            const foundRegion = regionsList.find(r => r.name === formData.region);
-            if (foundRegion) {
-                baseRent = foundRegion.baseRent;
+        if (formData.rentalMode === 'SHORT_TERM') {
+            const fetchShortTerm = async () => {
+                try {
+                    const res = await getShortTermEstimate({
+                        city: formData.region,
+                        zone: formData.areaType,
+                        condition: formData.propertyCondition,
+                        guestCapacity: Number(formData.maxGuests) || 2,
+                        bedrooms: Number(formData.bedrooms) || 1,
+                        bathrooms: Number(formData.bathrooms) || 1,
+                        listingType: formData.listingType
+                    }).unwrap();
+                    
+                    if (res?.status === 'success' && res.data) {
+                        const occ = res.data.occupancy || 0;
+                        const night = res.data.nightlyRate || 0;
+                        const annualGross = (night * occ / 100) * 365;
+                        const monthlyRent = annualGross / 12;
+
+                        setFormData((prev) => ({
+                            ...prev,
+                            occupancyRate: occ,
+                            nightlyRate: night,
+                            estimatedRent: !rentFromPropertyRef.current && monthlyRent > 0 ? monthlyRent : prev.estimatedRent
+                        }));
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch short term estimate", e);
+                }
+            };
+            fetchShortTerm();
+        } else {
+            // Base rent per sqm by city (region) from fetched regions
+            let baseRent = 0;
+            if (regionsList && regionsList.length > 0) {
+                const foundRegion = regionsList.find(r => r.name === formData.region);
+                if (foundRegion) {
+                    baseRent = foundRegion.baseRent;
+                }
+            }
+            // Fallback to hardcoded if regions not loaded yet or region not found
+            if (baseRent === 0) {
+                const baseRentByCity: Record<string, number> = {
+                    Braga: 9.5, Porto: 13.0, Lisbon: 18.0, Faro: 15.0,
+                    Valencia: 13.5, Alicante: 11.0, 'Málaga': 13.0, 'Las Palmas (Gran Canaria)': 10.5,
+                };
+                baseRent = baseRentByCity[formData.region] ?? 0;
+            }
+
+            const finalRent = calculateEstimatedRent({
+                baseRent,
+                size: Number(formData.size) || 0,
+                bedrooms: Number(formData.bedrooms) || 0,
+                areaType: formData.areaType,
+                yearBuilt: Number(formData.yearBuilt) || 0,
+                outdoorSpace: formData.outdoorSpace,
+                hasParking: formData.hasParking,
+                energyLabel: formData.energyLabel,
+                hasElevator: formData.hasElevator,
+                propertyCondition: formData.propertyCondition,
+                multipliers
+            });
+
+            if (finalRent > 0 && finalRent !== formData.estimatedRent && !rentFromPropertyRef.current) {
+                setFormData((prev) => ({ ...prev, estimatedRent: finalRent }));
             }
         }
-        // Fallback to hardcoded if regions not loaded yet or region not found
-        if (baseRent === 0) {
-            const baseRentByCity: Record<string, number> = {
-                Braga: 9.5, Porto: 13.0, Lisbon: 18.0, Faro: 15.0,
-                Valencia: 13.5, Alicante: 11.0, 'Málaga': 13.0, 'Las Palmas (Gran Canaria)': 10.5,
-            };
-            baseRent = baseRentByCity[formData.region] ?? 0;
-        }
-
-        const finalRent = calculateEstimatedRent({
-            baseRent,
-            size: Number(formData.size) || 0,
-            bedrooms: Number(formData.bedrooms) || 0,
-            areaType: formData.areaType,
-            yearBuilt: Number(formData.yearBuilt) || 0,
-            outdoorSpace: formData.outdoorSpace,
-            hasParking: formData.hasParking,
-            energyLabel: formData.energyLabel,
-            hasElevator: formData.hasElevator,
-            propertyCondition: formData.propertyCondition,
-            multipliers
-        });
-
-        if (finalRent > 0 && finalRent !== formData.estimatedRent && !rentFromPropertyRef.current) {
-            setFormData((prev) => ({ ...prev, estimatedRent: finalRent }));
-        }
     }, [
+        formData.rentalMode,
         formData.country,
         formData.region,
         formData.size,
         formData.bedrooms,
+        formData.bathrooms,
+        formData.maxGuests,
+        formData.listingType,
         formData.areaType,
         formData.propertyCondition,
         formData.yearBuilt,
@@ -341,16 +383,30 @@ function CalculatorContent() {
         const totalCapitalNeeded = purchasePrice + renovationCost + totalCosts;
         const annualRent = estimatedRent * 12;
 
-        const opexBreakdown = {
-            vacancy: formData.opexOverrides.vacancy ?? (annualRent * (Number(formData.vacancyRate || 0) / 100)),
-            maintenance: formData.opexOverrides.maintenance ?? (annualRent * (Number(formData.maintenanceRate || 0) / 100)),
-            capex: formData.opexOverrides.capex ?? (annualRent * (Number(formData.capexRate || 0) / 100)),
-            insurance: formData.opexOverrides.insurance ?? (annualRent * (Number(formData.insuranceRate || 0) / 100)),
-            propertyTax: formData.opexOverrides.propertyTax ?? (annualRent * (Number(formData.propertyTaxRate || 0) / 100)),
-            condo: formData.opexOverrides.condo ?? (annualRent * (Number(formData.condoFeeRate || 0) / 100)),
-            management: formData.opexOverrides.management ?? (annualRent * (Number(formData.managementFeeRate || 0) / 100)),
-            admin: formData.opexOverrides.admin ?? (annualRent * (Number(formData.adminRate || 0) / 100)),
-        };
+        const opexBreakdown = formData.rentalMode === 'SHORT_TERM'
+            ? {
+                platform: formData.opexOverrides.platform ?? (annualRent * 0.03),
+                cleaning: formData.opexOverrides.cleaning ?? (annualRent * 0.06),
+                supplies: formData.opexOverrides.supplies ?? (annualRent * 0.015),
+                utilities: formData.opexOverrides.utilities ?? (annualRent * 0.06),
+                maintenance: formData.opexOverrides.maintenance ?? (annualRent * 0.11),
+                management: formData.opexOverrides.management ?? (annualRent * (formData.managementType === 'professional' ? 0.20 : 0)),
+                insurance: formData.opexOverrides.insurance ?? (annualRent * 0.02),
+                capex: formData.opexOverrides.capex ?? (annualRent * 0.06),
+                admin: formData.opexOverrides.admin ?? (annualRent * 0.015),
+                propertyTax: formData.opexOverrides.propertyTax ?? (purchasePrice * 0.80 * (Number(formData.propertyTaxRate || 0) / 100)),
+                condo: formData.opexOverrides.condo ?? (annualRent * (Number(formData.condoFeeRate || 0) / 100)),
+            }
+            : {
+                vacancy: formData.opexOverrides.vacancy ?? (annualRent * (Number(formData.vacancyRate || 0) / 100)),
+                maintenance: formData.opexOverrides.maintenance ?? (annualRent * (Number(formData.maintenanceRate || 0) / 100)),
+                capex: formData.opexOverrides.capex ?? (annualRent * (Number(formData.capexRate || 0) / 100)),
+                insurance: formData.opexOverrides.insurance ?? (annualRent * (Number(formData.insuranceRate || 0) / 100)),
+                propertyTax: formData.opexOverrides.propertyTax ?? (purchasePrice * 0.80 * (Number(formData.propertyTaxRate || 0) / 100)),
+                condo: formData.opexOverrides.condo ?? (annualRent * (Number(formData.condoFeeRate || 0) / 100)),
+                management: formData.opexOverrides.management ?? (annualRent * (Number(formData.managementFeeRate || 0) / 100)),
+                admin: formData.opexOverrides.admin ?? (annualRent * (Number(formData.adminRate || 0) / 100)),
+            };
 
         const totalOpex = Object.values(opexBreakdown).reduce<number>((acc, val) => acc + Number(val || 0), 0);
         const netAnnualIncome = annualRent - totalOpex;
@@ -1247,11 +1303,13 @@ function CalculatorContent() {
                                                 <div className="p-6 bg-stone-50 rounded-3xl border border-stone-100 flex flex-col">
                                                     <div className="flex justify-between items-center mb-6">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Yearly Rent</span>
+                                                            <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                                                                {formData.rentalMode === 'SHORT_TERM' ? 'Gross Booking Revenue' : 'Yearly Rent'}
+                                                            </span>
                                                             <div className="group/yr relative">
                                                                 <Info className="size-3 text-stone-300 cursor-help" />
                                                                 <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-[#2C3E50] text-white text-[9px] font-bold rounded-xl opacity-0 group-hover/yr:opacity-100 transition-opacity z-50 pointer-events-none">
-                                                                    Total annual rental income.
+                                                                    {formData.rentalMode === 'SHORT_TERM' ? `(€${formData.nightlyRate}/night × ${formData.occupancyRate}% occupancy × 365)` : 'Total annual rental income.'}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1280,17 +1338,41 @@ function CalculatorContent() {
                                                                     exit={{ height: 0, opacity: 0 }}
                                                                     className="overflow-hidden"
                                                                 >
+                                                                    {formData.rentalMode === 'SHORT_TERM' && (
+                                                                        <div className="pb-4 mb-4 border-b border-stone-200">
+                                                                            <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block mb-2">Management Setup</span>
+                                                                            <div className="flex gap-2">
+                                                                                <button onClick={() => setFormData({ ...formData, managementType: 'self' })} className={cn("flex-1 py-2 rounded-xl font-bold uppercase text-[9px] tracking-widest border-2 transition-all", formData.managementType === 'self' ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>Self-Managed</button>
+                                                                                <button onClick={() => setFormData({ ...formData, managementType: 'professional' })} className={cn("flex-1 py-2 rounded-xl font-bold uppercase text-[9px] tracking-widest border-2 transition-all", formData.managementType === 'professional' ? "bg-[#2C3E50] text-white border-[#2C3E50]" : "bg-white text-stone-400 border-stone-100")}>Professional (20%)</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                     <div className="space-y-2 pt-4 border-t border-stone-200">
-                                                                        {[
-                                                                            { label: 'Vacancy (4%)', key: 'vacancy' },
-                                                                            { label: 'Maintenance (10%)', key: 'maintenance' },
-                                                                            { label: 'CapEx (5%)', key: 'capex' },
-                                                                            { label: 'Insurance', key: 'insurance' },
-                                                                            { label: 'Property Tax', key: 'propertyTax' },
-                                                                            { label: 'Condo Fees', key: 'condo' },
-                                                                            { label: 'Management', key: 'management' },
-                                                                            { label: 'Admin', key: 'admin' },
-                                                                        ].map((item) => (
+                                                                        {(formData.rentalMode === 'SHORT_TERM'
+                                                                            ? [
+                                                                                { label: 'Platform Fees (3%)', key: 'platform' },
+                                                                                { label: 'Cleaning (6%)', key: 'cleaning' },
+                                                                                { label: 'Supplies (1.5%)', key: 'supplies' },
+                                                                                { label: 'Utilities (6%)', key: 'utilities' },
+                                                                                { label: 'Maintenance (11%)', key: 'maintenance' },
+                                                                                { label: `Management (${formData.managementType === 'professional' ? '20%' : '0%'})`, key: 'management' },
+                                                                                { label: 'Insurance (2%)', key: 'insurance' },
+                                                                                { label: 'CapEx (6%)', key: 'capex' },
+                                                                                { label: 'Admin (1.5%)', key: 'admin' },
+                                                                                { label: 'Property Tax IMI', key: 'propertyTax' },
+                                                                                { label: 'Condo Fees', key: 'condo' },
+                                                                            ]
+                                                                            : [
+                                                                                { label: `Vacancy (${formData.vacancyRate || 0}%)`, key: 'vacancy' },
+                                                                                { label: `Maintenance (${formData.maintenanceRate || 0}%)`, key: 'maintenance' },
+                                                                                { label: `CapEx (${formData.capexRate || 0}%)`, key: 'capex' },
+                                                                                { label: `Insurance (${formData.insuranceRate || 0}%)`, key: 'insurance' },
+                                                                                { label: `Property Tax IMI (${formData.propertyTaxRate || 0}%)`, key: 'propertyTax' },
+                                                                                { label: `Condo Fees (${formData.condoFeeRate || 0}%)`, key: 'condo' },
+                                                                                { label: `Management (${formData.managementFeeRate || 0}%)`, key: 'management' },
+                                                                                { label: `Admin (${formData.adminRate || 0}%)`, key: 'admin' },
+                                                                            ]
+                                                                        ).map((item) => (
                                                                             <div key={item.key} className="flex justify-between items-center group/opex">
                                                                                 <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tight">{item.label}</span>
                                                                                 <div className="flex items-center gap-2">
