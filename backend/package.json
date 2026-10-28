@@ -3,10 +3,10 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "dev": "node api.js && NODE_ENV=development bun run --watch src/index.ts",
+    "dev": "node init && NODE_ENV=development bun run --watch src/index.ts",
     "postinstall": "prisma generate",
-    "build": "node api.js && prisma generate && bun build src/index.ts --target node --outdir dist --sourcemap",
-    "start": "node api.js && node dist/index.js",
+    "build": "node init && prisma generate && bun build src/index.ts --target node --outdir dist --sourcemap",
+    "start": "node init && node dist/index.js",
     "test": "NODE_ENV=test bun test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
